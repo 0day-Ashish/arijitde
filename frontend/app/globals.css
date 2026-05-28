@@ -181,3 +181,44 @@ html.lenis, html.lenis body {
   transform: translateX(0) scale(1);
   opacity: 1;
 }
+
+/* Scroll Reveal & Blur-in Effects */
+.reveal-fallback-hidden {
+  opacity: 0;
+  filter: blur(20px);
+  transform: translateY(35px) scale(0.98);
+  transition: opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 1.4s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, filter, transform;
+}
+
+.reveal-fallback-visible {
+  opacity: 1;
+  filter: blur(0px);
+  transform: translateY(0) scale(1);
+}
+
+/* Constellation SVG Glow Styles */
+.svg-glow-filter {
+  filter: drop-shadow(0 0 8px rgba(0, 255, 209, 0.4));
+}
+
+.svg-active-glow {
+  filter: drop-shadow(0 0 16px rgba(0, 255, 209, 0.85));
+}
+
+.svg-pulse-active {
+  animation: svg-pulse 2s infinite alternate ease-in-out;
+}
+
+@keyframes svg-pulse {
+  0% {
+    r: 9;
+    opacity: 0.7;
+  }
+  100% {
+    r: 13;
+    opacity: 1;
+  }
+}

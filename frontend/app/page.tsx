@@ -6,6 +6,66 @@ import Lenis from "lenis";
 import GradualBlur from "@/components/GradualBlur";
 import ScrollRevealSection from "@/components/ScrollRevealSection";
 import ScrollVideoPlayer from "@/components/ScrollVideoPlayer";
+import ScrollBlurReveal from "@/components/ScrollBlurReveal";
+import ServicesConstellation from "@/components/ServicesConstellation";
+
+const servicesData = [
+  {
+    title: "Mutual Funds & SIP Planning",
+    description: "Build robust, long-term wealth using systematically structured mutual fund portfolios, tailored to balance growth targets with proper risk management."
+  },
+  {
+    title: "Specialised Investment Funds (SIF)",
+    description: "Gain access to bespoke, high-growth investment vehicles engineered for sophisticated investors seeking alternative asset class diversification."
+  },
+  {
+    title: "Portfolio Management Services (PMS)",
+    description: "Leverage personalized wealth management models with active monitoring, strategic allocation adjustments, and direct equity integration."
+  },
+  {
+    title: "Life Insurance & LIC Products",
+    description: "Secure your family's future and safeguard your capital with top-tier life protection policies, endowment options, and customizable term riders."
+  },
+  {
+    title: "Mediclaim & Health Insurance",
+    description: "Guard against sudden medical emergencies and rising healthcare inflation with comprehensive personal, family, and corporate health covers."
+  },
+  {
+    title: "Vehicle & Householder Insurance",
+    description: "Protect your physical assets, including automobiles and residential property, from accidental damage, theft, and third-party liabilities."
+  },
+  {
+    title: "Fixed Deposits",
+    description: "Secure fixed interest rates and guaranteed capital preservation through high-yield fixed deposit options backed by leading banking institutions."
+  },
+  {
+    title: "PNB Housing Finance",
+    description: "Unlock structural leverage and long-term homeownership support through customized home loans, construction finance, and refinancing services."
+  }
+];
+
+const faqData = [
+  {
+    question: "How is FinAnalysis different from a robo-advisor or standard investment app?",
+    answer: "While apps rely solely on static algorithms, we combine advanced data analytics (like our ML anomaly detection models) with over 35 years of human market experience. This means your portfolio gets both structural precision and real-world wisdom."
+  },
+  {
+    question: "What does the SEBI-certified Mutual Fund Distributor model mean for me?",
+    answer: "It ensures all mutual fund advisory, distribution, and systematic transactions are fully compliant with SEBI regulations, structured, and aligned with standard security requirements, guaranteeing absolute transparency."
+  },
+  {
+    question: "What dimensions are used to score my investment portfolio?",
+    answer: "We evaluate your portfolio on 5 core pillars: Goal Alignment, Asset Allocation, Diversification, Systematic Investment Plan (SIP) Discipline, and Fee Efficiency to give you a clear, comprehensive scorecard."
+  },
+  {
+    question: "Is there any charge for the basic portfolio evaluation?",
+    answer: "Our basic manual portfolio scorecard and anomaly check is completely free. We charge a premium tier fee only for automated recurring alerts, continuous monitoring, and structured portfolio optimization strategies."
+  },
+  {
+    question: "How do I get started with a consultation?",
+    answer: "You can book a live video demo using the button in the hero section or drop us an email at contact@finanalysis.in. We will schedule a personalized session to analyze your current assets."
+  }
+];
 
 export default function Home() {
   const [count, setCount] = useState(0);
@@ -44,6 +104,83 @@ export default function Home() {
       lenis.destroy();
       cancelAnimationFrame(rafId);
     };
+  }, []);
+
+  // Services scroll sync tracking
+  const [activeService, setActiveService] = useState(0);
+  const serviceRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const triggerPoint = window.innerHeight * 0.55; // trigger slightly below mid viewport
+      let currentActive = 0;
+
+      serviceRefs.current.forEach((ref, idx) => {
+        if (!ref) return;
+        const rect = ref.getBoundingClientRect();
+        if (rect.top <= triggerPoint) {
+          currentActive = idx;
+        }
+      });
+
+      // Auto-activate last items if user reaches the bottom of the page
+      const scrollPosition = window.scrollY;
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+      if (windowHeight + scrollPosition >= documentHeight - 80) {
+        currentActive = servicesData.length - 1;
+      }
+
+      setActiveService(currentActive);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Footer clock tracking
+  const [currentTime, setCurrentTime] = useState("");
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      const options: Intl.DateTimeFormatOptions = {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+        timeZone: "Asia/Kolkata",
+      };
+      setCurrentTime(now.toLocaleTimeString("en-US", options));
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Footer visibility tracking to hide chatbot smoothly
+  const footerRef = useRef<HTMLDivElement>(null);
+  const [isFooterIntersecting, setIsFooterIntersecting] = useState(false);
+
+  // FAQ accordion active state
+  const [activeFaq, setActiveFaq] = useState<number | null>(null);
+
+  useEffect(() => {
+    const footer = footerRef.current;
+    if (!footer) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsFooterIntersecting(entry.isIntersecting);
+      },
+      {
+        threshold: 0.05,
+      }
+    );
+
+    observer.observe(footer);
+    return () => observer.disconnect();
   }, []);
 
   const triggerEnd = () => {
@@ -304,22 +441,9 @@ export default function Home() {
 
       {/* Hero Section */}
       <div className="relative z-10 flex-1 flex flex-col justify-center items-center px-6 pt-36 pb-48 text-center max-w-5xl mx-auto">
-        {/* Pill Badge (Blur-in) */}
-        <div
-          className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-emerald-500/30 bg-black/40 text-slate-200 text-sm font-medium tracking-wide mb-8 shadow-lg backdrop-blur-md select-none transition-all duration-[1000ms] ease-out ${
-            isLoaded ? "opacity-100 blur-none scale-100" : "opacity-0 blur-md scale-95"
-          } delay-[500ms]`}
-        >
-          <span>Now live –</span>
-          <span className="text-[#00ffd1] font-semibold">Finsync AI</span>
-          <svg className="w-3.5 h-3.5 text-[#00ffd1] ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </div>
-
         {/* Heading (Blur-in) */}
         <h1
-          className={`text-5xl md:text-8xl font-normal tracking-tight mb-8 leading-none text-white font-clash transition-all duration-[1200ms] ease-out ${
+          className={`text-5xl md:text-8xl font-normal tracking-tight mt-30 mb-8 leading-none text-white font-clash transition-all duration-[1200ms] ease-out ${
             isLoaded ? "opacity-100 blur-none scale-100" : "opacity-0 blur-lg scale-95"
           } delay-[700ms]`}
         >
@@ -358,21 +482,21 @@ export default function Home() {
           } delay-[1200ms]`}
         >
           {/* Main Statements */}
-          <div className="max-w-4xl text-center mb-20 flex flex-col gap-6 font-clash">
+          <ScrollBlurReveal className="max-w-4xl text-center mb-20 flex flex-col gap-6 font-clash">
             <p className="text-xl md:text-3xl text-white font-normal leading-relaxed">
-              Your investment research is scattered across spreadsheets, documents, emails, and fragmented systems.
+              For over 35 years, the name De has stood for one thing in personal finance — trust.
             </p>
             <p className="text-xl md:text-3xl text-slate-400 font-normal leading-relaxed">
-              You're dealing with operational inefficiencies, data silos, compliance headaches, and unprotected institutional knowledge.
+              Today, as the needs of investors evolve, we’re embracing the future with data-driven planning, technology-enabled insights, and a renewed commitment to what matters most: your financial future.
             </p>
             <p className="text-2xl md:text-4xl text-[#00ffd1] font-normal leading-relaxed mt-4 font-chillax">
-              This is where Bipsync comes in.
+              We've got everything covered.
             </p>
-          </div>
+          </ScrollBlurReveal>
           {/* 2-Column Grid Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 w-full items-start relative">
             {/* Left Column: 3 Feature Cards */}
-            <div className="lg:col-span-5 flex flex-col gap-5 py-20">
+            <ScrollBlurReveal className="lg:col-span-5 flex flex-col gap-5 py-20">
               {/* Card 1: Capture & Centralize */}
               <div className="relative group border border-emerald-500/20 bg-slate-950/20 hover:bg-slate-950/40 p-6 rounded-2xl flex flex-col gap-2 transition-all duration-300 shadow-lg backdrop-blur-xl hover:shadow-[0_0_20px_rgba(16,185,129,0.15)]">
                 <div className="absolute top-6 right-6 text-[#00ffd1] group-hover:scale-110 transition-transform duration-300">
@@ -425,10 +549,10 @@ export default function Home() {
                   Leverage your team's collective intelligence at scale to surface insights and track workflows.
                 </p>
               </div>
-            </div>
+            </ScrollBlurReveal>
 
             {/* Right Column: Video Showcase */}
-            <div className="lg:col-span-7 relative flex items-center justify-center lg:sticky lg:top-[12rem] h-auto lg:h-[550px] w-full">
+            <ScrollBlurReveal className="lg:col-span-7 relative flex items-center justify-center lg:sticky lg:top-[12rem] h-auto lg:h-[550px] w-full">
               {/* Ambient backing glow */}
               <div className="absolute -inset-2 pointer-events-none" />
               <div className="relative p-2.5 overflow-hidden w-full h-full flex items-center justify-center">
@@ -441,7 +565,7 @@ export default function Home() {
                   className="w-full h-full object-cover shadow-inner"
                 />
               </div>
-            </div>
+            </ScrollBlurReveal>
           </div>
         </div>
       </div>
@@ -458,16 +582,16 @@ export default function Home() {
           <div className="w-full max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             
             {/* Left Image: me.jpeg */}
-            <div className="lg:col-span-3 flex justify-center lg:justify-start order-2 lg:order-1">
+            <ScrollBlurReveal className="lg:col-span-3 flex justify-center lg:justify-start order-2 lg:order-1">
               <img 
                 src="/assets/me.jpeg" 
                 alt="Me" 
                 className="w-full max-w-[280px] lg:max-w-full h-auto object-cover rounded-2xl shadow-2xl"
               />
-            </div>
+            </ScrollBlurReveal>
 
             {/* Center Text Column */}
-            <div className="lg:col-span-5 flex flex-col items-center justify-center order-1 lg:order-2">
+            <ScrollBlurReveal className="lg:col-span-5 flex flex-col items-center justify-center order-1 lg:order-2 w-full">
               <div className="max-w-[460px] flex flex-col gap-8 text-sm md:text-[15px] text-white leading-relaxed font-sans text-left">
                 <p>
                   <span className="font-bold text-white">Arindam De</span> began this journey in 1989 in the insurance and financial services space, building a practice rooted in long-term client relationships at a time when financial planning was still a privilege of the few. From 2004 onwards, he expanded into mutual funds — bringing the same discipline and depth that defined his insurance practice into the world of market-linked investments. Today, he operates across the full spectrum of financial services: Mutual Funds, Specialised Investment Funds, Portfolio Management Services, Life Insurance, Mediclaim, Vehicle Insurance, Householder Insurance, Fixed Deposits, and PNB Housing Finance. His client relationships aren't measured in transactions. They're measured in decades.
@@ -478,16 +602,16 @@ export default function Home() {
 
                 </p>
               </div>
-            </div>
+            </ScrollBlurReveal>
 
             {/* Right Image: about.jpeg */}
-            <div className="lg:col-span-4 flex justify-center lg:justify-end order-3 lg:order-3">
+            <ScrollBlurReveal className="lg:col-span-4 flex justify-center lg:justify-end order-3 lg:order-3">
               <img 
                 src="/assets/about.jpeg" 
                 alt="About" 
                 className="w-full max-w-[540px] lg:max-w-full h-auto object-cover rounded-2xl shadow-2xl pointer-events-none"
               />
-            </div>
+            </ScrollBlurReveal>
 
           </div>
         </div>
@@ -498,6 +622,239 @@ export default function Home() {
         src="/assets/footer.mp4"
         isLoaded={isLoaded}
       />
+
+      {/* Services Sticky Constellation Section */}
+      <div className="w-full bg-black relative z-10 pt-32 pb-[50vh] overflow-visible">
+        <div className="w-full max-w-5xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-16 items-start relative">
+          
+          {/* Left Column: Sticky Constellation Graphic */}
+          <div className="lg:col-span-5 w-full flex flex-col justify-center items-center lg:sticky lg:top-[25%] py-6 lg:py-0 h-auto">
+            <ScrollBlurReveal className="w-full flex flex-col items-center gap-6">
+              <ServicesConstellation activeIndex={activeService} />
+              <div className="text-[10px] md:text-sm uppercase text-white font-clash font-mono text-center">
+                Active Node: 0{activeService + 1} / 08
+              </div>
+            </ScrollBlurReveal>
+          </div>
+
+          {/* Right Column: Title and 8 Scrollable Items */}
+          <div className="lg:col-span-7 flex flex-col gap-12 w-full">
+            <ScrollBlurReveal className="flex flex-col gap-4 text-left">
+              <span className="text-[10px] md:text-sm uppercase text-white font-mono font-bold font-clash">
+                Services & Solutions
+              </span>
+              <h2 className="text-3xl md:text-5xl font-normal leading-tight text-white font-clash">
+                Comprehensive wealth planning under one roof.
+              </h2>
+              <p className="text-slate-400 text-sm md:text-base max-w-xl font-sans mt-2">
+                We combine decades of personal finance trust with modern technology-backed analysis to ensure you capture and compound growth securely.
+              </p>
+            </ScrollBlurReveal>
+
+            {/* List of 8 Services */}
+            <div className="flex flex-col border-t border-white/10 w-full mt-6">
+              {servicesData.map((service, idx) => {
+                const isActive = idx === activeService;
+                return (
+                  <div
+                    key={idx}
+                    ref={(el) => { serviceRefs.current[idx] = el; }}
+                    className={`py-8 border-b border-white/10 transition-all duration-500 flex flex-col text-left cursor-default ${
+                      isActive ? "opacity-100" : "opacity-30 hover:opacity-50"
+                    }`}
+                  >
+                    <div className="flex justify-between items-center w-full gap-4">
+                      <div className="flex items-center gap-6 md:gap-8">
+                        {/* Number Index */}
+                        <span className={`text-xs md:text-sm font-mono tracking-wider transition-colors duration-500 ${
+                          isActive ? "text-[#00ffd1]" : "text-slate-500"
+                        }`}>
+                          0{idx + 1}
+                        </span>
+                        {/* Service Title */}
+                        <h3 className={`text-lg md:text-2xl font-normal tracking-wide transition-colors duration-500 font-clash ${
+                          isActive ? "text-white" : "text-slate-300"
+                        }`}>
+                          {service.title}
+                        </h3>
+                      </div>
+                      
+                      {/* Plus/Minus Indicator */}
+                      <span className={`text-xl transition-transform duration-500 ${
+                        isActive ? "text-[#00ffd1] rotate-45" : "text-slate-500"
+                      }`}>
+                        +
+                      </span>
+                    </div>
+
+                    {/* Accordion description container (Modern CSS Grid transition) */}
+                    <div className={`grid transition-all duration-[500ms] ease-in-out ${
+                      isActive ? "grid-rows-[1fr] opacity-100 mt-4" : "grid-rows-[0fr] opacity-0"
+                    }`}>
+                      <div className="overflow-hidden">
+                        <p className="text-xs md:text-sm text-slate-400 leading-relaxed max-w-xl pl-12 md:pl-16 font-sans">
+                          {service.description}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          
+        </div>
+      </div>
+
+      {/* Why Us Section */}
+      <div className="w-full bg-black relative z-10 py-32 overflow-hidden">
+        {/* Soft background glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-[radial-gradient(circle,rgba(168,85,247,0.06)_0%,transparent_75%)] pointer-events-none select-none" />
+
+        <div className="w-full max-w-5xl mx-auto px-6 flex flex-col items-center text-center relative z-10">
+          <ScrollBlurReveal className="flex flex-col items-center">
+            <h2 className="text-4xl md:text-6xl font-normal leading-tight text-white font-clash mb-12">
+              Why us?
+            </h2>
+            <p className="text-xl md:text-3xl text-slate-100 font-normal leading-relaxed max-w-4xl mx-auto font-sans tracking-wide">
+              Because your money deserves <span className="text-[#00ffd1] font-medium">more than an algorithm</span>. It deserves people who have seen market cycles, managed real portfolios through real crises, and still show up — <span className="text-[#00ffd1] font-medium">every single time</span>.
+            </p>
+          </ScrollBlurReveal>
+        </div>
+      </div>
+
+      {/* FAQ Section */}
+      <div className="w-full bg-black relative z-10 py-32 border-t border-white/5 overflow-hidden">
+        <div className="w-full max-w-5xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-16 items-start relative">
+          
+          {/* Left Column: Title & Subtitle */}
+          <div className="lg:col-span-4 flex flex-col gap-4 text-left lg:sticky lg:top-[25%]">
+            <ScrollBlurReveal className="flex flex-col gap-4">
+              <span className="text-[10px] md:text-sm uppercase text-white font-clash font-bold">
+                Common Inquiries
+              </span>
+              <h2 className="text-3xl md:text-5xl font-normal leading-tight text-white font-clash">
+                Frequently Asked Questions
+              </h2>
+              <p className="text-slate-400 text-sm font-sans mt-2">
+                Can't find the answer you're looking for? Reach out to our advisory team at <a href="mailto:contact@finanalysis.in" className="text-white hover:text-[#00ffd1] transition font-mono">contact@finanalysis.in</a>.
+              </p>
+            </ScrollBlurReveal>
+          </div>
+
+          {/* Right Column: Interactive Accordion List */}
+          <div className="lg:col-span-8 flex flex-col w-full border-t border-white/10 mt-6 lg:mt-0">
+            {faqData.map((faq, idx) => {
+              const isOpen = activeFaq === idx;
+              return (
+                <div
+                  key={idx}
+                  className="border-b border-white/10 py-6 flex flex-col text-left transition-colors duration-300"
+                >
+                  <button
+                    onClick={() => setActiveFaq(isOpen ? null : idx)}
+                    className="flex justify-between items-center w-full gap-4 text-left focus:outline-none group"
+                  >
+                    <h3 className={`text-base md:text-lg font-normal tracking-wide transition-colors duration-300 font-clash ${
+                      isOpen ? "text-white" : "text-slate-300 group-hover:text-white"
+                    }`}>
+                      {faq.question}
+                    </h3>
+                    
+                    {/* Expand/Collapse Chevron Indicator */}
+                    <span className={`text-xl md:text-2xl transition-transform duration-500 text-slate-500 ${
+                      isOpen ? "text-[#00ffd1] rotate-180" : "group-hover:text-white"
+                    }`}>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </span>
+                  </button>
+
+                  {/* Accordion description container (Modern CSS Grid transition) */}
+                  <div className={`grid transition-all duration-[500ms] ease-in-out ${
+                    isOpen ? "grid-rows-[1fr] opacity-100 mt-4" : "grid-rows-[0fr] opacity-0"
+                  }`}>
+                    <div className="overflow-hidden">
+                      <p className="text-xs md:text-sm text-slate-400 leading-relaxed font-sans pr-4">
+                        {faq.answer}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+        </div>
+      </div>
+
+      {/* Footer Section */}
+      <footer ref={footerRef} className="w-full bg-black border-t border-white/5 relative z-10 pt-24 pb-0 overflow-hidden">
+        {/* Top Columns Grid */}
+        <div className="w-full max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-5 gap-12 text-sm font-sans mb-20 text-slate-400 text-left">
+          {/* Location & Time */}
+          <div className="flex flex-col gap-2.5">
+            <span className="text-white font-medium text-xs tracking-wider uppercase font-mono">India</span>
+            <span className="text-slate-300 font-normal text-sm font-mono">{currentTime || "22:55:56"}</span>
+            <span className="text-slate-500 text-xs font-mono">(GMT+5:30)</span>
+          </div>
+
+          {/* About */}
+          <div className="flex flex-col gap-2.5">
+            <span className="text-white font-medium text-xs tracking-wider uppercase font-mono">About</span>
+            <a href="#about" className="text-slate-400 hover:text-white transition duration-200 text-sm">About Us</a>
+            <a href="#" className="text-slate-400 hover:text-white transition duration-200 text-sm">Process</a>
+          </div>
+
+          {/* Projects */}
+          <div className="flex flex-col gap-2.5">
+            <span className="text-white font-medium text-xs tracking-wider uppercase font-mono flex items-center gap-1">
+              Projects<span className="text-[9px] text-[#00ffd1] font-mono leading-none align-super">(4)</span>
+            </span>
+            <a href="#" className="text-slate-400 hover:text-white transition duration-200 text-sm">Services</a>
+            <a href="#" className="text-slate-400 hover:text-white transition duration-200 text-sm">Pricing</a>
+          </div>
+
+          {/* Socials */}
+          <div className="flex flex-col gap-2.5">
+            <span className="text-white font-medium text-xs tracking-wider uppercase font-mono">Socials</span>
+            <a href="#" className="text-slate-400 hover:text-white transition duration-200 text-sm">Instagram</a>
+            <a href="#" className="text-slate-400 hover:text-white transition duration-200 text-sm">LinkedIn</a>
+            <a href="#" className="text-slate-400 hover:text-white transition duration-200 text-sm">Newsletter</a>
+            <a href="#" className="text-slate-400 hover:text-white transition duration-200 text-sm">Medium</a>
+          </div>
+
+          {/* Contact */}
+          <div className="flex flex-col gap-2.5">
+            <span className="text-white font-medium text-xs tracking-wider uppercase font-mono">Contact</span>
+            <a href="mailto:contact@finanalysis.in" className="text-slate-400 hover:text-white transition duration-200 text-sm break-all font-mono">
+              contact@finanalysis.in
+            </a>
+          </div>
+        </div>
+
+        {/* Middle Divider Row */}
+        <div className="flex flex-col md:flex-row justify-between items-center w-full border-t border-white/10 max-w-5xl mx-auto px-6 py-6 text-xs text-slate-500 font-sans gap-4">
+          <span>©2026 FinAnalysis</span>
+          <div className="flex gap-6">
+            <a href="#" className="hover:text-white transition duration-200">Privacy</a>
+            <a href="#" className="hover:text-white transition duration-200">Terms</a>
+            <a href="#" className="hover:text-white transition duration-200">Cookies</a>
+          </div>
+          <span>Website by <a href="https://arddev.in" target="_blank" rel="noopener noreferrer" className="hover:text-white font-bold transition duration-200">ard.dev</a></span>
+        </div>
+
+        {/* Big Brand Logo Text */}
+        <div className="w-full overflow-hidden flex justify-center items-end relative h-[14vw] min-h-[100px] mt-10">
+          {/* Ambient backing glow centered under the big logo */}
+          <div className="absolute bottom-[-10vw] left-1/2 -translate-x-1/2 w-[60vw] h-[20vw] rounded-full bg-[radial-gradient(circle,rgba(0,255,209,0.12)_0%,transparent_70%)] pointer-events-none select-none" />
+          
+          <h1 className="font-chillax text-[18vw] font-bold text-white tracking-tighter leading-none select-none translate-y-[20%] text-center uppercase">
+            FinAnalysis
+          </h1>
+        </div>
+      </footer>
 
       {/* Preloader Overlay Screen (Slides down smoothly) */}
       {!preloaderGone && (
@@ -510,7 +867,7 @@ export default function Home() {
           <div className="flex justify-between items-start w-full">
             <div className="flex items-center gap-4">
               <div className="flex flex-col text-left">
-                <span className="text-sm font-bold text-white tracking-wide">Arijit De</span>
+                <span className="text-sm font-bold text-white tracking-wide">Arijit De ©2026</span>
               </div>
             </div>
           </div>
@@ -540,7 +897,13 @@ export default function Home() {
       )}
       {/* Floating Chatbot Widget */}
       {isLoaded && (
-        <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end">
+        <div 
+          className={`fixed bottom-6 right-6 z-40 flex flex-col items-end transition-all duration-500 ease-out ${
+            isFooterIntersecting 
+              ? "opacity-0 translate-y-10 scale-90 pointer-events-none" 
+              : "opacity-100 translate-y-0 scale-100 pointer-events-auto"
+          }`}
+        >
           {/* Chatbot Modal */}
           {isChatOpen && (
             <div className="w-80 md:w-96 h-[450px] md:h-[500px] mb-4 rounded-3xl border border-white/15 bg-transparent backdrop-blur-xl shadow-2xl overflow-hidden flex flex-col transition-all duration-300 transform scale-100 opacity-100 origin-bottom-right">

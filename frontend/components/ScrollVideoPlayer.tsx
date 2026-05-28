@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
+import ScrollBlurReveal from './ScrollBlurReveal';
 
 interface ScrollVideoPlayerProps {
   src: string;
@@ -101,14 +102,16 @@ export default function ScrollVideoPlayer({ src, isLoaded }: ScrollVideoPlayerPr
             isLoaded ? 'opacity-100' : 'opacity-0'
           }`}
         >
-          <video
-            ref={videoRef}
-            src={src}
-            muted
-            playsInline
-            preload="auto"
-            className="w-full h-full object-cover pointer-events-none"
-          />
+          <ScrollBlurReveal className="w-full h-full">
+            <video
+              ref={videoRef}
+              src={src}
+              muted
+              playsInline
+              preload="auto"
+              className="w-full h-full object-cover pointer-events-none"
+            />
+          </ScrollBlurReveal>
         </div>
       </div>
     </div>
