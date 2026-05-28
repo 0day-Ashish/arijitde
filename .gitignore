@@ -1,0 +1,11 @@
+.env
+.env.local
+backend/.env
+frontend/.env.local
+ml-service/.env
+**/node_modules
+**/__pycache__
+ml-service/venv
+.DS_Store
+**/.DS_Store
+/.DS_Store

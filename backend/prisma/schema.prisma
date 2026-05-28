@@ -1,0 +1,161 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id          String       @id @default(uuid())
+  phone       String?      @unique
+  email       String?      @unique
+  name        String?
+  role        Role         @default(GUEST)
+  googleId    String?      @unique
+  createdAt   DateTime     @default(now())
+  assessments Assessment[]
+  portfolios  Portfolio[]
+  leads       Lead[]
+  payments    Payment[]
+  client      Client?
+}
+
+enum Role {
+  GUEST
+  CLIENT
+  ADMIN
+}
+
+model Assessment {
+  id         String      @id @default(uuid())
+  userId     String
+  age        Int
+  goal       Goal
+  createdAt  DateTime    @default(now())
+  user       User        @relation(fields: [userId], references: [id])
+  portfolios Portfolio[]
+}
+
+enum Goal {
+  WEALTH_CREATION
+  RETIREMENT
+  SHORT_TERM
+  LONG_TERM
+  EXPLORING
+}
+
+model Portfolio {
+  id           String         @id @default(uuid())
+  userId       String
+  assessmentId String
+  uploadType   UploadType
+  createdAt    DateTime       @default(now())
+  user         User           @relation(fields: [userId], references: [id])
+  assessment   Assessment     @relation(fields: [assessmentId], references: [id])
+  rows         PortfolioRow[]
+  score        Score?
+  mlResult     MLResult?
+}
+
+enum UploadType {
+  EXCEL
+  MANUAL
+}
+
+model PortfolioRow {
+  id           String    @id @default(uuid())
+  portfolioId  String
+  fundName     String
+  type         FundType
+  startDate    DateTime
+  sipAmount    Float
+  invested     Float
+  currentValue Float
+  portfolio    Portfolio @relation(fields: [portfolioId], references: [id])
+}
+
+enum FundType {
+  SIP
+  LUMPSUM
+}
+
+model Score {
+  id              String   @id @default(uuid())
+  portfolioId     String   @unique
+  total           Int
+  goalAlignment   Int
+  assetAlloc      Int
+  diversification Int
+  discipline      Int
+  efficiency      Int
+  tag             ScoreTag
+  insights        Json
+  createdAt       DateTime @default(now())
+  portfolio       Portfolio @relation(fields:[portfolioId], references:[id])
+}
+
+enum ScoreTag {
+  ALIGNED
+  MODERATE
+  NEEDS_REVIEW
+  NEEDS_STRUCTURING
+}
+
+model MLResult {
+  id          String    @id @default(uuid())
+  portfolioId String    @unique
+  portfolio   Portfolio @relation(fields: [portfolioId], references: [id])
+}
+
+model Lead {
+  id        String     @id @default(uuid())
+  userId    String
+  scoreId   String?
+  name      String
+  phone     String
+  slot      DateTime?
+  status    LeadStatus @default(NEW)
+  notes     String?
+  createdAt DateTime   @default(now())
+  user      User       @relation(fields: [userId], references: [id])
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  CONVERTED
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  userId        String
+  amount        Float
+  utrId         String?
+  screenshotUrl String?
+  status        PaymentStatus @default(PENDING)
+  approvedBy    String?
+  createdAt     DateTime      @default(now())
+  user          User          @relation(fields: [userId], references: [id])
+}
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Client {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  activatedAt  DateTime @default(now())
+  advisorNotes String?
+  activePlan   String?
+  user         User     @relation(fields: [userId], references: [id])
+}
+
