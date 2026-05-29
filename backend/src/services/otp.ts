@@ -1,13 +1,14 @@
+import { randomInt } from 'crypto';
 import { transporter } from './email';
 
-// Memory store for OTPs: email (lowercase) -> { otp: string, expiresAt: Date }
-const otpStore = new Map<string, { otp: string; expiresAt: Date }>();
+// Memory store for OTPs: email (lowercase) -> { otp: string, expiresAt: Date, attempts: number }
+const otpStore = new Map<string, { otp: string; expiresAt: Date; attempts: number }>();
 
 /**
- * Generates a random 6-digit OTP string.
+ * Generates a cryptographically secure random 6-digit OTP string.
  */
 export function generateOTP(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return randomInt(100000, 999999).toString();
 }
 
 /**
@@ -40,13 +41,15 @@ export async function sendOTP(email: string, otp: string): Promise<void> {
  */
 export function saveOTP(email: string, otp: string): void {
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-  otpStore.set(email.toLowerCase(), { otp, expiresAt });
+  otpStore.set(email.toLowerCase(), { otp, expiresAt, attempts: 0 });
 }
 
 /**
  * Verifies if the OTP is correct and has not expired.
  * Removes OTP from the store upon successful or unsuccessful validation.
  */
+const MAX_OTP_ATTEMPTS = 5;
+
 export function verifyOTP(email: string, otp: string): boolean {
   const key = email.toLowerCase();
   const record = otpStore.get(key);
@@ -61,8 +64,15 @@ export function verifyOTP(email: string, otp: string): boolean {
     return false;
   }
 
+  // Check if max attempts exceeded
+  if (record.attempts >= MAX_OTP_ATTEMPTS) {
+    otpStore.delete(key);
+    return false;
+  }
+
   // Validate OTP
   if (record.otp !== otp) {
+    record.attempts += 1;
     return false;
   }
 

@@ -9,6 +9,8 @@ export interface AuthenticatedRequest extends Request {
     email: string | null;
     name: string | null;
     role: Role;
+    phone: string | null;
+    pan: string | null;
   };
 }
 
@@ -46,6 +48,8 @@ export async function authMiddleware(
         email: true,
         name: true,
         role: true,
+        phone: true,
+        pan: true,
       },
     });
 

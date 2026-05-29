@@ -41,7 +41,14 @@ router.get('/stats', async (req: AuthenticatedRequest, res: Response, next) => {
 router.get('/users', async (req: AuthenticatedRequest, res: Response, next) => {
   try {
     const users = await prisma.user.findMany({
-      include: {
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        phone: true,
+        pan: true,
+        role: true,
+        createdAt: true,
         assessments: {
           orderBy: { createdAt: 'desc' },
         },
@@ -142,12 +149,13 @@ router.post('/users/:id/role', async (req: AuthenticatedRequest, res: Response, 
 const updateClientProfileSchema = z.object({
   advisorNotes: z.string().optional(),
   activePlan: z.string().optional(),
+  pan: z.string().optional(),
 });
 
 router.post('/users/:id/client-profile', async (req: AuthenticatedRequest, res: Response, next) => {
   try {
     const { id } = z.object({ id: z.string().uuid('Invalid user ID format') }).parse(req.params);
-    const { advisorNotes, activePlan } = updateClientProfileSchema.parse(req.body);
+    const { advisorNotes, activePlan, pan } = updateClientProfileSchema.parse(req.body);
 
     const userExists = await prisma.user.findUnique({
       where: { id },
@@ -159,6 +167,13 @@ router.post('/users/:id/client-profile', async (req: AuthenticatedRequest, res: 
         error: 'User not found',
       });
       return;
+    }
+
+    if (pan !== undefined) {
+      await prisma.user.update({
+        where: { id },
+        data: { pan: pan.trim() === '' ? null : pan.trim().toUpperCase() }
+      });
     }
 
     const clientProfile = await prisma.client.upsert({

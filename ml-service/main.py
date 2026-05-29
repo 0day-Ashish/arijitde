@@ -83,7 +83,9 @@ def analyse_portfolio(req: AnalyseRequest):
 
 @app.post("/retrain", response_model=RetrainResponse)
 def retrain_model(x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key")):
-    admin_key = os.getenv("ADMIN_KEY", "admin_secret_key")
+    admin_key = os.getenv("ADMIN_KEY")
+    if not admin_key:
+        raise HTTPException(status_code=500, detail="Server misconfiguration: ADMIN_KEY not set")
     if not x_admin_key or x_admin_key != admin_key:
         raise HTTPException(status_code=403, detail="Forbidden: Invalid Admin Key")
         

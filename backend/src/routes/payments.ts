@@ -49,7 +49,7 @@ const upload = multer({
 // Zod schemas
 const createPaymentSchema = z.object({
   amount: z.preprocess((val) => Number(val), z.number().positive('Amount must be positive')),
-  utrId: z.string().min(1, 'UTR ID is required'),
+  utrId: z.string().min(1, 'UTR ID is required').optional(),
 });
 
 const getPaymentsQuerySchema = z.object({
@@ -79,23 +79,16 @@ router.post(
   },
   async (req: AuthenticatedRequest, res: Response, next) => {
     try {
-      if (!req.file) {
-        res.status(400).json({
-          success: false,
-          error: 'Screenshot file is required',
-        });
-        return;
-      }
-
       const validated = createPaymentSchema.parse(req.body);
       const userId = req.user!.id;
-      const screenshotUrl = `/uploads/${req.file.filename}`;
+      const screenshotUrl = req.file ? `/uploads/${req.file.filename}` : null;
+      const utrId = validated.utrId || `MOCK-UTR-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
       const payment = await prisma.payment.create({
         data: {
           userId,
           amount: validated.amount,
-          utrId: validated.utrId,
+          utrId,
           screenshotUrl,
           status: PaymentStatus.PENDING,
         },

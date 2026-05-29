@@ -2,7 +2,19 @@ import { prisma } from './lib/prisma';
 import { Role } from '@prisma/client';
 
 async function main() {
-  const email = '0day.ashish@gmail.com'.toLowerCase();
+  const email = process.argv[2]?.toLowerCase();
+
+  if (!email) {
+    console.error('Usage: ts-node set-admin.ts <email>');
+    console.error('Example: ts-node set-admin.ts admin@example.com');
+    process.exit(1);
+  }
+
+  // Basic email format check
+  if (!email.includes('@') || !email.includes('.')) {
+    console.error('Error: Invalid email format');
+    process.exit(1);
+  }
   
   const user = await prisma.user.upsert({
     where: { email },
@@ -12,11 +24,10 @@ async function main() {
     create: {
       email,
       role: Role.ADMIN,
-      name: 'Ashish Ranjan Das',
     },
   });
 
-  console.log('Successfully set/created admin user:', user);
+  console.log('Successfully set/created admin user:', user.id, user.email);
   process.exit(0);
 }
 

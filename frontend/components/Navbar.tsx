@@ -90,14 +90,9 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
                   Dashboard
                 </a>
               ) : (
-                <>
-                  <a href="/onboarding" className="text-sm font-semibold text-primary hover:text-primary/80 transition duration-200">
-                    Sign In
-                  </a>
-                  <a href="/onboarding" className="px-5 py-2.5 bg-primary text-primary-foreground font-bold text-xs rounded-xl hover:bg-primary/90 transition duration-200 shadow-sm text-center">
-                    Get Started
-                  </a>
-                </>
+                <a href="/onboarding" className="px-5 py-2.5 bg-primary text-primary-foreground font-bold text-xs rounded-xl hover:bg-primary/90 transition duration-200 shadow-sm text-center">
+                  Get Started
+                </a>
               )}
             </div>
 
@@ -165,14 +160,9 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
                     Dashboard
                   </a>
                 ) : (
-                  <>
-                    <a href="/onboarding" className="flex-1 text-center py-2.5 text-sm font-semibold text-primary hover:text-primary/80 border border-border bg-card/50 transition duration-200">
-                      Sign In
-                    </a>
-                    <a href="/onboarding" className="flex-1 text-center py-2.5 text-sm font-bold text-white bg-primary rounded-xl hover:bg-primary/90 transition duration-200">
-                      Get Started
-                    </a>
-                  </>
+                  <a href="/onboarding" className="flex-1 text-center py-2.5 text-sm font-bold text-white bg-primary rounded-xl hover:bg-primary/90 transition duration-200">
+                    Get Started
+                  </a>
                 )}
               </div>
             </nav>

@@ -62,6 +62,7 @@ export default function AdminDashboard() {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [advisorNotes, setAdvisorNotes] = useState('');
   const [activePlan, setActivePlan] = useState('PREMIUM');
+  const [pan, setPan] = useState('');
   const [savingClientProfile, setSavingClientProfile] = useState(false);
   const [updatingUserRole, setUpdatingUserRole] = useState<string | null>(null);
 
@@ -203,7 +204,7 @@ export default function AdminDashboard() {
       const res = await fetch(`${backendUrl}/api/admin/users/${userId}/client-profile`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ advisorNotes, activePlan }),
+        body: JSON.stringify({ advisorNotes, activePlan, pan }),
       });
 
       if (!res.ok) {
@@ -214,9 +215,10 @@ export default function AdminDashboard() {
       const resData = await res.json();
       
       // Update local states
-      setUsersList((prev: any[]) => prev.map(u => u.id === userId ? { ...u, client: resData.data } : u));
+      const updatedPan = pan.trim() === '' ? null : pan.trim().toUpperCase();
+      setUsersList((prev: any[]) => prev.map(u => u.id === userId ? { ...u, pan: updatedPan, client: resData.data } : u));
       if (selectedUser?.id === userId) {
-        setSelectedUser((prev: any) => ({ ...prev, client: resData.data }));
+        setSelectedUser((prev: any) => ({ ...prev, pan: updatedPan, client: resData.data }));
       }
       
       alert('Client activation details updated successfully!');
@@ -339,6 +341,7 @@ export default function AdminDashboard() {
     setSelectedUser(user);
     setAdvisorNotes(user.client?.advisorNotes || '');
     setActivePlan(user.client?.activePlan || 'PREMIUM');
+    setPan(user.pan || '');
     setSelectedLeadId(null);
   };
 
@@ -384,13 +387,22 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-neutral-50 text-neutral-900 font-sans flex flex-col relative">
       {/* Header Panel */}
       <header className="w-full border-b border-neutral-200 bg-white px-6 py-4 flex items-center justify-between z-20">
-        <div className="flex items-center gap-3">
-          <a href="/" className="text-xl font-bold tracking-wider text-neutral-900 font-chillax select-none hover:opacity-90">
-            FinAnalysis
+        <div className="flex items-center gap-4">
+          <a
+            href="/"
+            className="flex items-center gap-1.5 px-3 py-1.5 border border-neutral-200 bg-white rounded-xl hover:bg-neutral-100 transition-all duration-200 text-xs font-semibold cursor-pointer text-neutral-600 hover:text-neutral-900"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Back to Home</span>
           </a>
-          <span className="px-2.5 py-1 text-[10px] uppercase font-bold tracking-widest bg-neutral-900 text-white rounded-md">
-            Console
-          </span>
+          <div className="hidden md:flex items-center gap-3">
+            <a href="/" className="text-xl font-bold tracking-wider text-neutral-900 font-chillax select-none hover:opacity-90">
+              FinAnalysis
+            </a>
+            <span className="px-2.5 py-1 text-[10px] uppercase font-bold tracking-widest bg-neutral-900 text-white rounded-md">
+              Console
+            </span>
+          </div>
         </div>
         
         <div className="flex items-center gap-4">
@@ -552,6 +564,7 @@ export default function AdminDashboard() {
                         <th className="px-6 py-4">Register Date</th>
                         <th className="px-6 py-4">User Details</th>
                         <th className="px-6 py-4">Role</th>
+                        <th className="px-6 py-4">Payment Status</th>
                         <th className="px-6 py-4">Activity Summary</th>
                         <th className="px-6 py-4 text-right">Actions</th>
                       </tr>
@@ -559,7 +572,7 @@ export default function AdminDashboard() {
                     <tbody className="divide-y divide-neutral-200">
                       {filteredUsers.length === 0 ? (
                         <tr>
-                          <td colSpan={5} className="px-6 py-12 text-center text-sm text-neutral-500 font-mono">
+                          <td colSpan={6} className="px-6 py-12 text-center text-sm text-neutral-500 font-mono">
                             No matching user accounts found in registry
                           </td>
                         </tr>
@@ -593,6 +606,21 @@ export default function AdminDashboard() {
                               }`}>
                                 {user.role}
                               </span>
+                            </td>
+                            <td className="px-6 py-5 whitespace-nowrap">
+                              {user.payments && user.payments.length > 0 ? (
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${
+                                  user.payments[0].status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/25' :
+                                  user.payments[0].status === 'REJECTED' ? 'bg-rose-500/10 text-rose-700 border border-rose-500/25' :
+                                  'bg-amber-500/10 text-amber-700 border border-amber-500/25'
+                                }`}>
+                                  {user.payments[0].status}
+                                </span>
+                              ) : (
+                                <span className="px-2 py-0.5 rounded text-[10px] font-medium text-neutral-400 bg-neutral-100 font-mono">
+                                  UNPAID
+                                </span>
+                              )}
                             </td>
                             <td className="px-6 py-5">
                               <div className="flex flex-wrap gap-2 text-[10px] font-mono text-neutral-500">
@@ -650,6 +678,9 @@ export default function AdminDashboard() {
                             {payment.user?.name || 'Anonymous User'}
                           </h3>
                           <p className="text-xs text-neutral-500 font-mono">{payment.user?.email}</p>
+                          {payment.user?.phone && (
+                            <p className="text-xs text-neutral-600 font-semibold font-mono mt-0.5">Phone: {payment.user.phone}</p>
+                          )}
                           <span className="text-[10px] text-neutral-500 font-mono mt-1 block">
                             Submitted: {new Date(payment.createdAt).toLocaleString()}
                           </span>
@@ -773,6 +804,26 @@ export default function AdminDashboard() {
                     <span className="text-neutral-500 block text-[10px] uppercase">Phone Number</span>
                     <span className="text-neutral-900">{selectedUser.phone || 'Not provided'}</span>
                   </div>
+                  <div>
+                    <span className="text-neutral-500 block text-[10px] uppercase">PAN Number</span>
+                    <span className="text-neutral-900 font-mono">{selectedUser.pan || 'Not provided'}</span>
+                  </div>
+                  <div>
+                    <span className="text-neutral-500 block text-[10px] uppercase">Payment Status</span>
+                    {selectedUser.payments && selectedUser.payments.length > 0 ? (
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${
+                        selectedUser.payments[0].status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/25' :
+                        selectedUser.payments[0].status === 'REJECTED' ? 'bg-rose-500/10 text-rose-700 border border-rose-500/25' :
+                        'bg-amber-500/10 text-amber-700 border border-amber-500/25'
+                      }`}>
+                        {selectedUser.payments[0].status}
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded text-[10px] font-medium text-neutral-400 bg-neutral-100 font-mono">
+                        UNPAID
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Role Switcher */}
@@ -836,6 +887,18 @@ export default function AdminDashboard() {
                       <option value="PRO">Pro Compounding Plan</option>
                       <option value="MAX">Max Portfolio Plan</option>
                     </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-neutral-900 uppercase block mb-1">PAN Number</label>
+                    <input
+                      type="text"
+                      maxLength={10}
+                      placeholder="Enter 10-digit PAN (e.g. ABCDE1234F)"
+                      value={pan}
+                      onChange={(e) => setPan(e.target.value.toUpperCase())}
+                      className="w-full text-xs font-mono border border-neutral-200 rounded-xl px-3 py-2.5 bg-white text-neutral-900 focus:outline-none"
+                    />
                   </div>
 
                   <div>

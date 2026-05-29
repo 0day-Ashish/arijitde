@@ -30,8 +30,9 @@ export function errorHandler(
 
   // Fallback for default error handling
   const status = res.statusCode >= 400 ? res.statusCode : 500;
+  const isProduction = process.env.NODE_ENV === 'production';
   res.status(status).json({
     success: false,
-    error: err.message || 'Internal Server Error',
+    error: isProduction ? 'Internal Server Error' : (err.message || 'Internal Server Error'),
   });
 }

@@ -5,6 +5,7 @@ import path from 'path';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import authRouter from './routes/auth';
 import assessRouter from './routes/assess';
 import portfolioRouter from './routes/portfolio';
@@ -13,6 +14,7 @@ import leadsRouter from './routes/leads';
 import paymentsRouter from './routes/payments';
 import adminRouter from './routes/admin';
 import { errorHandler } from './middleware/error';
+import { authMiddleware } from './middleware/auth';
 
 // Verify required environment variables
 const requiredEnvVars = [
@@ -38,17 +40,44 @@ if (!process.env.GMAIL_USER) {
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middlewares
+// ─── Security Middlewares ───────────────────────────────────────────────────
 app.use(helmet());
+
+// F13: CORS — require FRONTEND_URL in production, fallback only in dev
+const allowedOrigins = process.env.FRONTEND_URL
+  ? process.env.FRONTEND_URL.split(',').map((o) => o.trim())
+  : ['http://localhost:3000'];
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: allowedOrigins,
     credentials: true,
   })
 );
-app.use(express.json());
 
-// Routes
+// F8: Explicit JSON body size limit to prevent payload abuse
+app.use(express.json({ limit: '50kb' }));
+
+// F5: Global rate limiter — 200 requests per 15 min per IP
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: 'Too many requests, please try again later.' },
+});
+app.use(globalLimiter);
+
+// F5: Strict rate limiter for auth endpoints — 10 requests per 15 min per IP
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: 'Too many authentication attempts. Please wait and try again.' },
+});
+
+// ─── Routes ─────────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
   res.json({
     success: true,
@@ -56,10 +85,12 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Serve uploaded files statically
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// F7: Serve uploaded files behind authentication instead of publicly
+app.use('/uploads', authMiddleware, express.static(path.join(__dirname, '../uploads')));
 
-app.use('/api/auth', authRouter);
+// Apply strict auth rate limiter to auth routes
+app.use('/api/auth', authLimiter, authRouter);
+
 app.use('/api/assess', assessRouter);
 app.use('/api/portfolio', portfolioRouter);
 app.use('/api/score', scoreRouter);

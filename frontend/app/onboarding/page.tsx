@@ -29,6 +29,7 @@ export default function Onboarding() {
   const [showPassword, setShowPassword] = useState(false);
   const [showClientPassword, setShowClientPassword] = useState(false);
   const [isAdminLogin, setIsAdminLogin] = useState(false);
+  const [isUserLogin, setIsUserLogin] = useState(false);
 
   // Clock
   const [currentTime, setCurrentTime] = useState("");
@@ -183,7 +184,10 @@ export default function Onboarding() {
       const res = await fetch(`${backendUrl}/api/auth/otp/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ 
+          email,
+          isRegistration: !isUserLogin
+        }),
       });
       const data = await res.json();
 
@@ -216,7 +220,12 @@ export default function Onboarding() {
       const res = await fetch(`${backendUrl}/api/auth/otp/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp }),
+        body: JSON.stringify({ 
+          email, 
+          otp,
+          name: (!isUserLogin && !isAdminLogin) ? name : undefined,
+          password: (!isUserLogin && !isAdminLogin) ? password : undefined,
+        }),
       });
       const data = await res.json();
 
@@ -244,8 +253,8 @@ export default function Onboarding() {
     }
   };
 
-  // Existing Client Login (Simulated PAN + Password)
-  const handleClientLoginSubmit = (e: React.FormEvent) => {
+  // Existing Client Login (Real PAN + Password Auth)
+  const handleClientLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // PAN validation regex: 5 letters, 4 digits, 1 letter
@@ -265,17 +274,27 @@ export default function Onboarding() {
     setError(null);
     setLoading(true);
 
-    // Simulate Client Authenticating
-    setTimeout(() => {
-      localStorage.setItem("token", "client_simulated_jwt_token_auth_verified");
-      localStorage.setItem("user", JSON.stringify({
-        id: "simulated-client-id",
-        name: "Premium Portfolio Client",
-        role: "CLIENT",
-        pan: formattedPan
-      }));
-      window.location.href = "/dashboard/client";
-    }, 1000);
+    try {
+      const res = await fetch(`${backendUrl}/api/auth/pan/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pan: formattedPan, password: clientPassword }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        localStorage.setItem("token", data.data.token);
+        localStorage.setItem("user", JSON.stringify(data.data.user));
+        window.location.href = "/dashboard/client";
+      } else {
+        setError(data.error || "Login failed. Please check your credentials.");
+      }
+    } catch (err) {
+      setError("Error connecting to server. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -388,12 +407,12 @@ export default function Onboarding() {
         {flow === "NEW_USER" && (
           <div className="w-full max-w-md bg-white/30 border border-white/20 rounded-3xl p-8 shadow-2xl backdrop-blur-xl relative overflow-hidden">
             <h2 className="text-2xl font-semibold text-foreground mb-2 font-clash">
-              {isAdminLogin ? "Admin Sign In" : "Create Account"}
+              {isAdminLogin ? "Admin Sign In" : (isUserLogin ? "User Sign In" : "Create Account")}
             </h2>
             <p className="text-muted-foreground text-xs font-sans mb-6">
               {isAdminLogin 
                 ? "Enter your administrator email to receive a 6-digit OTP code." 
-                : "Complete details to receive an OTP and register your workspace."}
+                : (isUserLogin ? "Enter your email to receive a 6-digit OTP code." : "Complete details to receive an OTP and register your workspace.")}
             </p>
 
             {/* Error Message */}
@@ -405,7 +424,7 @@ export default function Onboarding() {
             )}
 
             <form onSubmit={handleRegisterSubmit} className="space-y-4 text-left">
-              {!isAdminLogin && (
+              {!isAdminLogin && !isUserLogin && (
                 <div>
                   <label className="block text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-1.5">Full Name</label>
                   <div className="relative">
@@ -437,7 +456,7 @@ export default function Onboarding() {
                 </div>
               </div>
 
-              {!isAdminLogin && (
+              {!isAdminLogin && !isUserLogin && (
                 <div>
                   <label className="block text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-1.5">Password</label>
                   <div className="relative">
@@ -466,7 +485,7 @@ export default function Onboarding() {
                 disabled={loading}
                 className="w-full mt-4 py-3.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs flex items-center justify-center gap-2 transition duration-200 cursor-pointer disabled:opacity-50"
               >
-                {loading ? "Sending OTP..." : (isAdminLogin ? "Send OTP Code" : "Verify & Register")}
+                {loading ? "Sending OTP..." : (isAdminLogin || isUserLogin ? "Send OTP Code" : "Verify & Register")}
               </button>
             </form>
 
@@ -482,6 +501,38 @@ export default function Onboarding() {
                 {/* Google OAuth Button Container */}
                 <div className="w-full flex flex-col items-center justify-center">
                   <div id="google-signin-button" className="w-full min-h-[40px] flex justify-center" />
+                </div>
+
+                <div className="mt-6 text-center text-xs text-muted-foreground font-sans">
+                  {isUserLogin ? (
+                    <>
+                      New to FinAnalysis?{" "}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsUserLogin(false);
+                          setError(null);
+                        }}
+                        className="text-primary font-semibold hover:underline cursor-pointer"
+                      >
+                        Register here
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      Already registered as user?{" "}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsUserLogin(true);
+                          setError(null);
+                        }}
+                        className="text-primary font-semibold hover:underline cursor-pointer"
+                      >
+                        Login here
+                      </button>
+                    </>
+                  )}
                 </div>
               </>
             )}
