@@ -40,6 +40,23 @@ router.post('/', authMiddleware, async (req: AuthenticatedRequest, res: Response
   }
 });
 
+// GET /api/assess
+router.get('/', authMiddleware, async (req: AuthenticatedRequest, res: Response, next) => {
+  try {
+    const userId = req.user!.id;
+    const assessments = await prisma.assessment.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json({
+      success: true,
+      data: assessments,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // GET /api/assess/:id
 const getAssessmentParamsSchema = z.object({
   id: z.string().uuid('Invalid assessment ID format'),

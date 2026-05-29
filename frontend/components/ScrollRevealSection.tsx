@@ -78,15 +78,15 @@ export default function ScrollRevealSection({ text, isLoaded }: ScrollRevealSect
   const totalChars = characters.length;
 
   return (
-    <div ref={containerRef} className="h-[250vh] w-full relative bg-black select-none">
+    <div ref={containerRef} className="h-[250vh] w-full relative select-none">
       {/* Sticky container that centers the text in viewport */}
-      <div className="sticky top-0 h-screen w-full flex items-center justify-center bg-black overflow-hidden">
+      <div className="sticky top-0 h-screen w-full flex items-center justify-center  overflow-hidden">
         <div 
           className={`w-full max-w-5xl px-6 transition-all duration-[1200ms] ease-out ${
             isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"
           } delay-[1300ms]`}
         >
-          <h2 className="text-3xl md:text-5xl lg:text-[54px] font-normal leading-[1.2] tracking-tight text-white font-clash text-left indent-[15%] md:indent-[35%]">
+          <h2 className="text-3xl md:text-5xl lg:text-[54px] font-normal leading-[1.2] tracking-tight text-[#0B3C5D] font-clash text-left indent-[15%] md:indent-[35%]">
             {characters.map((char, index) => {
               // Distribute reveal starts from 0% to 80% scroll progress.
               // This gives the remaining 20% scroll progress for the text to be fully illuminated

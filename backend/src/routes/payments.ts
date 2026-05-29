@@ -219,4 +219,21 @@ router.post('/:id/approve', authMiddleware, adminMiddleware, async (req: Authent
   }
 });
 
+// GET /api/payments/my-payments
+router.get('/my-payments', authMiddleware, async (req: AuthenticatedRequest, res: Response, next) => {
+  try {
+    const userId = req.user!.id;
+    const payments = await prisma.payment.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json({
+      success: true,
+      data: payments,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

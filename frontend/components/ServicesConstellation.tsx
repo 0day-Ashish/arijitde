@@ -22,7 +22,7 @@ export default function ServicesConstellation({ activeIndex }: ServicesConstella
     switch (index) {
       case 0: // Mutual Funds (Bar chart)
         return (
-          <g stroke="#00ffd1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none">
+          <g stroke="#2E7D32" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none">
             <path d="M192 208 v-12" />
             <path d="M200 208 v-20" />
             <path d="M208 208 v-28" />
@@ -30,37 +30,37 @@ export default function ServicesConstellation({ activeIndex }: ServicesConstella
         );
       case 1: // SIF (Diamond)
         return (
-          <path d="M200 185 l12 15 l-12 15 l-12 -15 z" fill="none" stroke="#00ffd1" strokeWidth="2" strokeLinejoin="round" />
+          <path d="M200 185 l12 15 l-12 15 l-12 -15 z" fill="none" stroke="#2E7D32" strokeWidth="2" strokeLinejoin="round" />
         );
       case 2: // PMS (Target/Analytics)
         return (
-          <g stroke="#00ffd1" strokeWidth="2" fill="none">
+          <g stroke="#2E7D32" strokeWidth="2" fill="none">
             <circle cx="200" cy="200" r="14" />
-            <circle cx="200" cy="200" r="5" fill="#00ffd1" />
+            <circle cx="200" cy="200" r="5" fill="#2E7D32" />
           </g>
         );
       case 3: // Life Insurance (Heart)
         return (
-          <path d="M200 212 s-14-9-14-17 a8 8 0 0 1 14 -5 a8 8 0 0 1 14 5 c0 8-14 17-14 17 z" fill="none" stroke="#00ffd1" strokeWidth="2" strokeLinejoin="round" />
+          <path d="M200 212 s-14-9-14-17 a8 8 0 0 1 14 -5 a8 8 0 0 1 14 5 c0 8-14 17-14 17 z" fill="none" stroke="#2E7D32" strokeWidth="2" strokeLinejoin="round" />
         );
       case 4: // Mediclaim (Medical Cross)
         return (
-          <path d="M193 200 h14 M200 193 v14" stroke="#00ffd1" strokeWidth="3.5" strokeLinecap="round" />
+          <path d="M193 200 h14 M200 193 v14" stroke="#2E7D32" strokeWidth="3.5" strokeLinecap="round" />
         );
       case 5: // Vehicle & Householder (Shield)
         return (
-          <path d="M188 190 h24 v10 c0 10-12 16-12 16 s-12-6-12-16 z" fill="none" stroke="#00ffd1" strokeWidth="2" strokeLinejoin="round" />
+          <path d="M188 190 h24 v10 c0 10-12 16-12 16 s-12-6-12-16 z" fill="none" stroke="#2E7D32" strokeWidth="2" strokeLinejoin="round" />
         );
       case 6: // Fixed Deposits (Safe lock)
         return (
-          <g stroke="#00ffd1" strokeWidth="2" fill="none" strokeLinejoin="round">
+          <g stroke="#2E7D32" strokeWidth="2" fill="none" strokeLinejoin="round">
             <rect x="188" y="190" width="24" height="20" rx="3" />
             <circle cx="200" cy="200" r="4" />
           </g>
         );
       case 7: // PNB Housing Finance (Home)
         return (
-          <path d="M186 212 v-14 l14 -10 l14 10 v14 z" fill="none" stroke="#00ffd1" strokeWidth="2" strokeLinejoin="round" />
+          <path d="M186 212 v-14 l14 -10 l14 10 v14 z" fill="none" stroke="#2E7D32" strokeWidth="2" strokeLinejoin="round" />
         );
       default:
         return null;
@@ -70,14 +70,14 @@ export default function ServicesConstellation({ activeIndex }: ServicesConstella
   return (
     <div className="w-full max-w-[340px] md:max-w-[400px] aspect-square relative select-none">
       {/* Background soft ambient glowing ring behind constellation */}
-      <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(0,255,209,0.06)_0%,transparent_70%)] animate-pulse pointer-events-none" />
+      <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(46,125,50,0.04)_0%,transparent_70%)] pointer-events-none" />
       
       <svg
         viewBox="0 0 400 400"
         className="w-full h-full relative z-10 overflow-visible"
       >
         {/* Subtle mesh background webbing (low opacity web lines) */}
-        <g stroke="rgba(255, 255, 255, 0.05)" strokeWidth="0.5" fill="none">
+        <g stroke="rgba(11, 60, 93, 0.04)" strokeWidth="0.5" fill="none">
           <line x1={NODES[0].x} y1={NODES[0].y} x2={NODES[4].x} y2={NODES[4].y} />
           <line x1={NODES[1].x} y1={NODES[1].y} x2={NODES[5].x} y2={NODES[5].y} />
           <line x1={NODES[2].x} y1={NODES[2].y} x2={NODES[6].x} y2={NODES[6].y} />
@@ -93,7 +93,7 @@ export default function ServicesConstellation({ activeIndex }: ServicesConstella
         </g>
 
         {/* Regular Outer Ring Connections */}
-        <g stroke="rgba(255, 255, 255, 0.12)" strokeWidth="1" fill="none">
+        <g stroke="rgba(11, 60, 93, 0.08)" strokeWidth="1" fill="none">
           {NODES.map((node, idx) => {
             const nextNode = NODES[(idx + 1) % NODES.length];
             return (
@@ -109,7 +109,7 @@ export default function ServicesConstellation({ activeIndex }: ServicesConstella
         </g>
 
         {/* Regular Center Spoke Connections */}
-        <g stroke="rgba(255, 255, 255, 0.12)" strokeWidth="1" fill="none">
+        <g stroke="rgba(11, 60, 93, 0.08)" strokeWidth="1" fill="none">
           {NODES.map((node, idx) => (
             <line
               key={`spoke-${idx}`}
@@ -121,15 +121,15 @@ export default function ServicesConstellation({ activeIndex }: ServicesConstella
           ))}
         </g>
 
-        {/* Active Spoke Connection (Glows neon) */}
+        {/* Active Spoke Connection */}
         <line
           x1={200}
           y1={200}
           x2={NODES[activeIndex].x}
           y2={NODES[activeIndex].y}
-          stroke="#00ffd1"
+          stroke="#2E7D32"
           strokeWidth="2.5"
-          className="svg-glow-filter transition-all duration-[600ms]"
+          className="transition-all duration-[600ms]"
         />
 
         {/* Active Ring Connections (Adjacent nodes) */}
@@ -138,18 +138,18 @@ export default function ServicesConstellation({ activeIndex }: ServicesConstella
           y1={NODES[(activeIndex - 1 + NODES.length) % NODES.length].y}
           x2={NODES[activeIndex].x}
           y2={NODES[activeIndex].y}
-          stroke="#00ffd1"
+          stroke="#2E7D32"
           strokeWidth="2.5"
-          className="svg-glow-filter transition-all duration-[600ms]"
+          className="transition-all duration-[600ms]"
         />
         <line
           x1={NODES[activeIndex].x}
           y1={NODES[activeIndex].y}
           x2={NODES[(activeIndex + 1) % NODES.length].x}
           y2={NODES[(activeIndex + 1) % NODES.length].y}
-          stroke="#00ffd1"
+          stroke="#2E7D32"
           strokeWidth="2.5"
-          className="svg-glow-filter transition-all duration-[600ms]"
+          className="transition-all duration-[600ms]"
         />
 
         {/* Outer Nodes */}
@@ -159,20 +159,19 @@ export default function ServicesConstellation({ activeIndex }: ServicesConstella
             <g key={`node-${idx}`} className="cursor-default">
               {isActive ? (
                 <>
-                  {/* Glowing backing anchor for active node */}
                   <circle
                     cx={node.x}
                     cy={node.y}
-                    r="12"
-                    fill="rgba(0, 255, 209, 0.25)"
-                    className="svg-glow-filter transition-all duration-[600ms]"
+                    r="10"
+                    fill="rgba(46, 125, 50, 0.2)"
+                    className="transition-all duration-[600ms]"
                   />
                   <circle
                     cx={node.x}
                     cy={node.y}
-                    r="8"
-                    fill="#00ffd1"
-                    className="svg-active-glow svg-pulse-active transition-all duration-[600ms]"
+                    r="6"
+                    fill="#2E7D32"
+                    className="transition-all duration-[600ms]"
                   />
                 </>
               ) : (
@@ -180,10 +179,10 @@ export default function ServicesConstellation({ activeIndex }: ServicesConstella
                   cx={node.x}
                   cy={node.y}
                   r="5"
-                  fill="#030014"
-                  stroke="rgba(255, 255, 255, 0.45)"
+                  fill="#FFFFFF"
+                  stroke="rgba(11, 60, 93, 0.35)"
                   strokeWidth="1.5"
-                  className="hover:stroke-[#00ffd1] hover:stroke-[2px] transition-all duration-300"
+                  className="hover:stroke-[#2E7D32] hover:stroke-[2px] transition-all duration-300"
                 />
               )}
             </g>
@@ -195,18 +194,17 @@ export default function ServicesConstellation({ activeIndex }: ServicesConstella
           cx="200"
           cy="200"
           r="38"
-          fill="#030014"
-          stroke="rgba(255, 255, 255, 0.15)"
+          fill="#FFFFFF"
+          stroke="rgba(11, 60, 93, 0.1)"
           strokeWidth="1.5"
         />
         <circle
           cx="200"
           cy="200"
           r="33"
-          fill="#080718"
-          stroke="#00ffd1"
+          fill="#F8FAFC"
+          stroke="#2E7D32"
           strokeWidth="1.5"
-          className="svg-glow-filter"
         />
 
         {/* Dynamic Center Icon */}

@@ -396,4 +396,26 @@ router.get('/:id', authMiddleware, async (req: AuthenticatedRequest, res: Respon
   }
 });
 
+// GET /api/portfolio
+router.get('/', authMiddleware, async (req: AuthenticatedRequest, res: Response, next) => {
+  try {
+    const userId = req.user!.id;
+    const portfolios = await prisma.portfolio.findMany({
+      where: { userId },
+      include: {
+        rows: true,
+        score: true,
+        mlResult: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json({
+      success: true,
+      data: portfolios,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

@@ -11,6 +11,7 @@ import portfolioRouter from './routes/portfolio';
 import scoreRouter from './routes/score';
 import leadsRouter from './routes/leads';
 import paymentsRouter from './routes/payments';
+import adminRouter from './routes/admin';
 import { errorHandler } from './middleware/error';
 
 // Verify required environment variables
@@ -64,6 +65,7 @@ app.use('/api/portfolio', portfolioRouter);
 app.use('/api/score', scoreRouter);
 app.use('/api/leads', leadsRouter);
 app.use('/api/payments', paymentsRouter);
+app.use('/api/admin', adminRouter);
 
 // Global Error Handler
 app.use(errorHandler);
