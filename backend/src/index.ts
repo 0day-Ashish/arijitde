@@ -13,6 +13,7 @@ import scoreRouter from './routes/score';
 import leadsRouter from './routes/leads';
 import paymentsRouter from './routes/payments';
 import adminRouter from './routes/admin';
+import chatRouter from './routes/chat';
 import { errorHandler } from './middleware/error';
 import { authMiddleware } from './middleware/auth';
 
@@ -23,6 +24,7 @@ const requiredEnvVars = [
   'GMAIL_APP_PASSWORD',
   'GOOGLE_CLIENT_ID',
   'GOOGLE_CLIENT_SECRET',
+  'GROK_API_KEY',
 ];
 
 for (const envVar of requiredEnvVars) {
@@ -89,6 +91,7 @@ app.use('/api/score', scoreRouter);
 app.use('/api/leads', leadsRouter);
 app.use('/api/payments', paymentsRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/chat', chatRouter);
 
 // Global Error Handler
 app.use(errorHandler);

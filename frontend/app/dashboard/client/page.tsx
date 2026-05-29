@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import SoftBoxBlurBg from "@/components/SoftBoxBlurBg";
 import GradualBlur from "@/components/GradualBlur";
+import ChatbotWidget from "@/components/ChatbotWidget";
 
 // Global Goals Config
 const GOAL_OPTIONS = [
@@ -142,13 +143,7 @@ export default function ClientDashboard() {
     { fundName: "", type: "SIP", startDate: "", sipAmount: 0, invested: 0, currentValue: 0 }
   ]);
 
-  // Chatbot states
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const [messages, setMessages] = useState([
-    { id: 1, sender: "bot", text: "Hello Premium Client! I am your FinSync AI assistant. Ask me anything about your current score or anomalies." }
-  ]);
-  const [inputVal, setInputVal] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
+
   const [currentTime, setCurrentTime] = useState("");
 
   // View full scorecard inline toggle
@@ -246,6 +241,12 @@ export default function ClientDashboard() {
 
       // 1. Me check
       const meRes = await fetch(`${backendUrl}/api/auth/me`, { headers });
+      if (meRes.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        window.location.href = "/onboarding";
+        return;
+      }
       const meData = await meRes.json();
       if (meRes.ok && meData.data?.role === "CLIENT") {
         const uObj = meData.data;
@@ -571,33 +572,6 @@ export default function ClientDashboard() {
     } finally {
       setApiLoading(false);
     }
-  };
-
-  // Chatbot
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputVal.trim()) return;
-
-    const userMsg = { id: Date.now(), sender: "user", text: inputVal };
-    setMessages(prev => [...prev, userMsg]);
-    setInputVal("");
-    setIsTyping(true);
-
-    setTimeout(() => {
-      let replyText = "I'm on it! Tell me what details you need regarding your portfolio, points, or booking.";
-      const query = inputVal.toLowerCase();
-      if (query.includes("points") || query.includes("wallet") || query.includes("finpoint")) {
-        replyText = `You currently have ${finPoints} FinPoints in your FinWallet. You can apply them on booking a call to get a discount (up to ₹499 off). You flip the Daily Wisdom card to earn more points!`;
-      } else if (query.includes("wisdom") || query.includes("quote") || query.includes("flip")) {
-        replyText = "The Daily Wisdom quotes card resets every 24 hours. Tapping the card flips it, giving you a daily wisdom quote and a reward of 100-150 FinPoints!";
-      } else if (query.includes("booking") || query.includes("call") || query.includes("schedule")) {
-        replyText = "Booking a call is instant. Click the 'Book Call Instantly' button. If you select 'Apply points discount', it deducts points from your wallet and decreases the cash booking fee.";
-      } else if (query.includes("score") || query.includes("diagnose") || query.includes("analyse")) {
-        replyText = `Your current score is ${scoreReport?.total || "N/A"}/100. You can upload an Excel/CSV spreadsheet or add rows manually to re-calculate your score as many times as you like.`;
-      }
-      setMessages(prev => [...prev, { id: Date.now(), sender: "bot", text: replyText }]);
-      setIsTyping(false);
-    }, 1000);
   };
 
   const handleSignOut = () => {
@@ -1767,71 +1741,7 @@ export default function ClientDashboard() {
       )}
 
       {/* Floating Chatbot Widget */}
-      <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end">
-        {isChatOpen && (
-          <div className="w-80 md:w-96 h-[450px] md:h-[500px] mb-4 rounded-3xl border border-neutral-200 bg-white/70 backdrop-blur-2xl shadow-xl overflow-hidden flex flex-col transition-all duration-300 transform scale-100 opacity-100 origin-bottom-right">
-            <div className="px-5 py-4 bg-transparent border-b border-neutral-200 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
-                <div className="flex flex-col text-left">
-                  <span className="text-sm font-bold text-primary tracking-wide font-clash">FinSync Advisor Bot</span>
-                  <span className="text-[10px] text-neutral-400 font-mono">AI COMPANION • ONLINE</span>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsChatOpen(false)}
-                className="text-neutral-400 hover:text-primary transition duration-150 p-1 cursor-pointer font-bold"
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 scrollbar-thin scrollbar-thumb-border select-text">
-              {messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`max-w-[80%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed border ${msg.sender === "user"
-                    ? "bg-primary/10 border-primary/15 text-primary rounded-br-none self-end text-left font-clash"
-                    : "bg-neutral-100 border-neutral-200 text-neutral-800 rounded-bl-none self-start text-left font-clash"
-                  }`}
-                >
-                  {msg.text}
-                </div>
-              ))}
-              {isTyping && (
-                <div className="bg-neutral-100 border border-neutral-200 text-neutral-500 px-4 py-2.5 rounded-2xl rounded-bl-none text-sm self-start flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce delay-[100ms]" />
-                  <span className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce delay-[200ms]" />
-                  <span className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce delay-[300ms]" />
-                </div>
-              )}
-            </div>
-
-            <form onSubmit={handleSendMessage} className="p-3 border-t border-neutral-200 bg-transparent flex gap-2">
-              <input
-                type="text"
-                value={inputVal}
-                onChange={(e) => setInputVal(e.target.value)}
-                placeholder="Ask about points, score, bookings..."
-                className="flex-1 px-4 py-2 text-xs rounded-xl bg-white/40 border border-neutral-200 text-neutral-800 focus:outline-none focus:border-primary placeholder-neutral-400 font-clash"
-              />
-              <button
-                type="submit"
-                className="w-9 h-9 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center transition duration-200 cursor-pointer font-sans text-xs font-bold"
-              >
-                Send
-              </button>
-            </form>
-          </div>
-        )}
-
-        <button
-          onClick={() => setIsChatOpen(!isChatOpen)}
-          className="w-14 h-14 rounded-full bg-primary hover:bg-primary/95 text-primary-foreground flex items-center justify-center shadow-2xl transition duration-200 hover:rotate-12 cursor-pointer relative"
-        >
-          <HelpCircle className="w-6 h-6 stroke-[1.5]" />
-        </button>
-      </div>
+      <ChatbotWidget />
 
       {/* Footer */}
       <footer className="relative z-10 w-full max-w-5xl mx-auto px-6 pb-12 mt-12 text-center border-t border-neutral-200/50 pt-8">

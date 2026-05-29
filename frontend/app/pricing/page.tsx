@@ -6,18 +6,12 @@ import Lenis from "lenis";
 import GradualBlur from "@/components/GradualBlur";
 import { Zap, Check } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import ChatbotWidget from "@/components/ChatbotWidget";
 
 export default function Pricing() {
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Chatbot & Stickman states
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const [messages, setMessages] = useState([
-    { id: 1, sender: "bot", text: "Hello! Welcome to our pricing workspace. Let me know if you need help choosing between the Lite, Pro, or Max plans!" }
-  ]);
-  const [inputVal, setInputVal] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
-  const [eyeOffset, setEyeOffset] = useState({ x: 0, y: 0 });
+
 
   // Lenis smooth scrolling initialization
   useEffect(() => {
@@ -90,55 +84,7 @@ export default function Pricing() {
     return () => observer.disconnect();
   }, []);
 
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputVal.trim()) return;
 
-    const userMsg = { id: Date.now(), sender: "user", text: inputVal };
-    setMessages(prev => [...prev, userMsg]);
-    setInputVal("");
-    setIsTyping(true);
-
-    // Mock response after delay
-    setTimeout(() => {
-      let replyText = "I'm here to help! Feel free to ask about our different tiers, credits usage, or custom requirements.";
-      const query = inputVal.toLowerCase();
-      if (query.includes("lite") || query.includes("9.90")) {
-        replyText = "The Lite plan ($9.90/mo) is great for hobbyists. It includes 1,000 credits/mo, 200 songs/mo, 30 days of storage, and core features like a priority generation queue and commercial license.";
-      } else if (query.includes("pro") || query.includes("17.90")) {
-        replyText = "The Pro plan ($17.90/mo) is our most popular option. It offers 3,000 credits/mo, 600 songs/mo, 90 days storage, everything in Lite, plus priority email support.";
-      } else if (query.includes("max") || query.includes("29.90")) {
-        replyText = "The Max plan ($29.90/mo) is built for professional studios. You get 10,000 credits/mo, 2,000 songs/mo, and 365 days of storage alongside priority email support and early model access.";
-      } else if (query.includes("save") || query.includes("discount") || query.includes("annual")) {
-        replyText = "Yes! Billing annually saves you up to 50% depending on the tier. Lite saves 33%, Pro saves 40%, and Max saves 50%!";
-      } else if (query.includes("hello") || query.includes("hi")) {
-        replyText = "Hello! Hope you're having a great day. Ask me anything about our plans!";
-      }
-
-      setMessages(prev => [...prev, { id: Date.now() + 1, sender: "bot", text: replyText }]);
-      setIsTyping(false);
-    }, 1000);
-  };
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      const anchorX = window.innerWidth - 60; // Approximate position of the stickman face
-      const anchorY = window.innerHeight - 60;
-      
-      const dx = e.clientX - anchorX;
-      const dy = e.clientY - anchorY;
-      const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-      
-      const maxOffset = 4; 
-      const offsetX = (dx / dist) * maxOffset;
-      const offsetY = (dy / dist) * maxOffset;
-      
-      setEyeOffset({ x: offsetX, y: offsetY });
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
 
   return (
     <main className="relative min-h-screen w-full bg-background text-foreground flex flex-col font-clash">
@@ -486,120 +432,7 @@ export default function Pricing() {
       </footer>
 
       {/* Floating Chatbot Widget */}
-      {isLoaded && (
-        <div 
-          className={`fixed bottom-6 right-6 z-40 flex flex-col items-end transition-all duration-500 ease-out ${
-            isFooterIntersecting 
-              ? "opacity-0 translate-y-10 scale-90 pointer-events-none" 
-              : "opacity-100 translate-y-0 scale-100 pointer-events-auto"
-          }`}
-        >
-          {/* Chatbot Modal */}
-          {isChatOpen && (
-            <div className="w-80 md:w-96 h-[450px] md:h-[500px] mb-4 rounded-3xl border border-border bg-card/90 backdrop-blur-xl shadow-2xl overflow-hidden flex flex-col transition-all duration-300 transform scale-100 opacity-100 origin-bottom-right">
-              {/* Header */}
-              <div className="px-5 py-4 bg-transparent border-b border-border flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <div className="flex flex-col text-left">
-                    <span className="text-sm font-bold text-foreground tracking-wide font-clash">Finsync AI</span>
-                    <span className="text-[10px] text-muted-foreground font-mono">AI AGENT • ONLINE</span>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setIsChatOpen(false)}
-                  className="text-muted-foreground hover:text-foreground transition duration-150 p-1"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              {/* Message List */}
-              <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 scrollbar-thin scrollbar-thumb-black/10 select-text">
-                {messages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`max-w-[80%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed border ${
-                      msg.sender === "user"
-                        ? "bg-primary rounded-br-none self-end text-left text-primary-foreground border-primary font-clash"
-                        : "bg-card rounded-bl-none self-start text-left text-foreground border-border font-clash"
-                    }`}
-                  >
-                    {msg.text}
-                  </div>
-                ))}
-                {isTyping && (
-                  <div className="bg-card border border-border px-4 py-2.5 rounded-2xl rounded-bl-none text-sm self-start flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 bg-foreground rounded-full animate-bounce delay-[100ms]" />
-                    <span className="w-1.5 h-1.5 bg-foreground rounded-full animate-bounce delay-[200ms]" />
-                    <span className="w-1.5 h-1.5 bg-foreground rounded-full animate-bounce delay-[300ms]" />
-                  </div>
-                )}
-              </div>
-
-              {/* Chat Input */}
-              <form onSubmit={handleSendMessage} className="p-3 border-t border-border bg-transparent flex gap-2">
-                <input
-                  type="text"
-                  value={inputVal}
-                  onChange={(e) => setInputVal(e.target.value)}
-                  placeholder="Ask about scoring criteria, anomalies..."
-                  className="flex-1 px-4 py-2 text-xs rounded-xl bg-background border border-border text-foreground focus:outline-none focus:border-primary placeholder-slate-400 font-clash"
-                />
-                <button
-                  type="submit"
-                  className="w-9 h-9 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center transition duration-200"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                  </svg>
-                </button>
-              </form>
-            </div>
-          )}
-
-          {/* Speech Bubble */}
-          {!isChatOpen && (
-            <div className="absolute bottom-16 right-2 mb-2.5 bg-primary border border-primary rounded-xl px-3 py-1.5 text-xs text-primary-foreground tracking-wide shadow-lg whitespace-nowrap select-none font-clash">
-              Ask me <span className="text-amber-400 font-semibold">anything !</span>
-              {/* Arrow */}
-              <div className="absolute bottom-[-5px] right-5 w-2.5 h-2.5 bg-primary rotate-45" />
-            </div>
-          )}
-
-          {/* Stickman Face Toggle Button */}
-          <button
-            onClick={() => setIsChatOpen(!isChatOpen)}
-            className="w-14 h-14 rounded-full bg-white hover:bg-slate-100 border border-slate-200 flex flex-col items-center justify-center shadow-lg shadow-black/20 hover:scale-105 active:scale-95 transition-all duration-200 group"
-          >
-            {/* Eyes Container */}
-            <div className="flex gap-2 mb-1.5 justify-center items-center">
-              {/* Left Eye */}
-              <div className="w-3.5 h-3.5 rounded-full border border-slate-300 bg-white flex items-center justify-center overflow-hidden">
-                <div
-                  className="w-2 h-2 rounded-full bg-slate-900 transition-transform duration-75 ease-out"
-                  style={{ transform: `translate(${eyeOffset.x}px, ${eyeOffset.y}px)` }}
-                />
-              </div>
-              {/* Right Eye */}
-              <div className="w-3.5 h-3.5 rounded-full border border-slate-300 bg-white flex items-center justify-center overflow-hidden">
-                <div
-                  className="w-2 h-2 rounded-full bg-slate-900 transition-transform duration-75 ease-out"
-                  style={{ transform: `translate(${eyeOffset.x}px, ${eyeOffset.y}px)` }}
-                />
-              </div>
-            </div>
-            {/* Smile */}
-            <div className="w-5 h-2 flex items-center justify-center">
-              <svg className="w-4 h-2 text-slate-800" viewBox="0 0 20 10" fill="none">
-                <path d="M 2 2 Q 10 9 18 2" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-              </svg>
-            </div>
-          </button>
-        </div>
-      )}
+      <ChatbotWidget isFooterIntersecting={isFooterIntersecting} />
 
       {isLoaded && (
         <GradualBlur preset="page-footer" height="3rem" style={{ zIndex: 30 }} />

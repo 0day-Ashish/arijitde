@@ -10,6 +10,7 @@ import ServicesConstellation from "@/components/ServicesConstellation";
 import { GoArrowDownRight } from "react-icons/go";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import ChatbotWidget from "@/components/ChatbotWidget";
 
 const servicesData = [
   {
@@ -77,14 +78,7 @@ export default function Home() {
   const scrollVideoContainerRef = useRef<HTMLDivElement | null>(null);
   const scrollVideoRef = useRef<HTMLVideoElement | null>(null);
 
-  // Chatbot & Stickman states
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const [messages, setMessages] = useState([
-    { id: 1, sender: "bot", text: "Hello! I am your FinAnalysis AI assistant. How can I help you optimize your portfolio today?" }
-  ]);
-  const [inputVal, setInputVal] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
-  const [eyeOffset, setEyeOffset] = useState({ x: 0, y: 0 });
+
 
   // Daily Rewards Section States
   const [isFlipped, setIsFlipped] = useState(false);
@@ -311,57 +305,7 @@ export default function Home() {
     }, 1000); // Match slide duration
   };
 
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputVal.trim()) return;
 
-    const userMsg = { id: Date.now(), sender: "user", text: inputVal };
-    setMessages(prev => [...prev, userMsg]);
-    setInputVal("");
-    setIsTyping(true);
-
-    // Mock response after delay
-    setTimeout(() => {
-      let replyText = "I'm here to help! Feel free to ask about portfolio scoring, ML anomaly detection, or pricing options.";
-      const query = inputVal.toLowerCase();
-      if (query.includes("score") || query.includes("dimension")) {
-        replyText = "FinAnalysis evaluates your portfolio on 5 key dimensions: Goal Alignment, Asset Allocation, Diversification, SIP Discipline, and Fee Efficiency. Each gets scored out of 20 points.";
-      } else if (query.includes("demo") || query.includes("book")) {
-        replyText = "To book a demo, click the 'Book a demo' button in the center. We'll show you how we connect Node.js, FastAPI, and Next.js for unified scoring.";
-      } else if (query.includes("anomaly") || query.includes("ml") || query.includes("fastapi")) {
-        replyText = "Our FastAPI ML microservice runs an isolation forest model in python to flag strange anomalies or structural issues in your portfolio records.";
-      } else if (query.includes("pricing") || query.includes("cost")) {
-        replyText = "Manual basic scoring is completely free! Automation and continuous scoring alerts are part of our premium membership tier.";
-      } else if (query.includes("hello") || query.includes("hi")) {
-        replyText = "Hello! Hope you're having a great day. Ask me anything about FinAnalysis!";
-      }
-
-      setMessages(prev => [...prev, { id: Date.now() + 1, sender: "bot", text: replyText }]);
-      setIsTyping(false);
-    }, 1000);
-  };
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      // Calculate direction vector from bottom-right towards cursor
-      const anchorX = window.innerWidth - 60; // Approximate position of the face
-      const anchorY = window.innerHeight - 60;
-
-      const dx = e.clientX - anchorX;
-      const dy = e.clientY - anchorY;
-      const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-
-      // Capped movement offset for the pupils
-      const maxOffset = 4;
-      const offsetX = (dx / dist) * maxOffset;
-      const offsetY = (dy / dist) * maxOffset;
-
-      setEyeOffset({ x: offsetX, y: offsetY });
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
 
   useEffect(() => {
     let startTime = Date.now();
@@ -1254,102 +1198,7 @@ export default function Home() {
       )}
 
       {/* Floating Chatbot Widget */}
-      {isLoaded && (
-        <div
-          className={`fixed bottom-6 right-6 z-40 flex flex-col items-end transition-all duration-500 ease-out ${isFooterIntersecting
-              ? "opacity-0 translate-y-10 scale-90 pointer-events-none"
-              : "opacity-100 translate-y-0 scale-100 pointer-events-auto"
-            }`}
-        >
-          {/* Chatbot Modal */}
-          {isChatOpen && (
-            <div className="w-80 md:w-96 h-[450px] md:h-[500px] mb-4 rounded-3xl border border-border bg-white/35 backdrop-blur-2xl shadow-xl overflow-hidden flex flex-col transition-all duration-300 transform scale-100 opacity-100 origin-bottom-right">
-              {/* Header */}
-              <div className="px-5 py-4 bg-transparent border-b border-border flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
-                  <div className="flex flex-col text-left">
-                    <span className="text-sm font-bold text-primary tracking-wide font-clash">Finsync AI</span>
-                    <span className="text-[10px] text-muted-foreground font-mono">AI AGENT • ONLINE</span>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setIsChatOpen(false)}
-                  className="text-muted-foreground hover:text-primary transition duration-150 p-1"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              {/* Message List */}
-              <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 scrollbar-thin scrollbar-thumb-border select-text">
-                {messages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`max-w-[80%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed border ${msg.sender === "user"
-                        ? "bg-primary/10 border-primary/15 text-primary rounded-br-none self-end text-left font-clash"
-                        : "bg-muted border-border text-foreground rounded-bl-none self-start text-left font-clash"
-                      }`}
-                  >
-                    {msg.text}
-                  </div>
-                ))}
-                {isTyping && (
-                  <div className="bg-muted border border-border text-muted-foreground px-4 py-2.5 rounded-2xl rounded-bl-none text-sm self-start flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce delay-[100ms]" />
-                    <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce delay-[200ms]" />
-                    <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce delay-[300ms]" />
-                  </div>
-                )}
-              </div>
-
-              {/* Chat Input */}
-              <form onSubmit={handleSendMessage} className="p-3 border-t border-border bg-transparent flex gap-2">
-                <input
-                  type="text"
-                  value={inputVal}
-                  onChange={(e) => setInputVal(e.target.value)}
-                  placeholder="Ask about scoring criteria, anomalies..."
-                  className="flex-1 px-4 py-2 text-xs rounded-xl bg-transparent border border-border text-foreground focus:outline-none focus:border-primary placeholder-slate-500 font-clash"
-                />
-                <button
-                  type="submit"
-                  className="w-9 h-9 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center transition duration-200"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                  </svg>
-                </button>
-              </form>
-            </div>
-          )}
-
-          {/* Speech Bubble */}
-          {!isChatOpen && (
-            <div className="absolute bottom-16 right-2 mb-2.5 bg-transparent border border-primary/10 rounded-xl px-3 py-1.5 text-xs text-black tracking-wide shadow-lg whitespace-nowrap select-none font-clash">
-              Ask me <span className="font-semibold">anything !</span>
-            </div>
-          )}
-
-          {/* Chatbot Toggle Button */}
-          <button
-            onClick={() => setIsChatOpen(!isChatOpen)}
-            className="w-14 h-14 rounded-full bg-[#3A8293] hover:bg-[#3A8293]/90 text-white flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer"
-          >
-            {isChatOpen ? (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            ) : (
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M18 2H6C3.79 2 2 3.79 2 6v6c0 2.21 1.79 4 4 4h9l5 4v-4c1.66 0 3-1.34 3-3V6c0-2.21-1.79-4-4-4z" />
-              </svg>
-            )}
-          </button>
-        </div>
-      )}
+      <ChatbotWidget isFooterIntersecting={isFooterIntersecting} />
 
       {/* Cookie Acceptance Banner */}
       {showCookieBox && isLoaded && (

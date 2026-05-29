@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import SoftBoxBlurBg from "@/components/SoftBoxBlurBg";
 import GradualBlur from "@/components/GradualBlur";
+import ChatbotWidget from "@/components/ChatbotWidget";
 
 // Goal mapping
 const GOAL_OPTIONS = [
@@ -82,13 +83,7 @@ export default function UserDashboard() {
   const [modalSubmitting, setModalSubmitting] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
 
-  // Chatbot states
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const [messages, setMessages] = useState([
-    { id: 1, sender: "bot", text: "Hello! I am your FinAnalysis AI assistant. How can I help you optimize your portfolio today?" }
-  ]);
-  const [inputVal, setInputVal] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
+
   const [currentTime, setCurrentTime] = useState("");
 
   // Quiz State
@@ -188,6 +183,12 @@ export default function UserDashboard() {
 
       // 1. Fetch user profile role updates
       const meRes = await fetch(`${backendUrl}/api/auth/me`, { headers });
+      if (meRes.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        window.location.href = "/onboarding";
+        return;
+      }
       const meData = await meRes.json();
       if (!meRes.ok) throw new Error("Auth verify failed");
 
@@ -348,35 +349,7 @@ export default function UserDashboard() {
     }
   };
 
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputVal.trim()) return;
 
-    const userMsg = { id: Date.now(), sender: "user", text: inputVal };
-    setMessages(prev => [...prev, userMsg]);
-    setInputVal("");
-    setIsTyping(true);
-
-    // Mock response after delay
-    setTimeout(() => {
-      let replyText = "I'm here to help! Feel free to ask about portfolio scoring, ML anomaly detection, or pricing options.";
-      const query = inputVal.toLowerCase();
-      if (query.includes("score") || query.includes("dimension")) {
-        replyText = "FinAnalysis evaluates your portfolio on 5 key dimensions: Goal Alignment, Asset Allocation, Diversification, SIP Discipline, and Fee Efficiency. Each gets scored out of 20 points.";
-      } else if (query.includes("demo") || query.includes("book") || query.includes("consult")) {
-        replyText = "To book a 1-on-1 strategy call with our SEBI-registered advisor Arijit De, simply complete the ₹499 booking on the dashboard Evaluation page!";
-      } else if (query.includes("anomaly") || query.includes("ml") || query.includes("fastapi")) {
-        replyText = "Our FastAPI ML microservice runs an isolation forest model in python to flag strange anomalies or structural issues in your portfolio records.";
-      } else if (query.includes("pricing") || query.includes("cost") || query.includes("pay")) {
-        replyText = "The optimization review fee is ₹499. You can complete the payment directly on this scorecard dashboard to unlock your booking!";
-      } else if (query.includes("hello") || query.includes("hi")) {
-        replyText = "Hello! Hope you're having a great day. Ask me anything about FinAnalysis!";
-      }
-
-      setMessages(prev => [...prev, { id: Date.now() + 1, sender: "bot", text: replyText }]);
-      setIsTyping(false);
-    }, 1000);
-  };
 
   // Submit Assessment Quiz (Stage 1)
   const handleQuizSubmit = async () => {
@@ -1468,95 +1441,7 @@ export default function UserDashboard() {
       )}
 
       {/* Floating Chatbot Widget */}
-      <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end">
-        {/* Chatbot Modal */}
-        {isChatOpen && (
-          <div className="w-80 md:w-96 h-[450px] md:h-[500px] mb-4 rounded-3xl border border-neutral-200 bg-white/70 backdrop-blur-2xl shadow-xl overflow-hidden flex flex-col transition-all duration-300 transform scale-100 opacity-100 origin-bottom-right">
-            {/* Header */}
-            <div className="px-5 py-4 bg-transparent border-b border-neutral-200 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
-                <div className="flex flex-col text-left">
-                  <span className="text-sm font-bold text-primary tracking-wide font-clash">Finsync AI</span>
-                  <span className="text-[10px] text-neutral-400 font-mono">AI AGENT • ONLINE</span>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsChatOpen(false)}
-                className="text-neutral-400 hover:text-primary transition duration-150 p-1 cursor-pointer"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Message List */}
-            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 scrollbar-thin scrollbar-thumb-border select-text">
-              {messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`max-w-[80%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed border ${msg.sender === "user"
-                    ? "bg-primary/10 border-primary/15 text-primary rounded-br-none self-end text-left font-clash"
-                    : "bg-neutral-100 border-neutral-200 text-neutral-800 rounded-bl-none self-start text-left font-clash"
-                    }`}
-                >
-                  {msg.text}
-                </div>
-              ))}
-              {isTyping && (
-                <div className="bg-neutral-100 border border-neutral-200 text-neutral-500 px-4 py-2.5 rounded-2xl rounded-bl-none text-sm self-start flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce delay-[100ms]" />
-                  <span className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce delay-[200ms]" />
-                  <span className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce delay-[300ms]" />
-                </div>
-              )}
-            </div>
-
-            {/* Chat Input */}
-            <form onSubmit={handleSendMessage} className="p-3 border-t border-neutral-200 bg-transparent flex gap-2">
-              <input
-                type="text"
-                value={inputVal}
-                onChange={(e) => setInputVal(e.target.value)}
-                placeholder="Ask about scoring criteria, anomalies..."
-                className="flex-1 px-4 py-2 text-xs rounded-xl bg-white/40 border border-neutral-200 text-neutral-800 focus:outline-none focus:border-primary placeholder-neutral-400 font-clash"
-              />
-              <button
-                type="submit"
-                className="w-9 h-9 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center transition duration-200 cursor-pointer"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              </button>
-            </form>
-          </div>
-        )}
-
-        {/* Speech Bubble */}
-        {!isChatOpen && (
-          <div className="absolute bottom-16 right-2 mb-2.5 bg-white/80 border border-primary/10 rounded-xl px-3 py-1.5 text-xs text-black tracking-wide shadow-lg whitespace-nowrap select-none font-clash">
-            Ask me <span className="font-semibold">anything !</span>
-          </div>
-        )}
-
-        {/* Chatbot Toggle Button */}
-        <button
-          onClick={() => setIsChatOpen(!isChatOpen)}
-          className="w-14 h-14 rounded-full bg-[#3A8293] hover:bg-[#3A8293]/90 text-white flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer"
-        >
-          {isChatOpen ? (
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          ) : (
-            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M18 2H6C3.79 2 2 3.79 2 6v6c0 2.21 1.79 4 4 4h9l5 4v-4c1.66 0 3-1.34 3-3V6c0-2.21-1.79-4-4-4z" />
-            </svg>
-          )}
-        </button>
-      </div>
+      <ChatbotWidget />
 
       {/* Footer Section */}
       <footer className="w-full bg-transparent border-t border-border/40 relative z-10 pt-24 pb-0 overflow-hidden mt-auto">
