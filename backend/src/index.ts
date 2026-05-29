@@ -68,14 +68,7 @@ const globalLimiter = rateLimit({
 });
 app.use(globalLimiter);
 
-// F5: Strict rate limiter for auth endpoints — 10 requests per 15 min per IP
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { success: false, error: 'Too many authentication attempts. Please wait and try again.' },
-});
+
 
 // ─── Routes ─────────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
@@ -88,8 +81,7 @@ app.get('/api/health', (req, res) => {
 // F7: Serve uploaded files behind authentication instead of publicly
 app.use('/uploads', authMiddleware, express.static(path.join(__dirname, '../uploads')));
 
-// Apply strict auth rate limiter to auth routes
-app.use('/api/auth', authLimiter, authRouter);
+app.use('/api/auth', authRouter);
 
 app.use('/api/assess', assessRouter);
 app.use('/api/portfolio', portfolioRouter);

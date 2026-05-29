@@ -186,7 +186,7 @@ export default function Onboarding() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           email,
-          isRegistration: !isUserLogin
+          isRegistration: !isUserLogin && !isAdminLogin
         }),
       });
       const data = await res.json();
@@ -477,6 +477,7 @@ export default function Onboarding() {
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
+                  <p className="text-[10px] text-muted-foreground mt-1.5 font-sans">Must be at least 8 characters with 1 uppercase letter and 1 number.</p>
                 </div>
               )}
 

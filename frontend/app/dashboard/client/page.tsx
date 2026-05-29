@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from "react";
+import Lenis from "lenis";
 import { 
   LogOut, 
   LayoutGrid, 
@@ -164,6 +165,27 @@ export default function ClientDashboard() {
     updateTime();
     const interval = setInterval(updateTime, 1000);
     return () => clearInterval(interval);
+  }, []);
+
+  // Lenis smooth scrolling initialization
+  useEffect(() => {
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // standard expo out
+      smoothWheel: true,
+    });
+
+    let rafId: number;
+    function raf(time: number) {
+      lenis.raf(time);
+      rafId = requestAnimationFrame(raf);
+    }
+    rafId = requestAnimationFrame(raf);
+
+    return () => {
+      lenis.destroy();
+      cancelAnimationFrame(rafId);
+    };
   }, []);
 
   // Auth Guard & Setup
@@ -695,8 +717,8 @@ export default function ClientDashboard() {
       return;
     }
 
-    if (!trimmedPass || trimmedPass.length < 6) {
-      setLoginError("Password must be at least 6 characters long.");
+    if (!trimmedPass || trimmedPass.length < 8 || !/[A-Z]/.test(trimmedPass) || !/[0-9]/.test(trimmedPass)) {
+      setLoginError("Password must be at least 8 characters long and contain at least one uppercase letter and one number.");
       return;
     }
 
@@ -1009,7 +1031,7 @@ export default function ClientDashboard() {
                         required
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="Minimum 6 characters"
+                        placeholder="Min 8 chars, 1 uppercase, 1 number"
                         disabled={authenticating}
                         className="w-full pl-4 pr-10 py-3 bg-white/60 border border-border rounded-xl focus:outline-none focus:border-primary text-sm text-neutral-900 placeholder:text-neutral-400 font-sans"
                       />

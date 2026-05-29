@@ -2,6 +2,7 @@ import { Router } from 'express';
 import type { Response } from 'express';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
+import rateLimit from 'express-rate-limit';
 import { generateOTP, sendOTP, saveOTP, verifyOTP } from '../services/otp';
 import { prisma } from '../lib/prisma';
 import { signToken } from '../lib/jwt';
@@ -12,13 +13,22 @@ import { OAuth2Client } from 'google-auth-library';
 const router = Router();
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
+// Rate limiter for sensitive auth endpoints only (not /me, /phone, /logout)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 15, // 15 attempts per window
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: 'Too many authentication attempts. Please wait 15 minutes and try again.' },
+});
+
 // 1. POST /api/auth/otp/send
 const sendOtpSchema = z.object({
   email: z.string().email('Invalid email address'),
   isRegistration: z.boolean().optional(),
 });
 
-router.post('/otp/send', async (req, res, next) => {
+router.post('/otp/send', authLimiter, async (req, res, next) => {
   try {
     const { email, isRegistration } = sendOtpSchema.parse(req.body);
     const formattedEmail = email.toLowerCase();
@@ -65,7 +75,7 @@ const verifyOtpSchema = z.object({
     .optional(),
 });
 
-router.post('/otp/verify', async (req, res, next) => {
+router.post('/otp/verify', authLimiter, async (req, res, next) => {
   try {
     const { email, otp, name, password } = verifyOtpSchema.parse(req.body);
     const formattedEmail = email.toLowerCase();
@@ -124,7 +134,7 @@ const googleAuthSchema = z.object({
   token: z.string().min(1, 'Google token is required'),
 });
 
-router.post('/google', async (req, res, next) => {
+router.post('/google', authLimiter, async (req, res, next) => {
   try {
     const { token } = googleAuthSchema.parse(req.body);
 
@@ -257,7 +267,7 @@ const panLoginSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 });
 
-router.post('/pan/login', async (req, res, next) => {
+router.post('/pan/login', authLimiter, async (req, res, next) => {
   try {
     const { pan, password } = panLoginSchema.parse(req.body);
     const formattedPan = pan.trim().toUpperCase();
@@ -331,7 +341,7 @@ const sendResetOtpSchema = z.object({
   email: z.string().email('Invalid email address'),
 });
 
-router.post('/password/reset/send-otp', async (req, res, next) => {
+router.post('/password/reset/send-otp', authLimiter, async (req, res, next) => {
   try {
     const { email } = sendResetOtpSchema.parse(req.body);
     const formattedEmail = email.toLowerCase();
@@ -372,7 +382,7 @@ const confirmResetSchema = z.object({
     .regex(/[0-9]/, 'Password must contain at least one number'),
 });
 
-router.post('/password/reset/confirm', async (req, res, next) => {
+router.post('/password/reset/confirm', authLimiter, async (req, res, next) => {
   try {
     const { email, otp, password } = confirmResetSchema.parse(req.body);
     const formattedEmail = email.toLowerCase();
