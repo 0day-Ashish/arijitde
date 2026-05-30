@@ -47,12 +47,27 @@ app.use(helmet());
 
 // F13: CORS — require FRONTEND_URL in production, fallback only in dev
 const allowedOrigins = process.env.FRONTEND_URL
-  ? process.env.FRONTEND_URL.split(',').map((o) => o.trim())
-  : ['http://localhost:3000'];
+  ? process.env.FRONTEND_URL.split(',').map((o) => o.trim().replace(/\/$/, ''))
+  : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002'];
 
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, postman, or curl requests)
+      if (!origin) return callback(null, true);
+      
+      const normalizedOrigin = origin.trim().replace(/\/$/, '');
+      const isAllowed = allowedOrigins.some(
+        (allowed) => allowed.replace(/\/$/, '') === normalizedOrigin
+      );
+      
+      if (isAllowed) {
+        callback(null, true);
+      } else {
+        console.warn(`CORS blocked request from origin: ${origin}. Allowed origins:`, allowedOrigins);
+        callback(null, false);
+      }
+    },
     credentials: true,
   })
 );
