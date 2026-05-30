@@ -12,11 +12,26 @@ interface Message {
 
 interface ChatbotWidgetProps {
   isFooterIntersecting?: boolean;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export default function ChatbotWidget({ isFooterIntersecting = false }: ChatbotWidgetProps) {
+export default function ChatbotWidget({ 
+  isFooterIntersecting = false,
+  isOpen,
+  onOpenChange
+}: ChatbotWidgetProps) {
   const [mounted, setMounted] = useState(false);
-  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
+
+  const isChatOpen = isOpen !== undefined ? isOpen : internalIsOpen;
+  const setIsChatOpen = (open: boolean) => {
+    if (onOpenChange) {
+      onOpenChange(open);
+    } else {
+      setInternalIsOpen(open);
+    }
+  };
   const [messages, setMessages] = useState<Message[]>([
     { id: 1, sender: "bot", text: "Hello! I am your FinAnalysis AI assistant. How can I help you optimize your portfolio today?" }
   ]);

@@ -11,6 +11,7 @@ import { GoArrowDownRight } from "react-icons/go";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ChatbotWidget from "@/components/ChatbotWidget";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 const servicesData = [
   {
@@ -84,12 +85,12 @@ export default function Home() {
   const [isFlipped, setIsFlipped] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [dailyQuote, setDailyQuote] = useState({ text: "", author: "" });
-  
+
   useEffect(() => {
     // Check if token exists
     const token = localStorage.getItem("token");
     setIsLoggedIn(!!token);
-    
+
     // Select daily quote based on calendar day
     const quotesList = [
       { text: "Do not save what is left after spending, but spend what is left after saving.", author: "Warren Buffett" },
@@ -123,6 +124,7 @@ export default function Home() {
   const [heroProgress, setHeroProgress] = useState(0);
   const [windowSize, setWindowSize] = useState({ width: 1200, height: 800 });
   const [expandedOption, setExpandedOption] = useState<string | null>(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -265,7 +267,7 @@ export default function Home() {
       if (!isNaN(duration) && duration > 0) {
         const scrollRange = rect.height - viewportHeight;
         const relativeScroll = -rect.top;
-        
+
         let progress = relativeScroll / scrollRange;
         progress = Math.max(0, Math.min(1, progress));
 
@@ -452,17 +454,8 @@ export default function Home() {
                     }`}>
                     <div className="overflow-hidden max-w-[320px] md:max-w-xl space-y-2.5 font-sans pr-4 leading-relaxed">
                       <p>
-                        FinAnalysis blends over 35 years of trusted advisory with modern analytics.
-                        <strong className="text-primary font-semibold"> Arindam De</strong> (since 1989) manages insurance, fixed deposits, and home loans.
-                        <strong className="text-primary font-semibold"> Arijit De</strong> (SEBI-certified MFD ARN-273396) brings computer science data analytics and systematic wealth planning.
+                        FinAnalysis blends over 35 years of trusted financial advisory with modern technology and data science. Founded on a legacy started by <strong className="text-primary font-semibold">Arindam De</strong> in 1989, we have transitioned across multiple market cycles to safeguard and grow client wealth. Today, <strong className="text-primary font-semibold">Arijit De</strong> (SEBI-certified Mutual Fund Distributor ARN-273396 and SIF distributor) integrates computer science analytics, systematic portfolio optimization, and structured asset allocation, delivering a modern, data-backed approach to wealth management that prior generations never had access to.
                       </p>
-                      <a
-                        href="#about"
-                        onClick={(e) => handleSmoothScroll(e, "#about")}
-                        className="inline-flex items-center gap-1 text-[#2E7D32] hover:text-[#2E7D32]/85 font-semibold font-mono text-xs md:text-sm uppercase tracking-wider group/link"
-                      >
-                        Learn More <span className="transform group-hover/link:translate-x-0.5 transition-transform duration-200">&rarr;</span>
-                      </a>
                     </div>
                   </div>
                 </div>
@@ -483,16 +476,8 @@ export default function Home() {
                     }`}>
                     <div className="overflow-hidden max-w-[320px] md:max-w-xl space-y-2.5 font-sans pr-4 leading-relaxed">
                       <p>
-                        We deliver structured, regulation-compliant wealth products:
-                        <span className="font-semibold text-primary"> Mutual Funds & SIPs, Specialized Investment Funds (SIF), PMS models, Mediclaim health policies, and Fixed Deposits.</span>
+                        We provide a comprehensive, fully regulated suite of financial and wealth creation solutions tailored to your unique lifecycle goals. This includes systematically managed <span className="font-semibold text-primary">Mutual Funds & SIP planning</span> for long-term compound growth, high-yield <span className="font-semibold text-primary">Fixed Deposits, Specialized Investment Funds (SIF)</span>, and <span className="font-semibold text-primary">Portfolio Management Services (PMS)</span> for sophisticated asset allocation. Additionally, we protect your family's future with robust <span className="font-semibold text-primary">Life Insurance (LIC), Mediclaim Health Insurance, Vehicle/Property Insurance</span>, and provide leverage options through <span className="font-semibold text-primary">PNB Housing Finance</span> home loans.
                       </p>
-                      <a
-                        href="#services"
-                        onClick={(e) => handleSmoothScroll(e, "#services")}
-                        className="inline-flex items-center gap-1 text-[#2E7D32] hover:text-[#2E7D32]/85 font-semibold font-mono text-xs md:text-sm uppercase tracking-wider group/link"
-                      >
-                        Learn More <span className="transform group-hover/link:translate-x-0.5 transition-transform duration-200">&rarr;</span>
-                      </a>
                     </div>
                   </div>
                 </div>
@@ -513,15 +498,8 @@ export default function Home() {
                     }`}>
                     <div className="overflow-hidden max-w-[320px] md:max-w-xl space-y-2.5 font-sans pr-4 leading-relaxed">
                       <p>
-                        Because your money deserves <span className="font-semibold text-primary">relationship-driven human advisors</span> who have guided portfolios through multiple real-world market cycles and crises — not just cold app algorithms.
+                        In an era dominated by cold robo-advisors and static investment apps, your hard-earned wealth deserves personalized, <span className="font-semibold text-primary">relationship-driven human advisory</span>. We exist to bridge the gap between human empathy and data precision. By standing by our clients through decades of market turbulence, recessions, and regulatory shifts, we prioritize multi-generational trust and structured planning. We don't just measure relationships in transactions; we measure them in decades of successful outcomes and financial security.
                       </p>
-                      <a
-                        href="#why-us"
-                        onClick={(e) => handleSmoothScroll(e, "#why-us")}
-                        className="inline-flex items-center gap-1 text-[#2E7D32] hover:text-[#2E7D32]/85 font-semibold font-mono text-xs md:text-sm uppercase tracking-wider group/link"
-                      >
-                        Learn More <span className="transform group-hover/link:translate-x-0.5 transition-transform duration-200">&rarr;</span>
-                      </a>
                     </div>
                   </div>
                 </div>
@@ -785,7 +763,7 @@ export default function Home() {
             <div className="flex-1 min-h-[300px] flex items-center justify-center relative">
               <div className="w-full h-full min-h-[300px] p-6 bg-white/30 rounded-2xl border border-border/50 flex flex-col justify-between gap-6 shadow-sm relative group overflow-hidden">
                 <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-xl pointer-events-none" />
-                
+
                 {/* Header */}
                 <div className="flex justify-between items-center border-b border-border/30 pb-3">
                   <div className="flex items-center gap-2">
@@ -801,15 +779,15 @@ export default function Home() {
                   <div className="relative w-36 h-36 flex items-center justify-center select-none">
                     <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
                       <circle cx="50" cy="50" r="40" stroke="rgba(147, 197, 253, 0.15)" strokeWidth="8" fill="transparent" />
-                      <circle 
-                        cx="50" 
-                        cy="50" 
-                        r="40" 
-                        stroke="#2E7D32" 
-                        strokeWidth="8" 
-                        fill="transparent" 
-                        strokeDasharray={251.2} 
-                        strokeDashoffset={251.2 * (1 - 0.78)} 
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="40"
+                        stroke="#2E7D32"
+                        strokeWidth="8"
+                        fill="transparent"
+                        strokeDasharray={251.2}
+                        strokeDashoffset={251.2 * (1 - 0.78)}
                         strokeLinecap="round"
                         className="transition-all duration-1000 ease-out"
                       />
@@ -833,7 +811,7 @@ export default function Home() {
                           <span className="font-mono">{metric.score}%</span>
                         </div>
                         <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                          <div 
+                          <div
                             className={`h-full ${metric.color} rounded-full transition-all duration-1000`}
                             style={{ width: `${metric.score}%` }}
                           />
@@ -960,28 +938,37 @@ export default function Home() {
       <div id="daily-rewards" className="w-full relative z-10 py-16 px-6 bg-transparent">
         <ScrollBlurReveal className="w-full max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-primary font-clash leading-tight mt-3">
-              Daily Wisdom & Rewards
-            </h2>
+            <div className="flex items-center justify-center gap-3">
+              <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-primary font-clash leading-tight mt-3">
+                Daily Wisdom & Rewards
+              </h2>
+              <div className="w-20 h-20 md:w-28 md:h-28 shrink-0 mt-3">
+                <DotLottieReact
+                  src="https://lottie.host/8866dfb7-4cf0-4918-88c1-8b34b9434bd7/qZLurleDmZ.lottie"
+                  loop
+                  autoplay
+                />
+              </div>
+            </div>
             <p className="text-[#64748B] text-sm leading-relaxed font-sans mt-3 max-w-xl mx-auto">
               Get a new financial quote every 24 hours. Click the card below to turn it over and claim your daily reward promo code!
             </p>
           </div>
 
           {/* Flippable Card Container */}
-          <div 
+          <div
             className="w-full max-w-xl mx-auto h-[320px] [perspective:1000px] cursor-pointer"
             onClick={() => setIsFlipped(!isFlipped)}
           >
-            <div 
+            <div
               className="relative w-full h-full duration-700 transition-transform"
-              style={{ 
-                transformStyle: 'preserve-3d', 
-                transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)' 
+              style={{
+                transformStyle: 'preserve-3d',
+                transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)'
               }}
             >
               {/* Front Side of Card */}
-              <div 
+              <div
                 className="absolute inset-0 w-full h-full p-8 md:p-12 rounded-3xl bg-white/35 backdrop-blur-2xl border border-border shadow-sm flex flex-col justify-between items-center text-center"
                 style={{ backfaceVisibility: 'hidden' }}
               >
@@ -1006,11 +993,11 @@ export default function Home() {
               </div>
 
               {/* Back Side of Card */}
-              <div 
+              <div
                 className="absolute inset-0 w-full h-full p-8 md:p-12 rounded-3xl bg-white/35 backdrop-blur-2xl border border-border shadow-sm flex flex-col justify-between items-center text-center"
-                style={{ 
+                style={{
                   backfaceVisibility: 'hidden',
-                  transform: 'rotateY(180deg)' 
+                  transform: 'rotateY(180deg)'
                 }}
               >
                 <div className="w-full flex justify-between items-center border-b border-border/20 pb-3">
@@ -1058,7 +1045,7 @@ export default function Home() {
                       <span>✓</span>
                     </div>
                   ) : (
-                    <a 
+                    <a
                       href="/onboarding"
                       onClick={(e) => e.stopPropagation()} // Stop click propagating to rotate card back
                       className="w-full py-3 bg-primary hover:bg-primary/95 text-primary-foreground text-center block rounded-xl text-[10px] md:text-xs font-bold uppercase tracking-wider transition-all duration-200"
@@ -1137,13 +1124,13 @@ export default function Home() {
       </div>
 
       {/* Scroll-Driven Video Playback Showcase */}
-      <div 
-        ref={scrollVideoContainerRef} 
+      <div
+        ref={scrollVideoContainerRef}
         className="relative w-full h-[180vh] bg-transparent overflow-visible mt-20"
       >
         {/* Sticky viewport container - Full Bleed */}
         <div className="sticky top-0 left-0 w-full h-screen overflow-hidden flex flex-col items-center justify-center">
-          
+
           {/* Video element container - Full Bleed */}
           <div className="relative w-full h-full bg-black">
             <video
@@ -1198,7 +1185,11 @@ export default function Home() {
       )}
 
       {/* Floating Chatbot Widget */}
-      <ChatbotWidget isFooterIntersecting={isFooterIntersecting} />
+      <ChatbotWidget
+        isFooterIntersecting={isFooterIntersecting}
+        isOpen={isChatOpen}
+        onOpenChange={setIsChatOpen}
+      />
 
       {/* Cookie Acceptance Banner */}
       {showCookieBox && isLoaded && (
