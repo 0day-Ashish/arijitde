@@ -80,11 +80,12 @@ router.post('/:portfolioId', authMiddleware, async (req: AuthenticatedRequest, r
       },
     });
 
-    // Call ML service at http://localhost:8001/analyse (POST) with feature vector
+    // Call ML service (POST) with feature vector
     // Wrap in try/catch, ML failure should not block scoring
     try {
+      const mlServiceUrl = process.env.ML_SERVICE_URL || 'http://localhost:8001';
       // Use globalThis.fetch natively available in Node 18+
-      fetch('http://localhost:8001/analyse', {
+      fetch(`${mlServiceUrl}/analyse`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
