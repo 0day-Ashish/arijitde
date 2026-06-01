@@ -304,7 +304,7 @@ export default function FDCalculator() {
       <Footer />
 
       {isLoaded && (
-        <GradualBlur preset="page-footer" height="3rem" style={{ zIndex: 30 }} />
+        <GradualBlur preset="page-footer" height="2rem" style={{ zIndex: 30 }} />
       )}
     </main>
   );

@@ -691,7 +691,7 @@ export default function Home() {
 
             <div className="shrink-0 relative z-10 w-full md:w-auto">
               <a
-                href="/onboarding"
+                href="/quiz"
                 className="w-full md:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-xs rounded-2xl transition duration-200 shadow-md uppercase tracking-wider group"
               >
                 <span>Start Quiz</span>
@@ -846,7 +846,7 @@ export default function Home() {
             </p>
             <div className="mt-6 flex flex-wrap gap-4">
               <a
-                href="/onboarding"
+                href="/quiz"
                 className="inline-flex items-center gap-2 px-6 py-3.5 bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-xs rounded-xl transition duration-200 shadow-md uppercase tracking-wider group"
               >
                 <span>Start Quiz</span>
@@ -1231,7 +1231,7 @@ export default function Home() {
       )}
 
       {isLoaded && (
-        <GradualBlur preset="page-footer" height="3rem" style={{ zIndex: 30 }} />
+        <GradualBlur preset="page-footer" height="2rem" style={{ zIndex: 30 }} />
       )}
     </main>
   );

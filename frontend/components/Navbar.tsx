@@ -81,6 +81,12 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
               >
                 Pricing
               </a>
+              <a 
+                href="/quiz" 
+                className={`hover:text-primary transition duration-200 ${activePath === '/quiz' ? 'text-primary font-bold' : ''}`}
+              >
+                Investor Quiz
+              </a>
             </nav>
 
             {/* Right: Desktop CTA Buttons */}
@@ -149,6 +155,13 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
                   } delay-[400ms]`}
               >
                 Pricing
+              </a>
+              <a
+                href="/quiz"
+                className={`hover:text-primary transition-all duration-300 transform ${isMobileMenuOpen ? "opacity-100 translate-x-0 font-clash" : "opacity-0 -translate-x-4"
+                  } delay-[450ms]`}
+              >
+                Investor Quiz
               </a>
               <hr className="border-border my-2" />
               <div
