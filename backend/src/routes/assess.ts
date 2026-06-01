@@ -12,11 +12,28 @@ const router = Router();
 const createAssessmentSchema = z.object({
   age: z.number().int().min(0, 'Age must be positive').max(120, 'Age is too high'),
   goal: z.nativeEnum(Goal),
+  ageRange: z.string().optional().nullable(),
+  lifeStage: z.string().optional().nullable(),
+  investmentTenure: z.string().optional().nullable(),
+  isCompletePortfolio: z.boolean().optional().nullable(),
+  investmentStyle: z.string().optional().nullable(),
+  expectedReturn: z.string().optional().nullable(),
+  riskBehavior: z.string().optional().nullable(),
 });
 
 router.post('/', authMiddleware, async (req: AuthenticatedRequest, res: Response, next) => {
   try {
-    const { age, goal } = createAssessmentSchema.parse(req.body);
+    const {
+      age,
+      goal,
+      ageRange,
+      lifeStage,
+      investmentTenure,
+      isCompletePortfolio,
+      investmentStyle,
+      expectedReturn,
+      riskBehavior,
+    } = createAssessmentSchema.parse(req.body);
     const userId = req.user!.id; // Guaranteed by authMiddleware
 
     const assessment = await prisma.assessment.create({
@@ -24,6 +41,13 @@ router.post('/', authMiddleware, async (req: AuthenticatedRequest, res: Response
         userId,
         age,
         goal,
+        ageRange: ageRange ?? null,
+        lifeStage: lifeStage ?? null,
+        investmentTenure: investmentTenure ?? null,
+        isCompletePortfolio: isCompletePortfolio ?? null,
+        investmentStyle: investmentStyle ?? null,
+        expectedReturn: expectedReturn ?? null,
+        riskBehavior: riskBehavior ?? null,
       },
     });
 
@@ -33,6 +57,13 @@ router.post('/', authMiddleware, async (req: AuthenticatedRequest, res: Response
         assessmentId: assessment.id,
         age: assessment.age,
         goal: assessment.goal,
+        ageRange: assessment.ageRange,
+        lifeStage: assessment.lifeStage,
+        investmentTenure: assessment.investmentTenure,
+        isCompletePortfolio: assessment.isCompletePortfolio,
+        investmentStyle: assessment.investmentStyle,
+        expectedReturn: assessment.expectedReturn,
+        riskBehavior: assessment.riskBehavior,
       },
     });
   } catch (error) {

@@ -5,6 +5,13 @@ from datetime import datetime
 GOAL_HORIZONS = {
     "WEALTH_CREATION": 120.0,
     "RETIREMENT": 240.0,
+    "HOUSE_PURCHASE": 60.0,
+    "CHILD_EDUCATION": 120.0,
+    "MARRIAGE": 36.0,
+    "PASSIVE_INCOME": 60.0,
+    "TAX_SAVING": 12.0,
+    "NOT_SURE_YET": 36.0,
+    # Legacy
     "SHORT_TERM": 24.0,
     "LONG_TERM": 60.0,
     "EXPLORING": 36.0
@@ -13,9 +20,16 @@ GOAL_HORIZONS = {
 GOAL_ENCODING = {
     "WEALTH_CREATION": 0.0,
     "RETIREMENT": 1.0,
-    "SHORT_TERM": 2.0,
-    "LONG_TERM": 3.0,
-    "EXPLORING": 4.0
+    "HOUSE_PURCHASE": 2.0,
+    "CHILD_EDUCATION": 3.0,
+    "MARRIAGE": 4.0,
+    "PASSIVE_INCOME": 5.0,
+    "TAX_SAVING": 6.0,
+    "NOT_SURE_YET": 7.0,
+    # Legacy
+    "SHORT_TERM": 8.0,
+    "LONG_TERM": 9.0,
+    "EXPLORING": 7.0
 }
 
 def build_feature_vector(rows: List[Dict[str, Any]], assessment: Dict[str, Any]) -> List[float]:

@@ -5,6 +5,18 @@ import { scoreDimension as scoreDiversification } from './diversification';
 import { scoreDimension as scoreDiscipline } from './discipline';
 import { scoreDimension as scoreEfficiency } from './efficiency';
 
+export interface AssessmentContext {
+  age: number;
+  goal: Goal | null;
+  ageRange?: string | null;
+  lifeStage?: string | null;
+  investmentTenure?: string | null;
+  isCompletePortfolio?: boolean | null;
+  investmentStyle?: string | null;
+  expectedReturn?: string | null;
+  riskBehavior?: string | null;
+}
+
 export interface ScoreResult {
   total: number;
   goalAlignment: number;
@@ -18,7 +30,7 @@ export interface ScoreResult {
 
 export function calculateScore(
   rows: PortfolioRow[],
-  assessment: { age: number; goal: Goal | null }
+  assessment: AssessmentContext
 ): ScoreResult {
   const goalResult = scoreGoalAlignment(rows, assessment);
   const assetResult = scoreAssetAllocation(rows, assessment);
@@ -30,7 +42,7 @@ export function calculateScore(
 
   // Determine Tag
   let tag: ScoreTag;
-  if (!assessment.goal || assessment.goal === Goal.EXPLORING) {
+  if (!assessment.goal || assessment.goal === Goal.EXPLORING || assessment.goal === Goal.NOT_SURE_YET) {
     tag = ScoreTag.NEEDS_STRUCTURING;
   } else if (total >= 75) {
     tag = ScoreTag.ALIGNED;

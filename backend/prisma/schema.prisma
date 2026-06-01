@@ -35,18 +35,32 @@ enum Role {
 }
 
 model Assessment {
-  id         String      @id @default(uuid())
-  userId     String
-  age        Int
-  goal       Goal
-  createdAt  DateTime    @default(now())
-  user       User        @relation(fields: [userId], references: [id])
-  portfolios Portfolio[]
+  id                  String      @id @default(uuid())
+  userId              String
+  age                 Int
+  goal                Goal
+  ageRange            String?
+  lifeStage           String?
+  investmentTenure    String?
+  isCompletePortfolio Boolean?
+  investmentStyle     String?
+  expectedReturn      String?
+  riskBehavior        String?
+  createdAt           DateTime    @default(now())
+  user                User        @relation(fields: [userId], references: [id])
+  portfolios          Portfolio[]
 }
 
 enum Goal {
   WEALTH_CREATION
   RETIREMENT
+  HOUSE_PURCHASE
+  CHILD_EDUCATION
+  MARRIAGE
+  PASSIVE_INCOME
+  TAX_SAVING
+  NOT_SURE_YET
+  // Legacy values for backward compatibility
   SHORT_TERM
   LONG_TERM
   EXPLORING

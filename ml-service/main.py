@@ -37,6 +37,13 @@ class PortfolioRowSchema(BaseModel):
 class AssessmentSchema(BaseModel):
     age: int
     goal: str
+    ageRange: Optional[str] = None
+    lifeStage: Optional[str] = None
+    investmentTenure: Optional[str] = None
+    isCompletePortfolio: Optional[bool] = None
+    investmentStyle: Optional[str] = None
+    expectedReturn: Optional[str] = None
+    riskBehavior: Optional[str] = None
 
 class AnalyseRequest(BaseModel):
     rows: List[PortfolioRowSchema]

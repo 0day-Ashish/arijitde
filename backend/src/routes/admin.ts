@@ -5,7 +5,7 @@ import { prisma } from '../lib/prisma';
 import { authMiddleware } from '../middleware/auth';
 import type { AuthenticatedRequest } from '../middleware/auth';
 import { adminMiddleware } from '../middleware/admin';
-import { Role, PaymentStatus } from '@prisma/client';
+import { Role, PaymentStatus, Prisma } from '@prisma/client';
 
 const router = Router();
 
@@ -149,7 +149,12 @@ router.post('/users/:id/role', async (req: AuthenticatedRequest, res: Response, 
 const updateClientProfileSchema = z.object({
   advisorNotes: z.string().optional(),
   activePlan: z.string().optional(),
-  pan: z.string().optional(),
+  pan: z.string()
+    .optional()
+    .transform((val) => val ? val.trim().toUpperCase() : undefined)
+    .refine((val) => val === undefined || val === '' || /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(val), {
+      message: 'Invalid PAN format. Must be 10 characters (e.g. ABCDE1234F) or empty to clear.',
+    }),
 });
 
 router.post('/users/:id/client-profile', async (req: AuthenticatedRequest, res: Response, next) => {
@@ -172,7 +177,7 @@ router.post('/users/:id/client-profile', async (req: AuthenticatedRequest, res: 
     if (pan !== undefined) {
       await prisma.user.update({
         where: { id },
-        data: { pan: pan.trim() === '' ? null : pan.trim().toUpperCase() }
+        data: { pan: pan === '' ? null : pan }
       });
     }
 
@@ -195,6 +200,15 @@ router.post('/users/:id/client-profile', async (req: AuthenticatedRequest, res: 
       data: clientProfile,
     });
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2002') {
+        res.status(400).json({
+          success: false,
+          error: 'This PAN number is already assigned to another user account.',
+        });
+        return;
+      }
+    }
     next(error);
   }
 });

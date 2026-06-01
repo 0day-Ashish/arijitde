@@ -31,13 +31,65 @@ import SoftBoxBlurBg from "@/components/SoftBoxBlurBg";
 import GradualBlur from "@/components/GradualBlur";
 import ChatbotWidget from "@/components/ChatbotWidget";
 
-// Global Goals Config
+// ──── Quiz Configuration ────
 const GOAL_OPTIONS = [
   { value: "WEALTH_CREATION", label: "Wealth Creation", desc: "Long-term compounding to build a substantial corpus", icon: Sparkles },
   { value: "RETIREMENT", label: "Retirement Planning", desc: "Securing financial independence for your post-work years", icon: ShieldCheck },
-  { value: "SHORT_TERM", label: "Short-Term Goals", desc: "Funding immediate capital needs (1-3 years)", icon: Calendar },
-  { value: "LONG_TERM", label: "Long-Term Goals", desc: "Buying a house, children's education, or other major life plans", icon: Sparkles },
-  { value: "EXPLORING", label: "Exploring Markets", desc: "Learning options and testing investment strategies", icon: CompassIcon },
+  { value: "HOUSE_PURCHASE", label: "House Purchase", desc: "Saving for your dream home", icon: Sparkles },
+  { value: "CHILD_EDUCATION", label: "Child Education", desc: "Building a corpus for your children's education", icon: Calendar },
+  { value: "MARRIAGE", label: "Marriage", desc: "Funding an upcoming marriage", icon: Sparkles },
+  { value: "PASSIVE_INCOME", label: "Passive Income", desc: "Generate steady returns from your investments", icon: Sparkles },
+  { value: "TAX_SAVING", label: "Tax Saving", desc: "Optimizing investments for tax efficiency", icon: ShieldCheck },
+  { value: "NOT_SURE_YET", label: "Not Sure Yet", desc: "Exploring and learning about investment options", icon: CompassIcon },
+];
+
+const AGE_RANGE_OPTIONS = [
+  { value: "BELOW_25", label: "Below 25", numericAge: 22 },
+  { value: "25_35", label: "25–35", numericAge: 30 },
+  { value: "36_45", label: "36–45", numericAge: 40 },
+  { value: "46_60", label: "46–60", numericAge: 53 },
+  { value: "ABOVE_60", label: "Above 60", numericAge: 65 },
+];
+
+const LIFE_STAGE_OPTIONS = [
+  { value: "STUDENT", label: "Student" },
+  { value: "EARLY_CAREER", label: "Early Career Professional" },
+  { value: "MID_CAREER", label: "Mid-Career Professional" },
+  { value: "BUSINESS_OWNER", label: "Business Owner" },
+  { value: "HIGH_LEVEL_PROFESSIONAL", label: "High-Level Professional (10+ Yrs)" },
+  { value: "RETIRED", label: "Retired" },
+];
+
+const INVESTMENT_TENURE_OPTIONS = [
+  { value: "LESS_THAN_3_YEARS", label: "Less than 3 Years" },
+  { value: "3_TO_5_YEARS", label: "3–5 Years" },
+  { value: "5_TO_10_YEARS", label: "5–10 Years" },
+  { value: "10_TO_20_YEARS", label: "10–20 Years" },
+  { value: "MORE_THAN_20_YEARS", label: "More than 20 Years" },
+];
+
+const INVESTMENT_STYLE_OPTIONS = [
+  { value: "REGULAR_MONTHLY_SIP", label: "Regular Monthly SIP" },
+  { value: "OCCASIONAL_SIP", label: "Occasional SIP" },
+  { value: "MOSTLY_LUMPSUM", label: "Mostly Lumpsum" },
+  { value: "RARELY_INVEST", label: "Rarely Invest" },
+  { value: "FIRST_TIME_INVESTOR", label: "First-Time Investor" },
+];
+
+const EXPECTED_RETURN_OPTIONS = [
+  { value: "6_TO_8", label: "6–8%" },
+  { value: "8_TO_12", label: "8–12%" },
+  { value: "12_TO_15", label: "12–15%" },
+  { value: "15_PLUS", label: "15%+" },
+  { value: "NOT_SURE", label: "Not Sure" },
+];
+
+const RISK_BEHAVIOR_OPTIONS = [
+  { value: "SELL_EVERYTHING", label: "Sell everything" },
+  { value: "STOP_INVESTING", label: "Stop investing temporarily" },
+  { value: "WAIT_PATIENTLY", label: "Wait patiently" },
+  { value: "INVEST_MORE", label: "Invest more" },
+  { value: "REVIEW_FUNDAMENTALS", label: "Review and decide based on fundamentals" },
 ];
 
 function CompassIcon(props: any) {
@@ -118,9 +170,16 @@ export default function ClientDashboard() {
   // Quiz States (if needed to update lifecycle)
   const [showQuiz, setShowQuiz] = useState(false);
   const [quizStep, setQuizStep] = useState(1);
+  const [quizAgeRange, setQuizAgeRange] = useState<string>("");
   const [quizAge, setQuizAge] = useState<number>(30);
+  const [quizLifeStage, setQuizLifeStage] = useState<string>("");
   const [quizGoal, setQuizGoal] = useState<string>("WEALTH_CREATION");
-  const [quizTenure, setQuizTenure] = useState<string>("1 to 3 years");
+  const [quizInvestmentTenure, setQuizInvestmentTenure] = useState<string>("");
+  const [quizIsCompletePortfolio, setQuizIsCompletePortfolio] = useState<boolean | null>(null);
+  const [quizInvestmentStyle, setQuizInvestmentStyle] = useState<string>("");
+  const [quizExpectedReturn, setQuizExpectedReturn] = useState<string>("");
+  const [quizRiskBehavior, setQuizRiskBehavior] = useState<string>("");
+  const [showNotSureMessage, setShowNotSureMessage] = useState(false);
 
   // Database contexts
   const [activeAssessmentId, setActiveAssessmentId] = useState<string | null>(null);
@@ -534,7 +593,7 @@ export default function ClientDashboard() {
 
   // Re-assess profile logic
   const handleQuizSubmit = async () => {
-    if (!quizAge || !quizGoal) {
+    if (!quizAgeRange || !quizGoal || !quizLifeStage || !quizInvestmentTenure || quizIsCompletePortfolio === null || !quizInvestmentStyle || !quizExpectedReturn || !quizRiskBehavior) {
       setError("Please complete all assessment fields.");
       return;
     }
@@ -552,7 +611,14 @@ export default function ClientDashboard() {
         },
         body: JSON.stringify({
           age: Number(quizAge),
-          goal: quizGoal
+          goal: quizGoal,
+          ageRange: quizAgeRange,
+          lifeStage: quizLifeStage,
+          investmentTenure: quizInvestmentTenure,
+          isCompletePortfolio: quizIsCompletePortfolio,
+          investmentStyle: quizInvestmentStyle,
+          expectedReturn: quizExpectedReturn,
+          riskBehavior: quizRiskBehavior,
         })
       });
       const resData = await res.json();
@@ -1063,59 +1129,73 @@ export default function ClientDashboard() {
           <div className="w-full max-w-md mx-auto bg-white/30 border border-white/30 rounded-3xl p-8 shadow-2xl backdrop-blur-xl animate-in zoom-in-95 duration-300">
             <div className="flex justify-between items-center text-[10px] font-mono text-neutral-500 mb-6 uppercase tracking-widest">
               <span>Client Targets Quiz</span>
-              <span>Step {quizStep} of 2</span>
+              <span>Step {quizStep} of 8</span>
             </div>
 
+            {/* Step 1: Age Range */}
             {quizStep === 1 && (
               <div className="space-y-6">
                 <div className="space-y-2 text-left">
-                  <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">Enter Current Age</h2>
-                  <p className="text-neutral-500 text-xs font-sans leading-relaxed">
-                    Used to calculate asset allocation targets.
-                  </p>
+                  <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">How old are you?</h2>
+                  <p className="text-neutral-500 text-xs font-sans leading-relaxed">Age-based asset allocation benchmark.</p>
                 </div>
-                <input
-                  type="number"
-                  min="18"
-                  max="100"
-                  value={quizAge}
-                  onChange={(e) => setQuizAge(Number(e.target.value))}
-                  className="w-full px-4 py-3.5 bg-white/40 border border-border rounded-xl focus:outline-none focus:border-primary font-mono text-sm"
-                />
-                <button
-                  onClick={() => setQuizStep(2)}
-                  className="w-full py-3.5 bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition cursor-pointer"
-                >
-                  Continue
-                  <ArrowRight className="w-3.5 h-3.5" />
+                <div className="grid grid-cols-1 gap-2">
+                  {AGE_RANGE_OPTIONS.map((opt) => {
+                    const isSelected = quizAgeRange === opt.value;
+                    return (
+                      <button key={opt.value} onClick={() => { setQuizAgeRange(opt.value); setQuizAge(opt.numericAge); }}
+                        className={`w-full py-3.5 px-4 rounded-xl border text-xs font-medium transition duration-150 cursor-pointer text-center ${isSelected ? "bg-primary/10 border-primary text-neutral-900" : "bg-white/40 border-white/20 text-neutral-600 hover:text-neutral-900"}`}
+                      >{opt.label}</button>
+                    );
+                  })}
+                </div>
+                <button onClick={() => { if (!quizAgeRange) { setError("Please select your age range."); return; } setError(null); setQuizStep(2); }}
+                  className="w-full py-3.5 bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition cursor-pointer">
+                  Continue <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
             )}
 
+            {/* Step 2: Life Stage */}
             {quizStep === 2 && (
               <div className="space-y-6">
                 <div className="space-y-2 text-left">
-                  <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">Investment Goal</h2>
-                  <p className="text-neutral-500 text-xs font-sans leading-relaxed">
-                    Choose your priority target.
-                  </p>
+                  <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">Which best describes your current stage?</h2>
+                  <p className="text-neutral-500 text-xs font-sans leading-relaxed">Context and financial capacity.</p>
                 </div>
+                <div className="grid grid-cols-1 gap-2">
+                  {LIFE_STAGE_OPTIONS.map((opt) => {
+                    const isSelected = quizLifeStage === opt.value;
+                    return (
+                      <button key={opt.value} onClick={() => setQuizLifeStage(opt.value)}
+                        className={`w-full py-3.5 px-4 rounded-xl border text-xs font-medium transition duration-150 cursor-pointer text-center ${isSelected ? "bg-primary/10 border-primary text-neutral-900" : "bg-white/40 border-white/20 text-neutral-600 hover:text-neutral-900"}`}
+                      >{opt.label}</button>
+                    );
+                  })}
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => setQuizStep(1)} className="flex-1 py-3 bg-white/40 border border-border text-neutral-600 text-xs font-semibold rounded-xl hover:bg-white/60 transition cursor-pointer">Back</button>
+                  <button onClick={() => { if (!quizLifeStage) { setError("Please select your life stage."); return; } setError(null); setQuizStep(3); }}
+                    className="flex-1 py-3 bg-primary text-primary-foreground font-bold text-xs rounded-xl hover:bg-primary/95 transition cursor-pointer flex items-center justify-center gap-1.5">Continue <ArrowRight className="w-3.5 h-3.5" /></button>
+                </div>
+              </div>
+            )}
 
-                <div className="grid grid-cols-1 gap-2 text-left">
+            {/* Step 3: Investment Goal */}
+            {quizStep === 3 && (
+              <div className="space-y-6">
+                <div className="space-y-2 text-left">
+                  <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">What is your primary reason for investing?</h2>
+                  <p className="text-neutral-500 text-xs font-sans leading-relaxed">Goal alignment score.</p>
+                </div>
+                <div className="grid grid-cols-1 gap-2 text-left max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
                   {GOAL_OPTIONS.map((goal) => {
                     const isSelected = quizGoal === goal.value;
                     const IconComponent = goal.icon;
                     return (
-                      <button
-                        key={goal.value}
-                        onClick={() => setQuizGoal(goal.value)}
-                        className={`w-full text-left p-3.5 rounded-xl border transition flex items-start gap-3 cursor-pointer ${
-                          isSelected ? "bg-primary/10 border-primary" : "bg-white/40 border-white/20"
-                        }`}
-                      >
-                        <div className="p-1.5 rounded-lg bg-white border border-border text-neutral-500">
-                          <IconComponent className="w-3.5 h-3.5" />
-                        </div>
+                      <button key={goal.value} onClick={() => { setQuizGoal(goal.value); setShowNotSureMessage(goal.value === "NOT_SURE_YET"); }}
+                        className={`w-full text-left p-3.5 rounded-xl border transition flex items-start gap-3 cursor-pointer ${isSelected ? "bg-primary/10 border-primary" : "bg-white/40 border-white/20"}`}>
+                        <div className="p-1.5 rounded-lg bg-white border border-border text-neutral-500"><IconComponent className="w-3.5 h-3.5" /></div>
                         <div>
                           <span className="text-xs font-semibold block">{goal.label}</span>
                           <span className="text-[9px] text-neutral-500 block leading-tight mt-0.5">{goal.desc}</span>
@@ -1124,19 +1204,142 @@ export default function ClientDashboard() {
                     );
                   })}
                 </div>
-
+                {showNotSureMessage && (
+                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-xs text-amber-800 font-sans leading-relaxed animate-in fade-in slide-in-from-top-2 duration-300">
+                    <span className="font-bold block mb-1">💡 You&apos;re not alone!</span>
+                    More than 60% of investors start investing without a clearly defined goal. Let&apos;s help identify one through your portfolio analysis.
+                  </div>
+                )}
                 <div className="flex gap-2">
-                  <button
-                    onClick={() => setQuizStep(1)}
-                    className="flex-1 py-3 bg-white/40 border border-border text-neutral-600 text-xs font-semibold rounded-xl hover:bg-white/60 transition cursor-pointer"
-                  >
-                    Back
-                  </button>
-                  <button
-                    onClick={handleQuizSubmit}
-                    className="flex-1 py-3 bg-primary text-primary-foreground font-bold text-xs rounded-xl hover:bg-primary/95 transition cursor-pointer"
-                  >
-                    Finish & Update
+                  <button onClick={() => setQuizStep(2)} className="flex-1 py-3 bg-white/40 border border-border text-neutral-600 text-xs font-semibold rounded-xl hover:bg-white/60 transition cursor-pointer">Back</button>
+                  <button onClick={() => { if (!quizGoal) { setError("Please choose an investment goal."); return; } setError(null); setQuizStep(4); }}
+                    className="flex-1 py-3 bg-primary text-primary-foreground font-bold text-xs rounded-xl hover:bg-primary/95 transition cursor-pointer flex items-center justify-center gap-1.5">Continue <ArrowRight className="w-3.5 h-3.5" /></button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 4: Investment Tenure */}
+            {quizStep === 4 && (
+              <div className="space-y-6">
+                <div className="space-y-2 text-left">
+                  <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">When do you expect to use this money?</h2>
+                  <p className="text-neutral-500 text-xs font-sans leading-relaxed">Tenure matching.</p>
+                </div>
+                <div className="grid grid-cols-1 gap-2">
+                  {INVESTMENT_TENURE_OPTIONS.map((opt) => {
+                    const isSelected = quizInvestmentTenure === opt.value;
+                    return (
+                      <button key={opt.value} onClick={() => setQuizInvestmentTenure(opt.value)}
+                        className={`w-full py-3.5 px-4 rounded-xl border text-xs font-medium transition duration-150 cursor-pointer text-center ${isSelected ? "bg-primary/10 border-primary text-neutral-900" : "bg-white/40 border-white/20 text-neutral-600 hover:text-neutral-900"}`}
+                      >{opt.label}</button>
+                    );
+                  })}
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => setQuizStep(3)} className="flex-1 py-3 bg-white/40 border border-border text-neutral-600 text-xs font-semibold rounded-xl hover:bg-white/60 transition cursor-pointer">Back</button>
+                  <button onClick={() => { if (!quizInvestmentTenure) { setError("Please select your investment tenure."); return; } setError(null); setQuizStep(5); }}
+                    className="flex-1 py-3 bg-primary text-primary-foreground font-bold text-xs rounded-xl hover:bg-primary/95 transition cursor-pointer flex items-center justify-center gap-1.5">Continue <ArrowRight className="w-3.5 h-3.5" /></button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 5: Is Complete Portfolio? */}
+            {quizStep === 5 && (
+              <div className="space-y-6">
+                <div className="space-y-2 text-left">
+                  <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">Is this your complete mutual fund portfolio?</h2>
+                  <p className="text-neutral-500 text-xs font-sans leading-relaxed">Avoid misleading scores.</p>
+                </div>
+                <div className="grid grid-cols-1 gap-2">
+                  {[{ value: true, label: "Yes" }, { value: false, label: "No, only part of it" }].map((opt) => {
+                    const isSelected = quizIsCompletePortfolio === opt.value;
+                    return (
+                      <button key={String(opt.value)} onClick={() => setQuizIsCompletePortfolio(opt.value)}
+                        className={`w-full py-3.5 px-4 rounded-xl border text-xs font-medium transition duration-150 cursor-pointer text-center ${isSelected ? "bg-primary/10 border-primary text-neutral-900" : "bg-white/40 border-white/20 text-neutral-600 hover:text-neutral-900"}`}
+                      >{opt.label}</button>
+                    );
+                  })}
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => setQuizStep(4)} className="flex-1 py-3 bg-white/40 border border-border text-neutral-600 text-xs font-semibold rounded-xl hover:bg-white/60 transition cursor-pointer">Back</button>
+                  <button onClick={() => { if (quizIsCompletePortfolio === null) { setError("Please answer this question."); return; } setError(null); setQuizStep(6); }}
+                    className="flex-1 py-3 bg-primary text-primary-foreground font-bold text-xs rounded-xl hover:bg-primary/95 transition cursor-pointer flex items-center justify-center gap-1.5">Continue <ArrowRight className="w-3.5 h-3.5" /></button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 6: Investment Style */}
+            {quizStep === 6 && (
+              <div className="space-y-6">
+                <div className="space-y-2 text-left">
+                  <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">How do you usually invest?</h2>
+                  <p className="text-neutral-500 text-xs font-sans leading-relaxed">Discipline score.</p>
+                </div>
+                <div className="grid grid-cols-1 gap-2">
+                  {INVESTMENT_STYLE_OPTIONS.map((opt) => {
+                    const isSelected = quizInvestmentStyle === opt.value;
+                    return (
+                      <button key={opt.value} onClick={() => setQuizInvestmentStyle(opt.value)}
+                        className={`w-full py-3.5 px-4 rounded-xl border text-xs font-medium transition duration-150 cursor-pointer text-center ${isSelected ? "bg-primary/10 border-primary text-neutral-900" : "bg-white/40 border-white/20 text-neutral-600 hover:text-neutral-900"}`}
+                      >{opt.label}</button>
+                    );
+                  })}
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => setQuizStep(5)} className="flex-1 py-3 bg-white/40 border border-border text-neutral-600 text-xs font-semibold rounded-xl hover:bg-white/60 transition cursor-pointer">Back</button>
+                  <button onClick={() => { if (!quizInvestmentStyle) { setError("Please select how you invest."); return; } setError(null); setQuizStep(7); }}
+                    className="flex-1 py-3 bg-primary text-primary-foreground font-bold text-xs rounded-xl hover:bg-primary/95 transition cursor-pointer flex items-center justify-center gap-1.5">Continue <ArrowRight className="w-3.5 h-3.5" /></button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 7: Expected Return */}
+            {quizStep === 7 && (
+              <div className="space-y-6">
+                <div className="space-y-2 text-left">
+                  <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">What annual return are you expecting?</h2>
+                  <p className="text-neutral-500 text-xs font-sans leading-relaxed">Expectation vs reality analysis.</p>
+                </div>
+                <div className="grid grid-cols-1 gap-2">
+                  {EXPECTED_RETURN_OPTIONS.map((opt) => {
+                    const isSelected = quizExpectedReturn === opt.value;
+                    return (
+                      <button key={opt.value} onClick={() => setQuizExpectedReturn(opt.value)}
+                        className={`w-full py-3.5 px-4 rounded-xl border text-xs font-medium transition duration-150 cursor-pointer text-center ${isSelected ? "bg-primary/10 border-primary text-neutral-900" : "bg-white/40 border-white/20 text-neutral-600 hover:text-neutral-900"}`}
+                      >{opt.label}</button>
+                    );
+                  })}
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => setQuizStep(6)} className="flex-1 py-3 bg-white/40 border border-border text-neutral-600 text-xs font-semibold rounded-xl hover:bg-white/60 transition cursor-pointer">Back</button>
+                  <button onClick={() => { if (!quizExpectedReturn) { setError("Please select your expected return."); return; } setError(null); setQuizStep(8); }}
+                    className="flex-1 py-3 bg-primary text-primary-foreground font-bold text-xs rounded-xl hover:bg-primary/95 transition cursor-pointer flex items-center justify-center gap-1.5">Continue <ArrowRight className="w-3.5 h-3.5" /></button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 8: Risk Behavior */}
+            {quizStep === 8 && (
+              <div className="space-y-6">
+                <div className="space-y-2 text-left">
+                  <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">If your portfolio falls by 20%, what would you do?</h2>
+                  <p className="text-neutral-500 text-xs font-sans leading-relaxed">Cross-checks psychology profile.</p>
+                </div>
+                <div className="grid grid-cols-1 gap-2">
+                  {RISK_BEHAVIOR_OPTIONS.map((opt) => {
+                    const isSelected = quizRiskBehavior === opt.value;
+                    return (
+                      <button key={opt.value} onClick={() => setQuizRiskBehavior(opt.value)}
+                        className={`w-full py-3.5 px-4 rounded-xl border text-xs font-medium transition duration-150 cursor-pointer text-center ${isSelected ? "bg-primary/10 border-primary text-neutral-900" : "bg-white/40 border-white/20 text-neutral-600 hover:text-neutral-900"}`}
+                      >{opt.label}</button>
+                    );
+                  })}
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => setQuizStep(7)} className="flex-1 py-3 bg-white/40 border border-border text-neutral-600 text-xs font-semibold rounded-xl hover:bg-white/60 transition cursor-pointer">Back</button>
+                  <button onClick={handleQuizSubmit} disabled={apiLoading || !quizRiskBehavior}
+                    className="flex-1 py-3 bg-primary text-primary-foreground font-bold text-xs rounded-xl hover:bg-primary/95 transition cursor-pointer disabled:opacity-40">
+                    {apiLoading ? "Submitting..." : "Finish & Update"}
                   </button>
                 </div>
               </div>

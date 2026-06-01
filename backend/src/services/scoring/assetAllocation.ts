@@ -1,8 +1,9 @@
 import { PortfolioRow, Goal } from '@prisma/client';
+import type { AssessmentContext } from './index';
 
 export function scoreDimension(
   rows: PortfolioRow[],
-  assessment: { age: number; goal: Goal | null }
+  assessment: AssessmentContext
 ): { score: number; insights: string[] } {
   let score = 20;
   const insights: string[] = [];

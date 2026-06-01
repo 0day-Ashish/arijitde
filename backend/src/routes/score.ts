@@ -101,6 +101,13 @@ router.post('/:portfolioId', authMiddleware, async (req: AuthenticatedRequest, r
           assessment: {
             age: portfolio.assessment.age,
             goal: portfolio.assessment.goal,
+            ageRange: portfolio.assessment.ageRange,
+            lifeStage: portfolio.assessment.lifeStage,
+            investmentTenure: portfolio.assessment.investmentTenure,
+            isCompletePortfolio: portfolio.assessment.isCompletePortfolio,
+            investmentStyle: portfolio.assessment.investmentStyle,
+            expectedReturn: portfolio.assessment.expectedReturn,
+            riskBehavior: portfolio.assessment.riskBehavior,
           },
         }),
       })

@@ -1,8 +1,9 @@
 import { PortfolioRow, Goal } from '@prisma/client';
+import type { AssessmentContext } from './index';
 
 export function scoreDimension(
   rows: PortfolioRow[],
-  assessment: { age: number; goal: Goal | null }
+  assessment: AssessmentContext
 ): { score: number; insights: string[] } {
   let score = 20;
   const insights: string[] = [];
@@ -41,7 +42,7 @@ export function scoreDimension(
   }
 
   // Poor goal coverage (total currentValue < 2x total invested for LONG_TERM/WEALTH_CREATION)
-  const isGrowthGoal = assessment.goal === Goal.LONG_TERM || assessment.goal === Goal.WEALTH_CREATION;
+  const isGrowthGoal = assessment.goal === Goal.LONG_TERM || assessment.goal === Goal.WEALTH_CREATION || assessment.goal === Goal.RETIREMENT || assessment.goal === Goal.CHILD_EDUCATION || assessment.goal === Goal.HOUSE_PURCHASE || assessment.goal === Goal.PASSIVE_INCOME;
   if (isGrowthGoal && totalCurrentValue < 2 * totalInvested) {
     score -= 4;
     insights.push("Efficiency: Poor goal coverage — Total portfolio value is less than double the amount invested, which is low for long-term growth goals");

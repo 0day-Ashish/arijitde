@@ -32,6 +32,13 @@ import {
 const GOAL_LABELS: Record<string, { label: string; desc: string; icon: any }> = {
   WEALTH_CREATION: { label: 'Wealth Creation', desc: 'Long-term compounding to build a substantial corpus', icon: Sparkles },
   RETIREMENT: { label: 'Retirement Planning', desc: 'Securing financial independence for your post-work years', icon: ShieldCheck },
+  HOUSE_PURCHASE: { label: 'House Purchase', desc: 'Saving for a dream home', icon: TrendingUp },
+  CHILD_EDUCATION: { label: 'Child Education', desc: 'Building a corpus for children\'s education', icon: Calendar },
+  MARRIAGE: { label: 'Marriage', desc: 'Funding an upcoming marriage', icon: Sparkles },
+  PASSIVE_INCOME: { label: 'Passive Income', desc: 'Generate steady returns from investments', icon: TrendingUp },
+  TAX_SAVING: { label: 'Tax Saving', desc: 'Optimizing investments for tax efficiency', icon: ShieldCheck },
+  NOT_SURE_YET: { label: 'Not Sure Yet', desc: 'Exploring and learning about investment options', icon: Compass },
+  // Legacy
   SHORT_TERM: { label: 'Short-Term Goals', desc: 'Funding immediate capital needs (1-3 years)', icon: Calendar },
   LONG_TERM: { label: 'Long-Term Goals', desc: 'Buying a house, children\'s education, or other major plans', icon: TrendingUp },
   EXPLORING: { label: 'Exploring Markets', desc: 'Learning options and testing investment strategies', icon: Compass },
@@ -194,6 +201,15 @@ export default function AdminDashboard() {
 
   // Update Client Profile Details
   const handleUpdateClientProfile = async (userId: string) => {
+    const trimmedPan = pan.trim().toUpperCase();
+    if (trimmedPan !== '') {
+      const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+      if (!panRegex.test(trimmedPan)) {
+        alert('Invalid PAN format. Must be 10 characters (e.g. ABCDE1234F) or empty to clear.');
+        return;
+      }
+    }
+
     try {
       setSavingClientProfile(true);
       const headers = { 
@@ -204,7 +220,7 @@ export default function AdminDashboard() {
       const res = await fetch(`${backendUrl}/api/admin/users/${userId}/client-profile`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ advisorNotes, activePlan, pan }),
+        body: JSON.stringify({ advisorNotes, activePlan, pan: trimmedPan }),
       });
 
       if (!res.ok) {
@@ -215,7 +231,7 @@ export default function AdminDashboard() {
       const resData = await res.json();
       
       // Update local states
-      const updatedPan = pan.trim() === '' ? null : pan.trim().toUpperCase();
+      const updatedPan = trimmedPan === '' ? null : trimmedPan;
       setUsersList((prev: any[]) => prev.map(u => u.id === userId ? { ...u, pan: updatedPan, client: resData.data } : u));
       if (selectedUser?.id === userId) {
         setSelectedUser((prev: any) => ({ ...prev, pan: updatedPan, client: resData.data }));
@@ -322,7 +338,8 @@ export default function AdminDashboard() {
     const matchesSearch = 
       (user.name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
       (user.email?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
-      (user.phone || '').includes(searchQuery);
+      (user.phone || '').includes(searchQuery) ||
+      (user.pan?.toLowerCase() || '').includes(searchQuery.toLowerCase());
     
     const matchesRole = roleFilter === 'ALL' || user.role === roleFilter;
 
@@ -596,6 +613,11 @@ export default function AdminDashboard() {
                               <div className="text-neutral-500 font-mono text-[11px] mt-0.5">{user.email}</div>
                               {user.phone && (
                                 <div className="text-neutral-500 font-mono text-[11px] mt-0.5">{user.phone}</div>
+                              )}
+                              {user.pan && (
+                                <div className="text-neutral-500 font-mono text-[10px] mt-0.5 bg-neutral-100 border border-neutral-200 px-1.5 py-0.5 rounded w-max">
+                                  PAN: {user.pan}
+                                </div>
                               )}
                             </td>
                             <td className="px-6 py-5 whitespace-nowrap">
@@ -954,12 +976,48 @@ export default function AdminDashboard() {
                         <div className="grid grid-cols-2 gap-4 border-t border-neutral-200 pt-3 text-xs font-mono">
                           <div>
                             <span className="text-neutral-500 text-[10px] block uppercase">User Declared Age</span>
-                            <span className="text-neutral-900 font-bold">{a.age} Years Old</span>
+                            <span className="text-neutral-900 font-bold">{a.ageRange || `${a.age} Years Old`}</span>
                           </div>
                           <div>
                             <span className="text-neutral-500 text-[10px] block uppercase">Assessed Date</span>
                             <span className="text-neutral-900">{new Date(a.createdAt).toLocaleString()}</span>
                           </div>
+                          {a.lifeStage && (
+                            <div>
+                              <span className="text-neutral-500 text-[10px] block uppercase">Life Stage</span>
+                              <span className="text-neutral-900 font-bold">{a.lifeStage.replace(/_/g, ' ')}</span>
+                            </div>
+                          )}
+                          {a.investmentTenure && (
+                            <div>
+                              <span className="text-neutral-500 text-[10px] block uppercase">Investment Horizon</span>
+                              <span className="text-neutral-900 font-bold">{a.investmentTenure.replace(/_/g, ' ')}</span>
+                            </div>
+                          )}
+                          {a.isCompletePortfolio !== null && a.isCompletePortfolio !== undefined && (
+                            <div>
+                              <span className="text-neutral-500 text-[10px] block uppercase">Complete Portfolio</span>
+                              <span className="text-neutral-900 font-bold">{a.isCompletePortfolio ? 'Yes' : 'Partial'}</span>
+                            </div>
+                          )}
+                          {a.investmentStyle && (
+                            <div>
+                              <span className="text-neutral-500 text-[10px] block uppercase">Investment Style</span>
+                              <span className="text-neutral-900 font-bold">{a.investmentStyle.replace(/_/g, ' ')}</span>
+                            </div>
+                          )}
+                          {a.expectedReturn && (
+                            <div>
+                              <span className="text-neutral-500 text-[10px] block uppercase">Expected Return</span>
+                              <span className="text-neutral-900 font-bold">{a.expectedReturn.replace(/_/g, ' ')}</span>
+                            </div>
+                          )}
+                          {a.riskBehavior && (
+                            <div className="col-span-2">
+                              <span className="text-neutral-500 text-[10px] block uppercase">Risk Behavior</span>
+                              <span className="text-neutral-900 font-bold">{a.riskBehavior.replace(/_/g, ' ')}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     );
