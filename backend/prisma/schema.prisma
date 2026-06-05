@@ -20,6 +20,8 @@ model User {
   password    String?
   role        Role         @default(GUEST)
   googleId    String?      @unique
+  dob         DateTime?
+  anniversary DateTime?
   createdAt   DateTime     @default(now())
   assessments Assessment[]
   portfolios  Portfolio[]
@@ -175,3 +177,177 @@ model Client {
   user         User     @relation(fields: [userId], references: [id])
 }
 
+model Folio {
+  id                   String   @id @default(uuid())
+  clientName           String?
+  clientPan            String?
+  clientAadhaar        String?
+  nameAsPerFolio       String?
+  panAsPerFolio        String?
+  folioNumber          String?
+  schemeName           String?
+  units                Float?
+  aum                  Float?
+  email                String?
+  mobile               String?
+  dob                  String?
+  holding              String?
+  taxStatus            String?
+  comments             String?
+  freezeDate           String?
+  address1             String?
+  address2             String?
+  address3             String?
+  bankName             String?
+  bankAddress          String?
+  accountNumber        String?
+  ifscCode             String?
+  accountType          String?
+  jointHolder1Name     String?
+  jointHolder1Pan      String?
+  jointHolder1Kyc      String?
+  jointHolder1Aadhaar  String?
+  jointHolder2Name     String?
+  jointHolder2Pan      String?
+  jointHolder2Kyc      String?
+  jointHolder2Aadhaar  String?
+  guardianName         String?
+  guardianPan          String?
+  guardianKyc          String?
+  guardianAadhaar      String?
+  nomineeOpted         String?
+  nominee1Name         String?
+  nominee1Relation     String?
+  nominee1Percentage   String?
+  nominee2Name         String?
+  nominee2Relation     String?
+  nominee2Percentage   String?
+  nominee3Name         String?
+  nominee3Relation     String?
+  nominee3Percentage   String?
+  ftFolio              String?
+  folioType            String?
+  clientDematId        String?
+  dpId                 String?
+  appCode              String?
+  equityCode           String?
+  familyHead           String?
+  iwellCode            String?
+  iwellCode2           String?
+  nomineeDetails       String?
+  nomineeDetails2      String?
+  nomineeDetails3      String?
+  operations           String?
+  operationsCode       String?
+  relationshipManager  String?
+  relationshipManager2 String?
+  subBroker            String?
+  subBrokerCode        String?
+  lastUsedArn          String?
+  createdAt            DateTime @default(now())
+}
+
+model ExistingClient {
+  id                         String   @id @default(uuid())
+  title                      String?
+  name                       String?
+  pan                        String?
+  appCode                    String?
+  email                      String?
+  disableEmail               String?
+  secondaryEmail             String?
+  iwellCode                  String?
+  username                   String?
+  mobile                     String?
+  landline                   String?
+  dob                        String?
+  birthdayWish               String?
+  anniversary                String?
+  dateOfDeath                String?
+  familyHead                 String?
+  familyHeadIwellCode        String?
+  referredBy                 String?
+  iwellCode2                 String?
+  familyHeadIwellCode2       String?
+  address1                   String?
+  address2                   String?
+  address3                   String?
+  city                       String?
+  state                      String?
+  country                    String?
+  pinCode                    String?
+  clientRating               String?
+  firstInvestmentDate        String?
+  reviewFrequency            String?
+  lastReviewDate             String?
+  modelName                  String?
+  fileNumber                 String?
+  tags                       String?
+  updateLog                  String?
+  equityCode1                String?
+  equityCode2                String?
+  depository                 String?
+  dpName                     String?
+  dpId                       String?
+  npsAccountNumber           String?
+  annualIncome               String?
+  profession                 String?
+  billState                  String?
+  billGstin                  String?
+  aum                        Float?
+  targetSipAmount            Float?
+  targetElssAmount           Float?
+  targetEquityAllocation     Float?
+  targetDebtAllocation       Float?
+  preferredBillingMode       String?
+  equityMfBilling            Float?
+  debtMfBilling              Float?
+  sharesBilling              Float?
+  bondsBilling               Float?
+  fixedDepositBilling        Float?
+  otherAssetBilling          Float?
+  remarks                    String?
+  bankDetails                String?
+  overseasAddress1           String?
+  overseasAddress2           String?
+  overseasAddress3           String?
+  overseasCity               String?
+  overseasState              String?
+  overseasCountry            String?
+  overseasPin                String?
+  overseasPhone              String?
+  overseasMobile             String?
+  kycStatus                  String?
+  aadhaar                    String?
+  nominee1Name               String?
+  nominee1Relation           String?
+  nominee1Dob                String?
+  nominee1Percentage         String?
+  nominee2Name               String?
+  nominee2Relation           String?
+  nominee2Dob                String?
+  nominee2Percentage         String?
+  nominee3Name               String?
+  nominee3Relation           String?
+  nominee3Dob                String?
+  nominee3Percentage         String?
+  createdAt                  DateTime @default(now())
+}
+
+model PortfolioValuation {
+  id                 String   @id @default(uuid())
+  clientName         String?
+  iwellCode          String?
+  iwellCode2         String?
+  pan                String?
+  balanceUnits       Float?
+  purchaseValue      Float?
+  currentValue       Float?
+  oneDayChange       Float?
+  dividend           Float?
+  averageHoldingDays Float?
+  gain               Float?
+  absoluteReturn     Float?
+  cagr               Float?
+  createdAt          DateTime @default(now())
+}

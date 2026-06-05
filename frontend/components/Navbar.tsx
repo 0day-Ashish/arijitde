@@ -70,18 +70,6 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
                 Calculator
               </a>
               <a 
-                href="/#services" 
-                className={`hover:text-primary transition duration-200 ${activePath === '#services' ? 'text-primary font-bold' : ''}`}
-              >
-                Services
-              </a>
-              <a 
-                href="/pricing" 
-                className={`hover:text-primary transition duration-200 ${activePath === '/pricing' ? 'text-primary font-bold' : ''}`}
-              >
-                Pricing
-              </a>
-              <a 
                 href="/quiz" 
                 className={`hover:text-primary transition duration-200 ${activePath === '/quiz' ? 'text-primary font-bold' : ''}`}
               >
@@ -136,25 +124,11 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
                 About
               </a>
               <a
-                href="/#services"
-                className={`hover:text-primary transition-all duration-300 transform ${isMobileMenuOpen ? "opacity-100 translate-x-0 font-clash" : "opacity-0 -translate-x-4"
-                  } delay-[200ms]`}
-              >
-                Services
-              </a>
-              <a
-                href="/sip-calculator"
+                href="#calculators"
                 className={`hover:text-primary transition-all duration-300 transform ${isMobileMenuOpen ? "opacity-100 translate-x-0 font-clash" : "opacity-0 -translate-x-4"
                   } delay-[300ms]`}
               >
-                SIP Calculator
-              </a>
-              <a
-                href="/pricing"
-                className={`hover:text-primary transition-all duration-300 transform ${isMobileMenuOpen ? "opacity-100 translate-x-0 font-clash" : "opacity-0 -translate-x-4"
-                  } delay-[400ms]`}
-              >
-                Pricing
+                Calculators
               </a>
               <a
                 href="/quiz"

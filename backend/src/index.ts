@@ -85,8 +85,7 @@ const globalLimiter = rateLimit({
 });
 app.use(globalLimiter);
 
-
-
+// Trigger reload to pick up new Prisma Client schema fields
 // ─── Routes ─────────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
   res.json({

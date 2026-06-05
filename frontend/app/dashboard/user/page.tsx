@@ -124,6 +124,8 @@ export default function UserDashboard() {
   // Phone Modal state
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [phoneInput, setPhoneInput] = useState("");
+  const [dobInput, setDobInput] = useState("");
+  const [anniversaryInput, setAnniversaryInput] = useState("");
   const [modalSubmitting, setModalSubmitting] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
 
@@ -332,12 +334,27 @@ export default function UserDashboard() {
     localStorage.removeItem("user");
     window.location.href = "/onboarding";
   };
-
   const handlePhoneSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (phoneInput.trim().length < 10) {
       setModalError("Phone number must be at least 10 digits.");
       return;
+    }
+    if (!dobInput) {
+      setModalError("Date of birth is mandatory.");
+      return;
+    }
+    const selectedDob = new Date(dobInput);
+    if (selectedDob > new Date()) {
+      setModalError("Date of birth cannot be in the future.");
+      return;
+    }
+    if (anniversaryInput) {
+      const selectedAnniversary = new Date(anniversaryInput);
+      if (selectedAnniversary > new Date()) {
+        setModalError("Anniversary date cannot be in the future.");
+        return;
+      }
     }
 
     setModalError(null);
@@ -350,7 +367,11 @@ export default function UserDashboard() {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify({ phone: phoneInput.trim() })
+        body: JSON.stringify({ 
+          phone: phoneInput.trim(),
+          dob: dobInput,
+          anniversary: anniversaryInput || null
+        })
       });
       const data = await res.json();
 
@@ -360,6 +381,8 @@ export default function UserDashboard() {
         if (savedUser) {
           const uObj = JSON.parse(savedUser);
           uObj.phone = data.data.phone;
+          uObj.dob = data.data.dob;
+          uObj.anniversary = data.data.anniversary;
           localStorage.setItem("user", JSON.stringify(uObj));
           setUserData(uObj);
         }
@@ -367,7 +390,7 @@ export default function UserDashboard() {
         // Refresh state
         await fetchDashboardState();
       } else {
-        setModalError(data.error || "Failed to update phone number.");
+        setModalError(data.error || "Failed to update details.");
       }
     } catch (err) {
       setModalError("Network error. Please try again.");
@@ -375,7 +398,6 @@ export default function UserDashboard() {
       setModalSubmitting(false);
     }
   };
-
   const handleMockPaySubmit = async () => {
     setError(null);
     setApiLoading(true);
@@ -507,10 +529,10 @@ export default function UserDashboard() {
         await calculatePortfolioScore(pId);
       } else {
         setError(data.error || "Failed to process Excel upload.");
-        setApiLoading(false);
       }
     } catch (err) {
       setError("Network error while uploading file.");
+    } finally {
       setApiLoading(false);
     }
   };
@@ -613,10 +635,10 @@ export default function UserDashboard() {
         await calculatePortfolioScore(pId);
       } else {
         setError(data.error || "Failed to submit manual portfolio");
-        setApiLoading(false);
       }
     } catch (err) {
       setError("Network error while submitting details.");
+    } finally {
       setApiLoading(false);
     }
   };
@@ -639,11 +661,11 @@ export default function UserDashboard() {
       } else {
         setError(data.error || "Failed to score portfolio.");
         setDashboardStage("ANALYZE");
-        setApiLoading(false);
       }
     } catch (err) {
       setError("Network error running score calculation.");
       setDashboardStage("ANALYZE");
+    } finally {
       setApiLoading(false);
     }
   };
@@ -1736,14 +1758,14 @@ export default function UserDashboard() {
       {showPhoneModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/40 backdrop-blur-md animate-in fade-in duration-300">
           <div className="w-full max-w-md bg-white/70 border border-white/40 rounded-3xl p-8 shadow-2xl backdrop-blur-xl animate-in zoom-in-95 duration-300 text-left">
-            <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">Enter Phone Number</h2>
+            <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide font-clash">Complete Profile</h2>
             <p className="text-neutral-500 text-xs font-sans mt-2 leading-relaxed">
-              Please enter your phone number to proceed with your onboarding and premium advisory services.
+              Please enter your details to proceed with your onboarding and premium advisory services.
             </p>
             <form onSubmit={handlePhoneSubmit} className="mt-6 space-y-4">
               <div className="space-y-1.5">
                 <label className="block text-[10px] font-mono uppercase tracking-wider text-neutral-500">
-                  Mobile / Phone Number
+                  Mobile / Phone Number *
                 </label>
                 <input
                   type="tel"
@@ -1751,6 +1773,33 @@ export default function UserDashboard() {
                   placeholder="e.g. +91 98765 43210"
                   value={phoneInput}
                   onChange={(e) => setPhoneInput(e.target.value.replace(/[^\d+ ]/g, ""))}
+                  className="w-full px-4 py-3 bg-white/40 border border-border rounded-xl text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-primary font-mono text-sm"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-mono uppercase tracking-wider text-neutral-500">
+                  Date of Birth *
+                </label>
+                <input
+                  type="date"
+                  required
+                  max={new Date().toISOString().split("T")[0]}
+                  value={dobInput}
+                  onChange={(e) => setDobInput(e.target.value)}
+                  className="w-full px-4 py-3 bg-white/40 border border-border rounded-xl text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-primary font-mono text-sm"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-mono uppercase tracking-wider text-neutral-500">
+                  Anniversary Date (Optional)
+                </label>
+                <input
+                  type="date"
+                  max={new Date().toISOString().split("T")[0]}
+                  value={anniversaryInput}
+                  onChange={(e) => setAnniversaryInput(e.target.value)}
                   className="w-full px-4 py-3 bg-white/40 border border-border rounded-xl text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-primary font-mono text-sm"
                 />
               </div>

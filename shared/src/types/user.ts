@@ -6,6 +6,8 @@ export interface User {
   phone?: string;
   name?: string;
   role: Role;
+  dob?: string;
+  anniversary?: string;
   createdAt: Date;
 }
 

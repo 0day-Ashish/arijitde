@@ -68,6 +68,10 @@ router.post(
   '/',
   authMiddleware,
   (req, res, next) => {
+    const contentType = req.headers['content-type'] || '';
+    if (contentType.includes('application/json')) {
+      return next();
+    }
     upload.single('screenshot')(req, res, (err) => {
       if (err instanceof multer.MulterError) {
         return res.status(400).json({ success: false, error: `Upload error: ${err.message}` });

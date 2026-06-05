@@ -233,22 +233,34 @@ router.post('/logout', (req, res) => {
 // 6. POST /api/auth/phone
 const updatePhoneSchema = z.object({
   phone: z.string().min(10, 'Phone number must be at least 10 digits'),
+  dob: z.string().refine((val) => !isNaN(Date.parse(val)), {
+    message: 'Invalid date of birth format',
+  }).transform((val) => new Date(val)),
+  anniversary: z.string().optional().nullable().refine((val) => !val || val.trim() === '' || !isNaN(Date.parse(val)), {
+    message: 'Invalid anniversary date format',
+  }).transform((val) => (val && val.trim() !== '') ? new Date(val) : null),
 });
 
 router.post('/phone', authMiddleware, async (req: AuthenticatedRequest, res: Response, next) => {
   try {
-    const { phone } = updatePhoneSchema.parse(req.body);
+    const { phone, dob, anniversary } = updatePhoneSchema.parse(req.body);
     const userId = req.user!.id;
 
     const updatedUser = await prisma.user.update({
       where: { id: userId },
-      data: { phone },
+      data: { 
+        phone,
+        dob,
+        anniversary,
+      },
       select: {
         id: true,
         email: true,
         name: true,
         role: true,
         phone: true,
+        dob: true,
+        anniversary: true,
       }
     });
 
