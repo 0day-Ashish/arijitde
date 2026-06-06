@@ -355,12 +355,18 @@ router.post('/folios/upload', upload.single('file'), async (req: AuthenticatedRe
       lastUsedArn: String(row["Last Used ARN"] || '').trim() || null,
     }));
 
-    // Save using a transaction
+    // Save using a transaction with chunking to prevent PostgreSQL parameter limits
     const count = await prisma.$transaction(async (tx) => {
-      const result = await tx.folio.createMany({
-        data: parsedFolios,
-      });
-      return result.count;
+      let insertedCount = 0;
+      const chunkSize = 500;
+      for (let i = 0; i < parsedFolios.length; i += chunkSize) {
+        const chunk = parsedFolios.slice(i, i + chunkSize);
+        const result = await tx.folio.createMany({
+          data: chunk,
+        });
+        insertedCount += result.count;
+      }
+      return insertedCount;
     });
 
     res.status(201).json({
@@ -563,12 +569,18 @@ router.post('/existing-clients/upload', upload.single('file'), async (req: Authe
       nominee3Percentage: String(row["Nominee 3 Percentage"] || '').trim() || null,
     }));
 
-    // Save using a transaction
+    // Save using a transaction with chunking to prevent PostgreSQL parameter limits
     const count = await prisma.$transaction(async (tx) => {
-      const result = await tx.existingClient.createMany({
-        data: parsedClients,
-      });
-      return result.count;
+      let insertedCount = 0;
+      const chunkSize = 500;
+      for (let i = 0; i < parsedClients.length; i += chunkSize) {
+        const chunk = parsedClients.slice(i, i + chunkSize);
+        const result = await tx.existingClient.createMany({
+          data: chunk,
+        });
+        insertedCount += result.count;
+      }
+      return insertedCount;
     });
 
     res.status(201).json({
@@ -703,12 +715,18 @@ router.post('/portfolio-valuations/upload', upload.single('file'), async (req: A
       cagr: parseExcelNumber(row["CAGR (%)"]),
     }));
 
-    // Save using a transaction
+    // Save using a transaction with chunking to prevent PostgreSQL parameter limits
     const count = await prisma.$transaction(async (tx) => {
-      const result = await tx.portfolioValuation.createMany({
-        data: parsedValuations,
-      });
-      return result.count;
+      let insertedCount = 0;
+      const chunkSize = 500;
+      for (let i = 0; i < parsedValuations.length; i += chunkSize) {
+        const chunk = parsedValuations.slice(i, i + chunkSize);
+        const result = await tx.portfolioValuation.createMany({
+          data: chunk,
+        });
+        insertedCount += result.count;
+      }
+      return insertedCount;
     });
 
     res.status(201).json({

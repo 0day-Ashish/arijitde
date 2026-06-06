@@ -203,6 +203,8 @@ router.post('/google', authLimiter, async (req, res, next) => {
           email: user.email,
           name: user.name,
           role: user.role,
+          phone: user.phone,
+          pan: user.pan,
         },
       },
     });

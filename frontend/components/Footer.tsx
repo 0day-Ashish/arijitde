@@ -85,9 +85,9 @@ export default function Footer({ footerRef }: FooterProps) {
       <div className="flex flex-col md:flex-row justify-between items-center w-full border-t border-border max-w-5xl mx-auto px-6 py-6 text-xs text-slate-500 font-sans gap-4">
         <span>©2026 FinAnalysis</span>
         <div className="flex gap-6">
-          <a href="#" className="hover:text-primary transition duration-200">Privacy</a>
-          <a href="#" className="hover:text-primary transition duration-200">Terms</a>
-          <a href="#" className="hover:text-primary transition duration-200">Cookies</a>
+          <a href="/privacy" className="hover:text-primary transition duration-200">Privacy</a>
+          <a href="/terms" className="hover:text-primary transition duration-200">Terms</a>
+          <a href="/cookies" className="hover:text-primary transition duration-200">Cookies</a>
         </div>
         <span>Website by <a href="https://arddev.in" target="_blank" rel="noopener noreferrer" className="hover:text-primary font-bold transition duration-200 font-sans">ard.dev</a></span>
       </div>

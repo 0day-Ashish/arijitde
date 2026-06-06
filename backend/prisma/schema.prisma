@@ -51,6 +51,8 @@ model Assessment {
   createdAt           DateTime    @default(now())
   user                User        @relation(fields: [userId], references: [id])
   portfolios          Portfolio[]
+
+  @@index([userId])
 }
 
 enum Goal {
@@ -79,6 +81,9 @@ model Portfolio {
   rows         PortfolioRow[]
   score        Score?
   mlResult     MLResult?
+
+  @@index([userId])
+  @@index([assessmentId])
 }
 
 enum UploadType {
@@ -96,6 +101,8 @@ model PortfolioRow {
   invested     Float
   currentValue Float
   portfolio    Portfolio @relation(fields: [portfolioId], references: [id])
+
+  @@index([portfolioId])
 }
 
 enum FundType {
@@ -142,6 +149,8 @@ model Lead {
   notes     String?
   createdAt DateTime   @default(now())
   user      User       @relation(fields: [userId], references: [id])
+
+  @@index([userId])
 }
 
 enum LeadStatus {
@@ -160,6 +169,8 @@ model Payment {
   approvedBy    String?
   createdAt     DateTime      @default(now())
   user          User          @relation(fields: [userId], references: [id])
+
+  @@index([userId])
 }
 
 enum PaymentStatus {
@@ -245,6 +256,14 @@ model Folio {
   subBrokerCode        String?
   lastUsedArn          String?
   createdAt            DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([clientName])
+  @@index([clientPan])
+  @@index([folioNumber])
+  @@index([schemeName])
+  @@index([email])
+  @@index([mobile])
 }
 
 model ExistingClient {
@@ -332,6 +351,15 @@ model ExistingClient {
   nominee3Dob                String?
   nominee3Percentage         String?
   createdAt                  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([name])
+  @@index([pan])
+  @@index([email])
+  @@index([mobile])
+  @@index([iwellCode])
+  @@index([appCode])
+  @@index([city])
 }
 
 model PortfolioValuation {
@@ -350,4 +378,10 @@ model PortfolioValuation {
   absoluteReturn     Float?
   cagr               Float?
   createdAt          DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([clientName])
+  @@index([pan])
+  @@index([iwellCode])
+  @@index([iwellCode2])
 }

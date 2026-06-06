@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { 
   Users, 
+  User,
   CreditCard, 
   PhoneCall, 
   CheckCircle, 
@@ -71,7 +72,7 @@ export default function AdminDashboard() {
     totalPortfolioValuations: 0,
   });
   const [usersList, setUsersList] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<'users' | 'payments' | 'folios' | 'existingClients' | 'portfolioValuations'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'payments' | 'folios' | 'existingClients' | 'portfolioValuations' | 'consultations'>('users');
 
   // Folio state variables
   const [foliosList, setFoliosList] = useState<any[]>([]);
@@ -725,6 +726,11 @@ export default function AdminDashboard() {
       .map((p: any) => ({ ...p, user }))
   );
 
+  // Compile list of all leads across all users
+  const allLeadsList = usersList.flatMap(user => 
+    (user.leads || []).map((lead: any) => ({ ...lead, user }))
+  ).sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
   // Initialize Client edit profile inputs
   const selectUserForDetails = (user: any) => {
     setSelectedUser(user);
@@ -809,20 +815,20 @@ export default function AdminDashboard() {
         </div>
       </header>
 
-      <main className="relative z-10 flex-1 w-full max-w-7xl mx-auto px-6 py-10 flex flex-col gap-8">
+      <main className="relative z-10 flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-10 flex flex-col gap-8">
         
         {/* Page Title */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight font-clash text-neutral-900">System Dashboard</h1>
-            <p className="text-xs text-neutral-500 font-mono mt-1">Real-time telemetry and user record verification</p>
+            <h1 className="text-2xl md:text-3xl font-semibold tracking-tight font-clash text-neutral-900">System Dashboard</h1>
+            <p className="text-[11px] md:text-xs text-neutral-500 font-mono mt-1">Real-time telemetry and user record verification</p>
           </div>
           <button 
             onClick={() => fetchAdminData(false)}
-            className="p-2.5 border border-neutral-200 bg-white hover:bg-neutral-50 transition duration-200 cursor-pointer text-neutral-500 hover:text-neutral-900 rounded-xl"
+            className="p-2 md:p-2.5 border border-neutral-200 bg-white hover:bg-neutral-50 transition duration-200 cursor-pointer text-neutral-500 hover:text-neutral-900 rounded-xl"
             title="Refresh logs"
           >
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw className="w-3.5 h-3.5 md:w-4 md:h-4" />
           </button>
         </div>
 
@@ -830,106 +836,111 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4 md:gap-6">
           
           {/* Card 1: Users */}
-          <div className="border border-neutral-200 bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition duration-300">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-clash">Total Users</span>
-              <div className="p-2 bg-neutral-100 rounded-xl">
-                <Users className="w-4 h-4 text-neutral-900" />
+          <div className="border border-neutral-200 bg-white rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition duration-300">
+            <div className="flex items-start sm:items-center justify-between gap-2 mb-3">
+              <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-neutral-500 font-clash leading-tight">Total Users</span>
+              <div className="p-1.5 sm:p-2 bg-neutral-100 rounded-xl shrink-0">
+                <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-900" />
               </div>
             </div>
-            <h3 className="text-2xl md:text-3xl font-bold tracking-tight text-neutral-900 font-clash">{stats.totalUsers}</h3>
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-neutral-900 font-clash">{stats.totalUsers}</h3>
             <p className="text-[10px] text-neutral-500 font-mono mt-1">Registrations in database</p>
           </div>
 
           {/* Card 2: Clients */}
-          <div className="border border-neutral-200 bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition duration-300">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-clash">Active Clients</span>
-              <div className="p-2 bg-neutral-100 rounded-xl">
-                <UserCheck className="w-4 h-4 text-neutral-900" />
+          <div className="border border-neutral-200 bg-white rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition duration-300">
+            <div className="flex items-start sm:items-center justify-between gap-2 mb-3">
+              <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-neutral-500 font-clash leading-tight">Active Clients</span>
+              <div className="p-1.5 sm:p-2 bg-neutral-100 rounded-xl shrink-0">
+                <UserCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-900" />
               </div>
             </div>
-            <h3 className="text-2xl md:text-3xl font-bold tracking-tight text-neutral-900 font-clash">{stats.totalClients}</h3>
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-neutral-900 font-clash">{stats.totalClients}</h3>
             <p className="text-[10px] text-neutral-500 font-mono mt-1">Premium users activated</p>
           </div>
 
           {/* Card 3: Pending Payments */}
           <div 
             onClick={() => setActiveTab('payments')}
-            className={`border rounded-2xl p-5 shadow-sm hover:shadow-md transition duration-300 cursor-pointer ${
+            className={`border rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition duration-300 cursor-pointer ${
               stats.pendingPayments > 0 ? 'bg-amber-500/10 border-amber-300/40 text-amber-900' : 'bg-white border-neutral-200'
             }`}
           >
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-clash">Pending Payments</span>
-              <div className={`p-2 rounded-xl ${stats.pendingPayments > 0 ? 'bg-amber-500/20 text-amber-700' : 'bg-neutral-100 text-neutral-900'}`}>
-                <CreditCard className={`w-4 h-4 ${stats.pendingPayments > 0 ? 'animate-pulse' : ''}`} />
+            <div className="flex items-start sm:items-center justify-between gap-2 mb-3">
+              <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-neutral-500 font-clash leading-tight">Pending Payments</span>
+              <div className={`p-1.5 sm:p-2 rounded-xl shrink-0 ${stats.pendingPayments > 0 ? 'bg-amber-500/20 text-amber-700' : 'bg-neutral-100 text-neutral-900'}`}>
+                <CreditCard className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${stats.pendingPayments > 0 ? 'animate-pulse' : ''}`} />
               </div>
             </div>
-            <h3 className="text-2xl md:text-3xl font-bold tracking-tight text-neutral-900 font-clash">{stats.pendingPayments}</h3>
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-neutral-900 font-clash">{stats.pendingPayments}</h3>
             <p className="text-[10px] text-neutral-500 font-mono mt-1">Awaiting receipt approval</p>
           </div>
 
           {/* Card 4: Consultations */}
-          <div className="border border-neutral-200 bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition duration-300">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-clash">Consultations</span>
-              <div className="p-2 bg-neutral-100 rounded-xl">
-                <PhoneCall className="w-4 h-4 text-neutral-900" />
+          <div 
+            onClick={() => setActiveTab('consultations')}
+            className={`border rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition duration-300 cursor-pointer ${
+              activeTab === 'consultations' ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white border-neutral-200 text-neutral-900'
+            }`}
+          >
+            <div className="flex items-start sm:items-center justify-between gap-2 mb-3">
+              <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-wider font-clash leading-tight ${activeTab === 'consultations' ? 'text-neutral-300' : 'text-neutral-500'}`}>Consultations</span>
+              <div className={`p-1.5 sm:p-2 rounded-xl shrink-0 ${activeTab === 'consultations' ? 'bg-neutral-800' : 'bg-neutral-100'}`}>
+                <PhoneCall className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${activeTab === 'consultations' ? 'text-white' : 'text-neutral-900'}`} />
               </div>
             </div>
-            <h3 className="text-2xl md:text-3xl font-bold tracking-tight text-neutral-900 font-clash">{stats.totalLeads}</h3>
-            <p className="text-[10px] text-neutral-500 font-mono mt-1">Booked advisory leads</p>
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight font-clash">{stats.totalLeads}</h3>
+            <p className={`text-[10px] font-mono mt-1 ${activeTab === 'consultations' ? 'text-neutral-400' : 'text-neutral-500'}`}>Booked advisory leads</p>
           </div>
 
           {/* Card 5: Total Folios */}
           <div 
             onClick={() => setActiveTab('folios')}
-            className={`border rounded-2xl p-5 shadow-sm hover:shadow-md transition duration-300 cursor-pointer ${
+            className={`border rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition duration-300 cursor-pointer ${
               activeTab === 'folios' ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white border-neutral-200 text-neutral-900'
             }`}
           >
-            <div className="flex items-center justify-between mb-3">
-              <span className={`text-xs font-bold uppercase tracking-wider font-clash ${activeTab === 'folios' ? 'text-neutral-300' : 'text-neutral-500'}`}>Total Folios</span>
-              <div className={`p-2 rounded-xl ${activeTab === 'folios' ? 'bg-neutral-800' : 'bg-neutral-100'}`}>
-                <FileSpreadsheet className="w-4 h-4" />
+            <div className="flex items-start sm:items-center justify-between gap-2 mb-3">
+              <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-wider font-clash leading-tight ${activeTab === 'folios' ? 'text-neutral-300' : 'text-neutral-500'}`}>Total Folios</span>
+              <div className={`p-1.5 sm:p-2 rounded-xl shrink-0 ${activeTab === 'folios' ? 'bg-neutral-800' : 'bg-neutral-100'}`}>
+                <FileSpreadsheet className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
             </div>
-            <h3 className="text-2xl md:text-3xl font-bold tracking-tight font-clash">{stats.totalFolios || 0}</h3>
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight font-clash">{stats.totalFolios || 0}</h3>
             <p className={`text-[10px] font-mono mt-1 ${activeTab === 'folios' ? 'text-neutral-400' : 'text-neutral-500'}`}>Parsed folio files</p>
           </div>
 
           {/* Card 6: Existing Clients */}
           <div 
             onClick={() => setActiveTab('existingClients')}
-            className={`border rounded-2xl p-5 shadow-sm hover:shadow-md transition duration-300 cursor-pointer ${
+            className={`border rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition duration-300 cursor-pointer ${
               activeTab === 'existingClients' ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white border-neutral-200 text-neutral-900'
             }`}
           >
-            <div className="flex items-center justify-between mb-3">
-              <span className={`text-xs font-bold uppercase tracking-wider font-clash ${activeTab === 'existingClients' ? 'text-neutral-300' : 'text-neutral-500'}`}>Existing Clients</span>
-              <div className={`p-2 rounded-xl ${activeTab === 'existingClients' ? 'bg-neutral-800' : 'bg-neutral-100'}`}>
-                <Users className="w-4 h-4" />
+            <div className="flex items-start sm:items-center justify-between gap-2 mb-3">
+              <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-wider font-clash leading-tight ${activeTab === 'existingClients' ? 'text-neutral-300' : 'text-neutral-500'}`}>Existing Clients</span>
+              <div className={`p-1.5 sm:p-2 rounded-xl shrink-0 ${activeTab === 'existingClients' ? 'bg-neutral-800' : 'bg-neutral-100'}`}>
+                <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
             </div>
-            <h3 className="text-2xl md:text-3xl font-bold tracking-tight font-clash">{stats.totalExistingClients || 0}</h3>
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight font-clash">{stats.totalExistingClients || 0}</h3>
             <p className={`text-[10px] font-mono mt-1 ${activeTab === 'existingClients' ? 'text-neutral-400' : 'text-neutral-500'}`}>Imported client profiles</p>
           </div>
 
           {/* Card 7: Portfolio Valuations */}
           <div 
             onClick={() => setActiveTab('portfolioValuations')}
-            className={`border rounded-2xl p-5 shadow-sm hover:shadow-md transition duration-300 cursor-pointer ${
+            className={`border rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition duration-300 cursor-pointer ${
               activeTab === 'portfolioValuations' ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white border-neutral-200 text-neutral-900'
             }`}
           >
-            <div className="flex items-center justify-between mb-3">
-              <span className={`text-xs font-bold uppercase tracking-wider font-clash ${activeTab === 'portfolioValuations' ? 'text-neutral-300' : 'text-neutral-500'}`}>Portfolio Valuations</span>
-              <div className={`p-2 rounded-xl ${activeTab === 'portfolioValuations' ? 'bg-neutral-800' : 'bg-neutral-100'}`}>
-                <FileSpreadsheet className="w-4 h-4" />
+            <div className="flex items-start sm:items-center justify-between gap-2 mb-3">
+              <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-wider font-clash leading-tight ${activeTab === 'portfolioValuations' ? 'text-neutral-300' : 'text-neutral-500'}`}>Portfolio Valuations</span>
+              <div className={`p-1.5 sm:p-2 rounded-xl shrink-0 ${activeTab === 'portfolioValuations' ? 'bg-neutral-800' : 'bg-neutral-100'}`}>
+                <FileSpreadsheet className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
             </div>
-            <h3 className="text-2xl md:text-3xl font-bold tracking-tight font-clash">{stats.totalPortfolioValuations || 0}</h3>
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight font-clash">{stats.totalPortfolioValuations || 0}</h3>
             <p className={`text-[10px] font-mono mt-1 ${activeTab === 'portfolioValuations' ? 'text-neutral-400' : 'text-neutral-500'}`}>Valuation sheets</p>
           </div>
 
@@ -955,6 +966,19 @@ export default function AdminDashboard() {
             {stats.pendingPayments > 0 && (
               <span className="px-2 py-0.5 text-[10px] bg-amber-500 text-white rounded-full font-bold">
                 {stats.pendingPayments}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab('consultations')}
+            className={`py-3 text-sm font-bold font-clash tracking-wide border-b-2 cursor-pointer transition duration-200 flex items-center gap-2 whitespace-nowrap ${
+              activeTab === 'consultations' ? 'border-neutral-900 text-neutral-900' : 'border-transparent text-neutral-500 hover:text-neutral-900'
+            }`}
+          >
+            Consultation Leads
+            {stats.totalLeads > 0 && (
+              <span className="px-2 py-0.5 text-[10px] bg-neutral-900 text-white rounded-full font-bold">
+                {stats.totalLeads}
               </span>
             )}
           </button>
@@ -1220,6 +1244,99 @@ export default function AdminDashboard() {
                         >
                           <CheckCircle className="w-3.5 h-3.5 text-amber-400" />
                           {processingPaymentId === payment.id ? 'Processing...' : 'Verify & Approve'}
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'consultations' && (
+            <div className="space-y-4">
+              <h2 className="text-sm font-bold font-clash text-neutral-500 uppercase tracking-wider mb-2">
+                Advisory & Consultation Leads ({allLeadsList.length})
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {allLeadsList.length === 0 ? (
+                  <div className="col-span-2 border border-dashed border-neutral-200 rounded-2xl p-12 text-center text-sm text-neutral-500 bg-neutral-50 font-mono">
+                    <PhoneCall className="w-12 h-12 text-neutral-400 mx-auto mb-4" />
+                    No booked advisory calls found.
+                  </div>
+                ) : (
+                  allLeadsList.map((lead) => (
+                    <div 
+                      key={lead.id} 
+                      className="border border-neutral-200 bg-white rounded-2xl p-6 flex flex-col gap-4 shadow-sm hover:shadow-md transition duration-300 text-neutral-900"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-semibold text-neutral-900 text-sm">
+                            {lead.name}
+                          </h3>
+                          <p className="text-xs text-neutral-500 font-mono">Account: {lead.user?.name || 'Anonymous'} ({lead.user?.email || 'N/A'})</p>
+                          <p className="text-xs text-neutral-600 font-semibold font-mono mt-1 flex items-center gap-1">
+                            <PhoneCall className="w-3.5 h-3.5 text-neutral-400" />
+                            <span>Phone: {lead.phone}</span>
+                          </p>
+                          <span className="text-[10px] text-neutral-400 font-mono mt-1 block">
+                            Booked: {new Date(lead.createdAt).toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="text-right flex flex-col items-end gap-1.5">
+                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider ${
+                            lead.status === 'NEW' ? 'bg-blue-500/10 text-blue-700 border border-blue-500/20' :
+                            lead.status === 'CONTACTED' ? 'bg-amber-500/10 text-amber-700 border border-amber-500/20' :
+                            'bg-emerald-500/10 text-emerald-700 border border-emerald-500/20'
+                          }`}>
+                            {lead.status}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="border border-neutral-200 bg-neutral-50 rounded-xl p-4 space-y-3">
+                        <div className="flex items-start gap-2">
+                          <Calendar className="w-4 h-4 text-neutral-400 shrink-0 mt-0.5" />
+                          <div>
+                            <span className="text-[10px] text-neutral-500 block uppercase font-mono">Scheduled Time Slot</span>
+                            <span className="text-xs font-semibold text-neutral-950">
+                              {lead.slot ? new Date(lead.slot).toLocaleString(undefined, {
+                                weekday: 'short',
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              }) : 'No slot selected'}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        {lead.notes && (
+                          <div className="border-t border-neutral-200/60 pt-2 flex items-start gap-2">
+                            <FileText className="w-4 h-4 text-neutral-400 shrink-0 mt-0.5" />
+                            <div>
+                              <span className="text-[10px] text-neutral-500 block uppercase font-mono">Advisor Notes</span>
+                              <p className="text-xs text-neutral-700 font-sans italic">"{lead.notes}"</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex gap-3 mt-1">
+                        <button
+                          onClick={() => {
+                            selectUserForDetails(lead.user);
+                            setSelectedLeadId(lead.id);
+                            setLeadStatus(lead.status);
+                            setLeadNotes(lead.notes || '');
+                          }}
+                          className="flex-1 py-2.5 bg-neutral-900 text-white text-xs font-bold rounded-xl hover:bg-neutral-800 transition duration-200 cursor-pointer flex items-center justify-center gap-1.5"
+                        >
+                          <User className="w-3.5 h-3.5 text-amber-400" />
+                          Manage Lead & Audit User
                         </button>
                       </div>
                     </div>
@@ -1877,9 +1994,7 @@ export default function AdminDashboard() {
                       className="w-full text-xs font-mono border border-neutral-200 rounded-xl px-3 py-2.5 bg-white text-neutral-900 focus:outline-none"
                     >
                       <option value="FREE">Free Tier</option>
-                      <option value="LITE">Lite Compound Plan</option>
-                      <option value="PREMIUM">Premium Pro Plan (Active)</option>
-                      <option value="PRO">Pro Compounding Plan</option>
+                      <option value="PREMIUM">Premium Pro Plan</option>
                       <option value="MAX">Max Portfolio Plan</option>
                     </select>
                   </div>

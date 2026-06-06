@@ -1203,7 +1203,7 @@ export default function Home() {
             <div>
               <h4 className="text-sm font-bold text-primary font-clash">Cookie Preferences</h4>
               <p className="text-[11px] text-muted-foreground leading-relaxed mt-1 font-sans">
-                We use cookies to analyze traffic, remember preferences, and optimize your portfolio analysis.
+                We use cookies to analyze traffic, remember preferences, and optimize your portfolio analysis. Read our <a href="/cookies" className="underline hover:text-primary transition duration-200">Cookies Policy</a>.
               </p>
             </div>
           </div>

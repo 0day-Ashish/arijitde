@@ -31,11 +31,28 @@ export default function Onboarding() {
   const [isAdminLogin, setIsAdminLogin] = useState(false);
   const [isUserLogin, setIsUserLogin] = useState(false);
 
+  const [clientForgotFlow, setClientForgotFlow] = useState<"LOGIN" | "SEND_OTP" | "VERIFY_RESET">("LOGIN");
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetOtp, setResetOtp] = useState("");
+  const [newClientPassword, setNewClientPassword] = useState("");
+  const [resetSuccessMsg, setResetSuccessMsg] = useState("");
+  const [showNewClientPassword, setShowNewClientPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
+
   // Clock
   const [currentTime, setCurrentTime] = useState("");
 
   const backendUrl = process.env.NEXT_PUBLIC_API_URL;
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+
+  const setAuthSession = (token: string, user: any, remember: boolean) => {
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(user));
+
+    const expiry = remember ? `max-age=${30 * 24 * 60 * 60}` : ""; // 30 days or session cookie
+    document.cookie = `token=${token}; path=/; ${expiry}; SameSite=Lax; Secure`;
+    document.cookie = `user=${encodeURIComponent(JSON.stringify(user))}; path=/; ${expiry}; SameSite=Lax; Secure`;
+  };
 
   // Lenis smooth scrolling initialization
   useEffect(() => {
@@ -85,19 +102,46 @@ export default function Onboarding() {
 
   // Load Google GSI Script dynamically for Google Sign-In
   useEffect(() => {
-    if (flow === "NEW_USER") {
-      const script = document.createElement("script");
-      script.src = "https://accounts.google.com/gsi/client";
-      script.async = true;
-      script.defer = true;
-      script.onload = initializeGoogleSignIn;
-      document.body.appendChild(script);
+    if (flow === "NEW_USER" || flow === "EXISTING_CLIENT") {
+      const existingScript = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+      
+      const renderBtn = () => {
+        if (typeof window !== "undefined" && (window as any).google) {
+          initializeGoogleSignIn();
+        } else {
+          const interval = setInterval(() => {
+            if (typeof window !== "undefined" && (window as any).google) {
+              initializeGoogleSignIn();
+              clearInterval(interval);
+            }
+          }, 100);
+          return () => clearInterval(interval);
+        }
+      };
+
+      let cleanupInterval: (() => void) | undefined;
+
+      if (!existingScript) {
+        const script = document.createElement("script");
+        script.src = "https://accounts.google.com/gsi/client";
+        script.async = true;
+        script.defer = true;
+        script.onload = () => {
+          cleanupInterval = renderBtn();
+        };
+        document.body.appendChild(script);
+      } else {
+        const timer = setTimeout(() => {
+          cleanupInterval = renderBtn();
+        }, 50);
+        return () => {
+          clearTimeout(timer);
+          if (cleanupInterval) cleanupInterval();
+        };
+      }
 
       return () => {
-        const scriptElement = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
-        if (scriptElement) {
-          document.body.removeChild(scriptElement);
-        }
+        if (cleanupInterval) cleanupInterval();
       };
     }
   }, [flow]);
@@ -109,16 +153,34 @@ export default function Onboarding() {
           client_id: googleClientId,
           callback: handleGoogleLoginSuccess,
         });
-        (window as any).google.accounts.id.renderButton(
-          document.getElementById("google-signin-button"),
-          {
-            theme: "dark",
-            size: "large",
-            width: "100%",
-            text: "signup_with",
-            shape: "pill"
-          }
-        );
+
+        const newUserBtn = document.getElementById("google-signin-button");
+        if (newUserBtn) {
+          (window as any).google.accounts.id.renderButton(
+            newUserBtn,
+            {
+              theme: "dark",
+              size: "large",
+              width: "100%",
+              text: "signup_with",
+              shape: "pill"
+            }
+          );
+        }
+
+        const clientBtn = document.getElementById("google-signin-button-client");
+        if (clientBtn) {
+          (window as any).google.accounts.id.renderButton(
+            clientBtn,
+            {
+              theme: "dark",
+              size: "large",
+              width: "100%",
+              text: "signin_with",
+              shape: "pill"
+            }
+          );
+        }
       } catch (err) {
         console.error("Failed to initialize Google Sign In: ", err);
       }
@@ -139,13 +201,14 @@ export default function Onboarding() {
       const data = await res.json();
 
       if (data.success) {
-        // Save token and user details to localStorage
-        localStorage.setItem("token", data.data.token);
-        localStorage.setItem("user", JSON.stringify(data.data.user));
+        // Save token and user details to cookies/localStorage
+        setAuthSession(data.data.token, data.data.user, true);
         
         // Redirect dynamically based on user role
         if (data.data.user?.role === "ADMIN") {
           window.location.href = "/dashboard/admin";
+        } else if (data.data.user?.role === "CLIENT") {
+          window.location.href = "/dashboard/client";
         } else {
           window.location.href = "/dashboard/user";
         }
@@ -230,12 +293,11 @@ export default function Onboarding() {
       const data = await res.json();
 
       if (data.success) {
-        // Save registration details in localStorage
-        localStorage.setItem("token", data.data.token);
-        localStorage.setItem("user", JSON.stringify({
+        // Save registration details in cookies/localStorage
+        setAuthSession(data.data.token, {
           ...data.data.user,
           name: isAdminLogin ? (data.data.user.name || "Administrator") : name // Use custom name provided in form or default to admin
-        }));
+        }, rememberMe);
 
         // Redirect dynamically based on user role
         if (data.data.user?.role === "ADMIN") {
@@ -284,14 +346,92 @@ export default function Onboarding() {
       const data = await res.json();
 
       if (res.ok && data.success) {
-        localStorage.setItem("token", data.data.token);
-        localStorage.setItem("user", JSON.stringify(data.data.user));
+        setAuthSession(data.data.token, data.data.user, rememberMe);
         window.location.href = "/dashboard/client";
       } else {
         setError(data.error || "Login failed. Please check your credentials.");
       }
     } catch (err) {
       setError("Error connecting to server. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClientSendResetOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setResetSuccessMsg("");
+    const trimmedEmail = resetEmail.trim().toLowerCase();
+
+    if (!trimmedEmail) {
+      setError("Please enter your registered email address.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch(`${backendUrl}/api/auth/password/reset/send-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: trimmedEmail }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setResetSuccessMsg(`Verification code sent successfully to ${trimmedEmail}`);
+        setClientForgotFlow('VERIFY_RESET');
+      } else {
+        setError(data.error || "Failed to send reset code.");
+      }
+    } catch (err) {
+      setError("Network connection error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClientConfirmReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setResetSuccessMsg("");
+    const trimmedEmail = resetEmail.trim().toLowerCase();
+    const trimmedOtp = resetOtp.trim();
+    const trimmedPass = newClientPassword.trim();
+
+    if (!trimmedOtp || trimmedOtp.length !== 6) {
+      setError("Please enter a valid 6-digit OTP code.");
+      return;
+    }
+
+    if (!trimmedPass || trimmedPass.length < 8 || !/[A-Z]/.test(trimmedPass) || !/[0-9]/.test(trimmedPass)) {
+      setError("Password must be at least 8 characters long and contain at least one uppercase letter and one number.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch(`${backendUrl}/api/auth/password/reset/confirm`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: trimmedEmail, otp: trimmedOtp, password: trimmedPass }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setResetSuccessMsg("Password reset successfully! Please log in using your new credentials.");
+        setClientForgotFlow('LOGIN');
+        // Clear forms
+        setResetEmail('');
+        setResetOtp('');
+        setNewClientPassword('');
+        setPanNumber('');
+        setClientPassword('');
+      } else {
+        setError(data.error || "Failed to reset password.");
+      }
+    } catch (err) {
+      setError("Network connection error. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -481,6 +621,20 @@ export default function Onboarding() {
                 </div>
               )}
 
+              {/* Remember Me Checkbox */}
+              <div className="flex items-center gap-2 mt-1">
+                <input
+                  type="checkbox"
+                  id="userRememberMe"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 rounded border-border text-primary focus:ring-primary accent-primary cursor-pointer"
+                />
+                <label htmlFor="userRememberMe" className="text-xs text-muted-foreground select-none cursor-pointer font-sans">
+                  Remember me on this device
+                </label>
+              </div>
+
               <button
                 type="submit"
                 disabled={loading}
@@ -588,66 +742,213 @@ export default function Onboarding() {
         {/* 4. EXISTING CLIENT FORM */}
         {flow === "EXISTING_CLIENT" && (
           <div className="w-full max-w-md bg-white/30 border border-white/20 rounded-3xl p-8 shadow-2xl backdrop-blur-xl relative text-left">
-            <h2 className="text-2xl font-semibold text-foreground mb-2 font-clash">Client Log In</h2>
+            <h2 className="text-2xl font-semibold text-foreground mb-2 font-clash">
+              {clientForgotFlow === 'LOGIN' && "Client Log In"}
+              {clientForgotFlow === 'SEND_OTP' && "Reset Account Password"}
+              {clientForgotFlow === 'VERIFY_RESET' && "Verify Reset Code"}
+            </h2>
             <p className="text-muted-foreground text-xs font-sans mb-6">
-              Enter your Permanent Account Number (PAN) and security password.
+              {clientForgotFlow === 'LOGIN' && "Enter your Permanent Account Number (PAN) and security password."}
+              {clientForgotFlow === 'SEND_OTP' && "Enter your registered email address to receive a 6-digit verification code."}
+              {clientForgotFlow === 'VERIFY_RESET' && "Enter the verification code sent to your email and your new password."}
             </p>
 
             {/* Error Message */}
             {error && (
-              <div className="mb-5 p-3.5 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs flex gap-2 items-start text-left font-sans">
+              <div className="mb-5 p-3.5 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs flex gap-2 items-start text-left font-sans animate-in fade-in slide-in-from-top-2">
                 <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
                 <span>{error}</span>
               </div>
             )}
 
-            <form onSubmit={handleClientLoginSubmit} className="space-y-4">
-              <div>
-                <label className="block text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-1.5">PAN Card Number</label>
-                <div className="relative">
-                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. ABCDE1234F"
-                    maxLength={10}
-                    value={panNumber}
-                    onChange={(e) => setPanNumber(e.target.value.toUpperCase())}
-                    className="w-full pl-10 pr-4 py-3 text-sm bg-white/40 border border-white/20 rounded-xl text-foreground placeholder-slate-500 focus:outline-none focus:border-primary focus:bg-white/60 font-sans tracking-wide transition-all"
-                  />
-                </div>
+            {/* Success Message */}
+            {resetSuccessMsg && (
+              <div className="mb-5 p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-xs flex gap-2 items-start text-left font-sans animate-in fade-in slide-in-from-top-2">
+                <span className="font-bold shrink-0 mt-0.5">✓</span>
+                <span>{resetSuccessMsg}</span>
               </div>
+            )}
 
-              <div>
-                <label className="block text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-1.5">Account Password</label>
-                <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input
-                    type={showClientPassword ? "text" : "password"}
-                    required
-                    placeholder="Enter account password"
-                    value={clientPassword}
-                    onChange={(e) => setClientPassword(e.target.value)}
-                    className="w-full pl-10 pr-10 py-3 text-sm bg-white/40 border border-white/20 rounded-xl text-foreground placeholder-slate-500 focus:outline-none focus:border-primary focus:bg-white/60 font-sans transition-all"
-                  />
+            {clientForgotFlow === 'LOGIN' && (
+              <>
+                <form onSubmit={handleClientLoginSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-1.5">PAN Card Number</label>
+                    <div className="relative">
+                      <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. ABCDE1234F"
+                        maxLength={10}
+                        value={panNumber}
+                        onChange={(e) => setPanNumber(e.target.value.toUpperCase())}
+                        className="w-full pl-10 pr-4 py-3 text-sm bg-white/40 border border-white/20 rounded-xl text-foreground placeholder-slate-500 focus:outline-none focus:border-primary focus:bg-white/60 font-sans tracking-wide transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-center mb-1.5">
+                      <label className="block text-[11px] font-mono uppercase tracking-wider text-muted-foreground">Account Password</label>
+                      <button
+                        type="button"
+                        onClick={() => { setClientForgotFlow('SEND_OTP'); setError(null); setResetSuccessMsg(""); }}
+                        className="text-[10px] text-primary hover:underline font-semibold font-sans cursor-pointer"
+                      >
+                        Forgot password?
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <input
+                        type={showClientPassword ? "text" : "password"}
+                        required
+                        placeholder="Enter account password"
+                        value={clientPassword}
+                        onChange={(e) => setClientPassword(e.target.value)}
+                        className="w-full pl-10 pr-10 py-3 text-sm bg-white/40 border border-white/20 rounded-xl text-foreground placeholder-slate-500 focus:outline-none focus:border-primary focus:bg-white/60 font-sans transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowClientPassword(!showClientPassword)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors p-1 cursor-pointer"
+                      >
+                        {showClientPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Remember Me Checkbox */}
+                  <div className="flex items-center gap-2 mt-1">
+                    <input
+                      type="checkbox"
+                      id="clientRememberMe"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="w-4 h-4 rounded border-border text-primary focus:ring-primary accent-primary cursor-pointer"
+                    />
+                    <label htmlFor="clientRememberMe" className="text-xs text-muted-foreground select-none cursor-pointer font-sans">
+                      Remember me on this device
+                    </label>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full mt-4 py-3.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs flex items-center justify-center gap-2 transition duration-200 cursor-pointer disabled:opacity-50"
+                  >
+                    {loading ? "Authenticating..." : "Client Access Sign In"}
+                  </button>
+                </form>
+
+                <div className="relative my-6 flex items-center justify-center">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-white/20"></div>
+                  </div>
+                  <span className="relative z-10 px-3 bg-white/50 backdrop-blur-md text-[10px] font-mono text-muted-foreground uppercase tracking-widest rounded-full">Or Continue With</span>
+                </div>
+
+                {/* Google OAuth Button Container */}
+                <div className="w-full flex flex-col items-center justify-center">
+                  <div id="google-signin-button-client" className="w-full min-h-[40px] flex justify-center" />
+                </div>
+              </>
+            )}
+
+            {clientForgotFlow === 'SEND_OTP' && (
+              <form onSubmit={handleClientSendResetOtp} className="space-y-4">
+                <div>
+                  <label className="block text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-1.5">Registered Email Address</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <input
+                      type="email"
+                      required
+                      placeholder="Enter your registered email"
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      className="w-full pl-10 pr-4 py-3 text-sm bg-white/40 border border-white/20 rounded-xl text-foreground placeholder-slate-500 focus:outline-none focus:border-primary focus:bg-white/60 font-sans transition-all"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full mt-4 py-3.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs flex items-center justify-center gap-2 transition duration-200 cursor-pointer disabled:opacity-50"
+                >
+                  {loading ? "Sending OTP..." : "Send Verification OTP"}
+                </button>
+
+                <div className="text-center mt-4">
                   <button
                     type="button"
-                    onClick={() => setShowClientPassword(!showClientPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors p-1 cursor-pointer"
+                    onClick={() => { setClientForgotFlow('LOGIN'); setError(null); setResetSuccessMsg(""); }}
+                    className="text-xs text-neutral-600 hover:text-primary font-semibold font-sans cursor-pointer"
                   >
-                    {showClientPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    &larr; Back to Login
                   </button>
                 </div>
-              </div>
+              </form>
+            )}
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full mt-4 py-3.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs flex items-center justify-center gap-2 transition duration-200 cursor-pointer disabled:opacity-50"
-              >
-                {loading ? "Authenticating..." : "Client Access Sign In"}
-              </button>
-            </form>
+            {clientForgotFlow === 'VERIFY_RESET' && (
+              <form onSubmit={handleClientConfirmReset} className="space-y-4">
+                <div>
+                  <label className="block text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-1.5 text-center">6-Digit OTP Code</label>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    required
+                    placeholder="Enter verification code"
+                    value={resetOtp}
+                    onChange={(e) => setResetOtp(e.target.value.replace(/\D/g, ""))}
+                    className="w-full tracking-[1.5em] text-center py-3.5 text-lg bg-white/40 border border-white/20 rounded-xl text-foreground placeholder-slate-500 focus:outline-none focus:border-primary focus:bg-white/60 font-mono transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-1.5">New Password</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <input
+                      type={showNewClientPassword ? "text" : "password"}
+                      required
+                      placeholder="Min 8 chars, 1 uppercase, 1 number"
+                      value={newClientPassword}
+                      onChange={(e) => setNewClientPassword(e.target.value)}
+                      className="w-full pl-10 pr-10 py-3 text-sm bg-white/40 border border-white/20 rounded-xl text-foreground placeholder-slate-500 focus:outline-none focus:border-primary focus:bg-white/60 font-sans transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewClientPassword(!showNewClientPassword)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors p-1 cursor-pointer"
+                    >
+                      {showNewClientPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full mt-4 py-3.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs flex items-center justify-center gap-2 transition duration-200 cursor-pointer disabled:opacity-50"
+                >
+                  {loading ? "Resetting Password..." : "Reset Password"}
+                </button>
+
+                <div className="text-center mt-4">
+                  <button
+                    type="button"
+                    onClick={() => { setClientForgotFlow('LOGIN'); setError(null); setResetSuccessMsg(""); }}
+                    className="text-xs text-neutral-600 hover:text-primary font-semibold font-sans cursor-pointer"
+                  >
+                    &larr; Back to Login
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         )}
 

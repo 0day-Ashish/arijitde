@@ -142,9 +142,27 @@ interface ScoreData {
   insights: string[];
 }
 
+const PLAN_LABELS: Record<string, string> = {
+  FREE: "Free Tier",
+  PREMIUM: "Premium Pro Plan",
+  MAX: "Max Portfolio Plan",
+};
+
 export default function ClientDashboard() {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [userData, setUserData] = useState<{ id: string; name?: string; email?: string; role?: string; phone?: string } | null>(null);
+  const [userData, setUserData] = useState<{ 
+    id: string; 
+    name?: string; 
+    email?: string; 
+    role?: string; 
+    phone?: string;
+    pan?: string;
+    client?: {
+      activePlan: string | null;
+      advisorNotes: string | null;
+      activatedAt: string;
+    } | null;
+  } | null>(null);
   const [token, setToken] = useState<string | null>(null);
 
   // States
@@ -184,6 +202,7 @@ export default function ClientDashboard() {
   // Database contexts
   const [activeAssessmentId, setActiveAssessmentId] = useState<string | null>(null);
   const [activePortfolioId, setActivePortfolioId] = useState<string | null>(null);
+  const [activePortfolio, setActivePortfolio] = useState<any | null>(null);
   const [scoreReport, setScoreReport] = useState<ScoreData | null>(null);
 
   // Client specifics
@@ -194,6 +213,7 @@ export default function ClientDashboard() {
   const [clientBookings, setClientBookings] = useState<string[]>([]);
   const [showBookingSuccess, setShowBookingSuccess] = useState(false);
   const [pointsEarnedToday, setPointsEarnedToday] = useState(0);
+  const [selectedSlot, setSelectedSlot] = useState<string>("");
 
   // Uploader tabs
   const [analyzeTab, setAnalyzeTab] = useState<"FILE" | "MANUAL">("FILE");
@@ -208,9 +228,20 @@ export default function ClientDashboard() {
   // View full scorecard inline toggle
   const [viewFullReport, setViewFullReport] = useState(false);
 
+  const [rememberMe, setRememberMe] = useState(true);
+
   const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-  // Clock Synchronizer
+  const setAuthSession = (token: string, user: any, remember: boolean) => {
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(user));
+
+    const expiry = remember ? `max-age=${30 * 24 * 60 * 60}` : ""; // 30 days or session cookie
+    document.cookie = `token=${token}; path=/; ${expiry}; SameSite=Lax; Secure`;
+    document.cookie = `user=${encodeURIComponent(JSON.stringify(user))}; path=/; ${expiry}; SameSite=Lax; Secure`;
+  };
+
+  // Clock Synchronizer and Booking Slot Initializer
   useEffect(() => {
     const updateTime = () => {
       const date = new Date();
@@ -218,6 +249,16 @@ export default function ClientDashboard() {
     };
     updateTime();
     const interval = setInterval(updateTime, 1000);
+
+    // Default slot: 24h from now formatted to YYYY-MM-DDTHH:mm
+    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const year = tomorrow.getFullYear();
+    const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+    const day = String(tomorrow.getDate()).padStart(2, '0');
+    const hours = String(tomorrow.getHours()).padStart(2, '0');
+    const minutes = String(tomorrow.getMinutes()).padStart(2, '0');
+    setSelectedSlot(`${year}-${month}-${day}T${hours}:${minutes}`);
+
     return () => clearInterval(interval);
   }, []);
 
@@ -333,6 +374,7 @@ export default function ClientDashboard() {
       if (userPortfolios.length > 0) {
         const latestPortfolio = userPortfolios[0];
         setActivePortfolioId(latestPortfolio.id);
+        setActivePortfolio(latestPortfolio);
         if (latestPortfolio.score) {
           setScoreReport(latestPortfolio.score);
         } else {
@@ -417,15 +459,23 @@ export default function ClientDashboard() {
           "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({
-          name: userData?.name || "Premium Client",
+          name: userData?.name || "Client",
           phone: userData?.phone || "0000000000",
-          slot: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+          slot: selectedSlot ? new Date(selectedSlot).toISOString() : new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
         })
       });
       const data = await res.json();
 
       if (data.success) {
-        const newBooking = `1-on-1 Strategy Session - Confirmed (Paid ₹${amountPaid} using FinPoints)`;
+        const selectedSlotDate = selectedSlot ? new Date(selectedSlot) : new Date(Date.now() + 24 * 60 * 60 * 1000);
+        const formattedSlot = selectedSlotDate.toLocaleString(undefined, {
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        const newBooking = `1-on-1 Strategy Session - Confirmed for ${formattedSlot} (Paid ₹${amountPaid} using FinPoints)`;
         const updatedBookings = [newBooking, ...clientBookings];
         setClientBookings(updatedBookings);
         localStorage.setItem("clientBookings", JSON.stringify(updatedBookings));
@@ -480,6 +530,7 @@ export default function ClientDashboard() {
         setActivePortfolioId(pId);
         setStatusMsg("Analyzing asset allocation and scoring...");
         await calculatePortfolioScore(pId);
+        await fetchClientData();
         setUploadedFile(null);
       } else {
         setError(data.error || "Failed to process Excel upload.");
@@ -551,6 +602,7 @@ export default function ClientDashboard() {
         setActivePortfolioId(pId);
         setStatusMsg("Calculating financial health scores...");
         await calculatePortfolioScore(pId);
+        await fetchClientData();
         // Reset manual grid
         setManualRows([{ fundName: "", type: "SIP", startDate: "", sipAmount: 0, invested: 0, currentValue: 0 }]);
       } else {
@@ -643,6 +695,8 @@ export default function ClientDashboard() {
   const handleSignOut = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    document.cookie = "user=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     window.location.href = "/onboarding";
   };
 
@@ -679,8 +733,7 @@ export default function ClientDashboard() {
         const fetchedToken = data.data.token;
         const fetchedUser = data.data.user;
 
-        localStorage.setItem("token", fetchedToken);
-        localStorage.setItem("user", JSON.stringify(fetchedUser));
+        setAuthSession(fetchedToken, fetchedUser, rememberMe);
 
         setToken(fetchedToken);
         setUserData(fetchedUser);
@@ -980,6 +1033,20 @@ export default function ClientDashboard() {
                         )}
                       </button>
                     </div>
+                  </div>
+
+                  {/* Remember Me Checkbox */}
+                  <div className="flex items-center gap-2 mt-1">
+                    <input
+                      type="checkbox"
+                      id="dashboardRememberMe"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="w-4 h-4 rounded border-border text-primary focus:ring-primary accent-primary cursor-pointer"
+                    />
+                    <label htmlFor="dashboardRememberMe" className="text-xs text-muted-foreground select-none cursor-pointer font-sans">
+                      Remember me on this device
+                    </label>
                   </div>
 
                   <button
@@ -1355,7 +1422,7 @@ export default function ClientDashboard() {
               <div className="bg-white/50 backdrop-blur-xl border border-white/40 shadow-xl rounded-3xl p-6 space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 font-mono text-[9px] font-bold tracking-wider uppercase">
-                    Premium Member
+                    {PLAN_LABELS[userData?.client?.activePlan || "PREMIUM"]}
                   </span>
                   <Award className="w-4 h-4 text-emerald-600 animate-pulse" />
                 </div>
@@ -1380,6 +1447,12 @@ export default function ClientDashboard() {
                       {GOAL_OPTIONS.find(o => o.value === quizGoal)?.label || quizGoal}
                     </span>
                   </div>
+                  {userData?.pan && (
+                    <div className="flex justify-between font-mono">
+                      <span>PAN Card:</span>
+                      <span className="font-semibold text-neutral-800">{userData.pan}</span>
+                    </div>
+                  )}
                   {userData?.phone && (
                     <div className="flex justify-between font-mono">
                       <span>Phone:</span>
@@ -1445,6 +1518,19 @@ export default function ClientDashboard() {
                 <p className="text-[11px] text-neutral-500 font-sans leading-relaxed">
                   Book a priority review session. Applied FinPoints deduct from standard ₹499 fee.
                 </p>
+
+                <div className="space-y-1">
+                  <label htmlFor="booking-time-slot" className="text-[10px] uppercase font-bold text-neutral-500 block font-mono">
+                    Select Time Slot
+                  </label>
+                  <input
+                    type="datetime-local"
+                    id="booking-time-slot"
+                    value={selectedSlot}
+                    onChange={(e) => setSelectedSlot(e.target.value)}
+                    className="w-full p-2.5 text-xs border border-border/40 rounded-xl bg-white/50 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-neutral-900 font-sans cursor-pointer"
+                  />
+                </div>
 
                 <div className="p-3 bg-neutral-900/5 rounded-2xl flex justify-between items-center text-xs">
                   <span className="text-neutral-500 font-semibold">Total Price</span>
@@ -1574,7 +1660,7 @@ export default function ClientDashboard() {
                     </div>
 
                     <div className="text-[9px] font-mono text-neutral-400">
-                      THANK YOU FOR BEING A PREMIUM CLIENT
+                      THANK YOU FOR BEING ON THE {PLAN_LABELS[userData?.client?.activePlan || "PREMIUM"].toUpperCase()}
                     </div>
                   </div>
                 </div>
@@ -1915,6 +2001,52 @@ export default function ClientDashboard() {
                   </form>
                 )}
               </div>
+
+              {/* Current Investments / Holdings Card */}
+              {activePortfolio && activePortfolio.rows && activePortfolio.rows.length > 0 && (
+                <div className="bg-white/50 backdrop-blur-xl border border-white/40 shadow-xl rounded-3xl p-6 space-y-4">
+                  <div className="flex justify-between items-center border-b border-border/20 pb-2">
+                    <h3 className="text-sm font-bold font-clash text-neutral-800 flex items-center gap-1.5">
+                      <FileSpreadsheet className="w-4 h-4 text-primary" />
+                      Current Investment Holdings ({activePortfolio.rows.length})
+                    </h3>
+                    <span className="text-[10px] font-mono text-neutral-400">
+                      Uploaded via {activePortfolio.uploadType}
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] text-neutral-500 font-sans leading-relaxed">
+                    Below are the current holdings you submitted during your portfolio assessment.
+                  </p>
+
+                  <div className="border border-border/30 bg-white/40 rounded-2xl overflow-hidden font-sans text-xs">
+                    <div className="overflow-x-auto w-full">
+                      <table className="w-full text-left text-neutral-900">
+                        <thead>
+                          <tr className="bg-white/60 border-b border-border/20 text-neutral-500 font-bold font-mono text-[9px] uppercase tracking-wider">
+                            <th className="px-4 py-3">Fund Name</th>
+                            <th className="px-4 py-3">Type</th>
+                            <th className="px-4 py-3 text-right">Invested</th>
+                            <th className="px-4 py-3 text-right">Current Value</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border/10 font-sans">
+                          {activePortfolio.rows.map((row: any) => (
+                            <tr key={row.id} className="hover:bg-white/20 transition duration-150">
+                              <td className="px-4 py-3 font-semibold text-neutral-900 truncate max-w-[200px]" title={row.fundName}>
+                                {row.fundName}
+                              </td>
+                              <td className="px-4 py-3 text-neutral-500 font-mono text-[10px]">{row.type}</td>
+                              <td className="px-4 py-3 text-right text-neutral-900 font-mono">₹{row.invested.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-right text-neutral-900 font-semibold font-mono">₹{row.currentValue.toLocaleString()}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
