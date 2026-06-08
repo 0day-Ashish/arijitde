@@ -97,10 +97,9 @@ export default function ScrollVideoPlayer({ src, isLoaded }: ScrollVideoPlayerPr
     <div ref={containerRef} className="h-[200vh] w-full relative bg-black select-none">
       {/* Sticky container that centers the video in viewport */}
       <div className="sticky top-0 h-screen w-full flex items-center justify-center bg-black overflow-hidden">
-        <div 
-          className={`w-full h-full flex items-center justify-center transition-all duration-[1000ms] ease-out ${
-            isLoaded ? 'opacity-100' : 'opacity-0'
-          }`}
+        <div
+          className={`w-full h-full flex items-center justify-center transition-all duration-[1000ms] ease-out ${isLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
         >
           <ScrollBlurReveal className="w-full h-full">
             <video
