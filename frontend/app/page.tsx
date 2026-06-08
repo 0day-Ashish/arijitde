@@ -1134,27 +1134,6 @@ export default function Home() {
       </div>
 
       {/* Scroll-Driven Video Playback Showcase */}
-      <div
-        ref={scrollVideoContainerRef}
-        className="relative w-full h-[180vh] bg-transparent overflow-visible mt-20"
-      >
-        {/* Sticky viewport container - Full Bleed */}
-        <div className="sticky top-0 left-0 w-full h-screen overflow-hidden flex flex-col items-center justify-center">
-
-          {/* Video element container - Full Bleed */}
-          <div className="relative w-full h-full bg-black">
-            <video
-              ref={scrollVideoRef}
-              src="/assets/video2.mp4"
-              muted
-              playsInline
-              preload="auto"
-              className="w-full h-full object-cover"
-            />
-          </div>
-
-        </div>
-      </div>
 
       <Footer footerRef={footerRef} />
 

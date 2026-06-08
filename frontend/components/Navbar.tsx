@@ -64,6 +64,12 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
                 About
               </a>
               <a 
+                href="/onboarding" 
+                className={`hover:text-primary transition duration-200 ${activePath === '/onboarding' ? 'text-primary font-bold' : ''}`}
+              >
+                Portfolio
+              </a>
+              <a 
                 href="#calculators" 
                 className={`hover:text-primary transition duration-200 ${activePath === '#calculators' ? 'text-primary font-bold' : ''}`}
               >
@@ -122,6 +128,13 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
                   } delay-[100ms]`}
               >
                 About
+              </a>
+              <a
+                href="/onboarding"
+                className={`hover:text-primary transition-all duration-300 transform ${isMobileMenuOpen ? "opacity-100 translate-x-0 font-clash" : "opacity-0 -translate-x-4"
+                  } delay-[200ms]`}
+              >
+                Portfolio
               </a>
               <a
                 href="#calculators"
