@@ -310,6 +310,16 @@ export default function Home() {
 
 
   useEffect(() => {
+    if (typeof window !== "undefined" && sessionStorage.getItem("hasSeenPreloader")) {
+      setIsLoaded(true);
+      setPreloaderGone(true);
+      return;
+    }
+
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("hasSeenPreloader", "true");
+    }
+
     let startTime = Date.now();
     const duration = 5000; // 5 seconds preloader duration
 
@@ -1151,6 +1161,7 @@ export default function Home() {
       {/* Preloader Overlay Screen (Slides down smoothly) */}
       {!preloaderGone && (
         <div
+          id="preloader-screen"
           className={`fixed inset-0 z-50 flex flex-col justify-between bg-[#F2F0EF] p-12 md:p-20 transition-transform duration-[1000ms] ease-[cubic-bezier(0.85,0,0.15,1)] ${isLoaded ? "translate-y-full" : "translate-y-0"
             }`}
         >
