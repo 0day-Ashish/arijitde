@@ -31,7 +31,7 @@ export default function Onboarding() {
   const [isAdminLogin, setIsAdminLogin] = useState(false);
   const [isUserLogin, setIsUserLogin] = useState(false);
 
-  const [clientForgotFlow, setClientForgotFlow] = useState<"LOGIN" | "SEND_OTP" | "VERIFY_RESET">("LOGIN");
+  const [clientForgotFlow, setClientForgotFlow] = useState<"LOGIN" | "SEND_OTP" | "VERIFY_RESET" | "ACTIVATE_SEND" | "ACTIVATE_VERIFY">("LOGIN");
   const [resetEmail, setResetEmail] = useState("");
   const [resetOtp, setResetOtp] = useState("");
   const [newClientPassword, setNewClientPassword] = useState("");
@@ -437,6 +437,97 @@ export default function Onboarding() {
     }
   };
 
+  const handleClientSendActivationOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setResetSuccessMsg("");
+    const formattedPan = panNumber.trim().toUpperCase();
+    const trimmedEmail = resetEmail.trim().toLowerCase();
+
+    const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+    if (!panRegex.test(formattedPan)) {
+      setError("Invalid PAN structure. Standard format: ABCDE1234F");
+      return;
+    }
+
+    if (!trimmedEmail) {
+      setError("Please enter your registered email address.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch(`${backendUrl}/api/auth/activation/send-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pan: formattedPan, email: trimmedEmail }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setResetSuccessMsg(`Activation code sent successfully to ${trimmedEmail}`);
+        setClientForgotFlow('ACTIVATE_VERIFY');
+      } else {
+        setError(data.error || "Failed to send activation code.");
+      }
+    } catch (err) {
+      setError("Network connection error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClientConfirmActivation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setResetSuccessMsg("");
+    const formattedPan = panNumber.trim().toUpperCase();
+    const trimmedEmail = resetEmail.trim().toLowerCase();
+    const trimmedOtp = resetOtp.trim();
+    const trimmedPass = newClientPassword.trim();
+
+    if (!trimmedOtp || trimmedOtp.length !== 6) {
+      setError("Please enter a valid 6-digit verification code.");
+      return;
+    }
+
+    if (!trimmedPass || trimmedPass.length < 8 || !/[A-Z]/.test(trimmedPass) || !/[0-9]/.test(trimmedPass)) {
+      setError("Password must be at least 8 characters long and contain at least one uppercase letter and one number.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch(`${backendUrl}/api/auth/activation/verify-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pan: formattedPan,
+          email: trimmedEmail,
+          otp: trimmedOtp,
+          password: trimmedPass
+        }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setResetSuccessMsg("Account activated successfully! Please log in with your credentials.");
+        setClientForgotFlow('LOGIN');
+        setResetEmail('');
+        setResetOtp('');
+        setNewClientPassword('');
+        setPanNumber('');
+        setClientPassword('');
+      } else {
+        setError(data.error || "Failed to activate account.");
+      }
+    } catch (err) {
+      setError("Network connection error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <main className="relative min-h-screen w-full bg-transparent text-foreground flex flex-col font-clash">
       {/* Fixed Background container with User's Gradient Theme */}
@@ -746,11 +837,15 @@ export default function Onboarding() {
               {clientForgotFlow === 'LOGIN' && "Client Log In"}
               {clientForgotFlow === 'SEND_OTP' && "Reset Account Password"}
               {clientForgotFlow === 'VERIFY_RESET' && "Verify Reset Code"}
+              {clientForgotFlow === 'ACTIVATE_SEND' && "Activate Client Account"}
+              {clientForgotFlow === 'ACTIVATE_VERIFY' && "Verify Activation Code"}
             </h2>
             <p className="text-muted-foreground text-xs font-sans mb-6">
               {clientForgotFlow === 'LOGIN' && "Enter your Permanent Account Number (PAN) and security password."}
               {clientForgotFlow === 'SEND_OTP' && "Enter your registered email address to receive a 6-digit verification code."}
               {clientForgotFlow === 'VERIFY_RESET' && "Enter the verification code sent to your email and your new password."}
+              {clientForgotFlow === 'ACTIVATE_SEND' && "Enter your PAN and registered Email Address to receive an activation code."}
+              {clientForgotFlow === 'ACTIVATE_VERIFY' && "Enter the activation code sent to your email and set your new security password."}
             </p>
 
             {/* Error Message */}
@@ -841,6 +936,17 @@ export default function Onboarding() {
                     {loading ? "Authenticating..." : "Client Access Sign In"}
                   </button>
                 </form>
+
+                <div className="mt-6 text-center text-xs text-muted-foreground font-sans">
+                  First time logging in?{" "}
+                  <button
+                    type="button"
+                    onClick={() => { setClientForgotFlow('ACTIVATE_SEND'); setError(null); setResetSuccessMsg(""); }}
+                    className="text-primary font-semibold hover:underline cursor-pointer"
+                  >
+                    Activate your account
+                  </button>
+                </div>
 
                 <div className="relative my-6 flex items-center justify-center">
                   <div className="absolute inset-0 flex items-center">
@@ -936,6 +1042,116 @@ export default function Onboarding() {
                   className="w-full mt-4 py-3.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs flex items-center justify-center gap-2 transition duration-200 cursor-pointer disabled:opacity-50"
                 >
                   {loading ? "Resetting Password..." : "Reset Password"}
+                </button>
+
+                <div className="text-center mt-4">
+                  <button
+                    type="button"
+                    onClick={() => { setClientForgotFlow('LOGIN'); setError(null); setResetSuccessMsg(""); }}
+                    className="text-xs text-neutral-600 hover:text-primary font-semibold font-sans cursor-pointer"
+                  >
+                    &larr; Back to Login
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {clientForgotFlow === 'ACTIVATE_SEND' && (
+              <form onSubmit={handleClientSendActivationOtp} className="space-y-4">
+                <div>
+                  <label className="block text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-1.5">PAN Card Number</label>
+                  <div className="relative">
+                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. ABCDE1234F"
+                      maxLength={10}
+                      value={panNumber}
+                      onChange={(e) => setPanNumber(e.target.value.toUpperCase())}
+                      className="w-full pl-10 pr-4 py-3 text-sm bg-white/40 border border-white/20 rounded-xl text-foreground placeholder-slate-500 focus:outline-none focus:border-primary focus:bg-white/60 font-sans tracking-wide transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-1.5">Registered Email Address</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <input
+                      type="email"
+                      required
+                      placeholder="Enter your registered email"
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      className="w-full pl-10 pr-4 py-3 text-sm bg-white/40 border border-white/20 rounded-xl text-foreground placeholder-slate-500 focus:outline-none focus:border-primary focus:bg-white/60 font-sans transition-all"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full mt-4 py-3.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs flex items-center justify-center gap-2 transition duration-200 cursor-pointer disabled:opacity-50"
+                >
+                  {loading ? "Sending Activation Code..." : "Send Activation OTP"}
+                </button>
+
+                <div className="text-center mt-4">
+                  <button
+                    type="button"
+                    onClick={() => { setClientForgotFlow('LOGIN'); setError(null); setResetSuccessMsg(""); }}
+                    className="text-xs text-neutral-600 hover:text-primary font-semibold font-sans cursor-pointer"
+                  >
+                    &larr; Back to Login
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {clientForgotFlow === 'ACTIVATE_VERIFY' && (
+              <form onSubmit={handleClientConfirmActivation} className="space-y-4">
+                <div>
+                  <label className="block text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-1.5 text-center">6-Digit Activation Code</label>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    required
+                    placeholder="Enter activation code"
+                    value={resetOtp}
+                    onChange={(e) => setResetOtp(e.target.value.replace(/\D/g, ""))}
+                    className="w-full tracking-[1.5em] text-center py-3.5 text-lg bg-white/40 border border-white/20 rounded-xl text-foreground placeholder-slate-500 focus:outline-none focus:border-primary focus:bg-white/60 font-mono transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-1.5">Set Security Password</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <input
+                      type={showNewClientPassword ? "text" : "password"}
+                      required
+                      placeholder="Min 8 chars, 1 uppercase, 1 number"
+                      value={newClientPassword}
+                      onChange={(e) => setNewClientPassword(e.target.value)}
+                      className="w-full pl-10 pr-10 py-3 text-sm bg-white/40 border border-white/20 rounded-xl text-foreground placeholder-slate-500 focus:outline-none focus:border-primary focus:bg-white/60 font-sans transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewClientPassword(!showNewClientPassword)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors p-1 cursor-pointer"
+                    >
+                      {showNewClientPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full mt-4 py-3.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs flex items-center justify-center gap-2 transition duration-200 cursor-pointer disabled:opacity-50"
+                >
+                  {loading ? "Activating Account..." : "Confirm & Activate"}
                 </button>
 
                 <div className="text-center mt-4">

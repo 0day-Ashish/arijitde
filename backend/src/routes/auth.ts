@@ -426,4 +426,221 @@ router.post('/password/reset/confirm', authLimiter, async (req, res, next) => {
   }
 });
 
+// 10. POST /api/auth/activation/send-otp
+const sendActivationOtpSchema = z.object({
+  pan: z.string().min(1, 'PAN is required'),
+  email: z.string().email('Invalid email address'),
+});
+
+router.post('/activation/send-otp', authLimiter, async (req, res, next) => {
+  try {
+    const { pan, email } = sendActivationOtpSchema.parse(req.body);
+    const formattedPan = pan.trim().toUpperCase();
+    const formattedEmail = email.toLowerCase();
+
+    // 1. Check if user already exists with this PAN
+    const userWithPan = await prisma.user.findUnique({
+      where: { pan: formattedPan }
+    });
+    if (userWithPan) {
+      res.status(400).json({
+        success: false,
+        error: 'An account has already been activated for this PAN. Please log in using your PAN.'
+      });
+      return;
+    }
+
+    // 2. Check if user already exists with this email but a different PAN
+    const userWithEmail = await prisma.user.findUnique({
+      where: { email: formattedEmail }
+    });
+    if (userWithEmail && userWithEmail.pan && userWithEmail.pan !== formattedPan) {
+      res.status(400).json({
+        success: false,
+        error: 'This email address is already linked to another client account.'
+      });
+      return;
+    }
+
+    // 3. Verify PAN + Email combination in ExistingClient or Folio tables
+    const existingClientMatch = await prisma.existingClient.findFirst({
+      where: {
+        pan: { equals: formattedPan, mode: 'insensitive' },
+        email: { equals: formattedEmail, mode: 'insensitive' }
+      }
+    });
+
+    let matches = !!existingClientMatch;
+
+    if (!matches) {
+      const folioMatch = await prisma.folio.findFirst({
+        where: {
+          OR: [
+            { clientPan: { equals: formattedPan, mode: 'insensitive' } },
+            { panAsPerFolio: { equals: formattedPan, mode: 'insensitive' } }
+          ],
+          email: { equals: formattedEmail, mode: 'insensitive' }
+        }
+      });
+      matches = !!folioMatch;
+    }
+
+    if (!matches) {
+      res.status(404).json({
+        success: false,
+        error: 'No matching client profile found with the provided PAN and Email combination. Please verify your details or contact support.'
+      });
+      return;
+    }
+
+    // 4. Send OTP
+    const otp = generateOTP();
+    saveOTP(formattedEmail, otp);
+    await sendOTP(formattedEmail, otp);
+
+    res.json({
+      success: true,
+      data: { message: 'Activation OTP sent successfully' }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 11. POST /api/auth/activation/verify-otp
+const verifyActivationOtpSchema = z.object({
+  pan: z.string().min(1, 'PAN is required'),
+  email: z.string().email('Invalid email address'),
+  otp: z.string().length(6, 'OTP must be 6 digits'),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one number'),
+});
+
+router.post('/activation/verify-otp', authLimiter, async (req, res, next) => {
+  try {
+    const { pan, email, otp, password } = verifyActivationOtpSchema.parse(req.body);
+    const formattedPan = pan.trim().toUpperCase();
+    const formattedEmail = email.toLowerCase();
+
+    // 1. Double check PAN uniqueness to avoid race conditions
+    const userWithPan = await prisma.user.findUnique({
+      where: { pan: formattedPan }
+    });
+    if (userWithPan) {
+      res.status(400).json({
+        success: false,
+        error: 'An account has already been activated for this PAN. Please log in using your PAN.'
+      });
+      return;
+    }
+
+    // 2. Verify OTP
+    const isValid = verifyOTP(formattedEmail, otp);
+    if (!isValid) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid or expired activation OTP.'
+      });
+      return;
+    }
+
+    // 3. Fetch name from imported records
+    let clientName: string | null = null;
+    const existingClientMatch = await prisma.existingClient.findFirst({
+      where: {
+        pan: { equals: formattedPan, mode: 'insensitive' },
+        email: { equals: formattedEmail, mode: 'insensitive' }
+      }
+    });
+    if (existingClientMatch) {
+      clientName = existingClientMatch.name;
+    } else {
+      const folioMatch = await prisma.folio.findFirst({
+        where: {
+          OR: [
+            { clientPan: { equals: formattedPan, mode: 'insensitive' } },
+            { panAsPerFolio: { equals: formattedPan, mode: 'insensitive' } }
+          ],
+          email: { equals: formattedEmail, mode: 'insensitive' }
+        }
+      });
+      if (folioMatch) {
+        clientName = folioMatch.clientName || folioMatch.nameAsPerFolio;
+      }
+    }
+
+    // 4. Upsert User in database with role CLIENT in a transaction
+    const user = await prisma.$transaction(async (tx) => {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const existingUser = await tx.user.findUnique({
+        where: { email: formattedEmail }
+      });
+
+      let updatedUser;
+      if (existingUser) {
+        updatedUser = await tx.user.update({
+          where: { email: formattedEmail },
+          data: {
+            pan: formattedPan,
+            name: existingUser.name || clientName || undefined,
+            password: hashedPassword,
+            role: 'CLIENT'
+          }
+        });
+      } else {
+        updatedUser = await tx.user.create({
+          data: {
+            email: formattedEmail,
+            pan: formattedPan,
+            name: clientName,
+            password: hashedPassword,
+            role: 'CLIENT'
+          }
+        });
+      }
+
+      await tx.client.upsert({
+        where: { userId: updatedUser.id },
+        update: {
+          activatedAt: new Date(),
+        },
+        create: {
+          userId: updatedUser.id,
+          activatedAt: new Date(),
+          advisorNotes: 'Activated via PAN + Email OTP',
+          activePlan: 'PREMIUM',
+        }
+      });
+
+      return updatedUser;
+    });
+
+    const token = signToken({
+      userId: user.id,
+      email: user.email || '',
+      role: user.role,
+    });
+
+    res.json({
+      success: true,
+      data: {
+        token,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          pan: user.pan,
+          phone: user.phone,
+        }
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;
+

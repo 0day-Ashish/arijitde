@@ -134,9 +134,23 @@ export default function AdminDashboard() {
   const [leadNotes, setLeadNotes] = useState('');
   const [savingLeadStatus, setSavingLeadStatus] = useState(false);
 
-  // Payment popup screenshot state
   const [screenshotModalUrl, setScreenshotModalUrl] = useState<string | null>(null);
   const [processingPaymentId, setProcessingPaymentId] = useState<string | null>(null);
+
+  // Custom Confirm Modal state
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    danger?: boolean;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    danger: false
+  });
 
   const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -245,33 +259,37 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleClearFolios = async () => {
-    if (!window.confirm('Are you absolutely sure you want to delete all folio records? This action is irreversible.')) {
-      return;
-    }
+  const handleClearFolios = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Folio Database',
+      message: 'Are you absolutely sure you want to delete all folio records? This action is irreversible and will permanently wipe the imported folio database.',
+      danger: true,
+      onConfirm: async () => {
+        try {
+          setFetchingFolios(true);
+          const res = await fetch(`${backendUrl}/api/admin/folios/clear`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+          });
 
-    try {
-      setFetchingFolios(true);
-      const res = await fetch(`${backendUrl}/api/admin/folios/clear`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+          const resData = await res.json();
+          if (!res.ok) throw new Error(resData.error || 'Failed to clear folio records');
 
-      const resData = await res.json();
-      if (!res.ok) throw new Error(resData.error || 'Failed to clear folio records');
-
-      alert(resData.message || 'All folio records deleted.');
-      setFoliosPage(1);
-      setFoliosList([]);
-      setFoliosPagination({ page: 1, limit: 10, total: 0, pages: 0 });
-      await fetchAdminData();
-    } catch (err: any) {
-      alert(err.message || 'Failed to clear records');
-    } finally {
-      setFetchingFolios(false);
-    }
+          alert(resData.message || 'All folio records deleted.');
+          setFoliosPage(1);
+          setFoliosList([]);
+          setFoliosPagination({ page: 1, limit: 10, total: 0, pages: 0 });
+          await fetchAdminData();
+        } catch (err: any) {
+          alert(err.message || 'Failed to clear records');
+        } finally {
+          setFetchingFolios(false);
+        }
+      }
+    });
   };
 
   // 3b. Fetch Existing Clients when tab is existingClients or pagination/search changes
@@ -351,33 +369,37 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleClearExistingClients = async () => {
-    if (!window.confirm('Are you absolutely sure you want to delete all existing client records? This action is irreversible.')) {
-      return;
-    }
+  const handleClearExistingClients = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Client Database',
+      message: 'Are you absolutely sure you want to delete all existing client records? This action is irreversible and will permanently wipe the imported client database.',
+      danger: true,
+      onConfirm: async () => {
+        try {
+          setFetchingExistingClients(true);
+          const res = await fetch(`${backendUrl}/api/admin/existing-clients/clear`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+          });
 
-    try {
-      setFetchingExistingClients(true);
-      const res = await fetch(`${backendUrl}/api/admin/existing-clients/clear`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+          const resData = await res.json();
+          if (!res.ok) throw new Error(resData.error || 'Failed to clear existing client records');
 
-      const resData = await res.json();
-      if (!res.ok) throw new Error(resData.error || 'Failed to clear existing client records');
-
-      alert(resData.message || 'All existing client records deleted.');
-      setExistingClientsPage(1);
-      setExistingClientsList([]);
-      setExistingClientsPagination({ page: 1, limit: 10, total: 0, pages: 0 });
-      await fetchAdminData();
-    } catch (err: any) {
-      alert(err.message || 'Failed to clear records');
-    } finally {
-      setFetchingExistingClients(false);
-    }
+          alert(resData.message || 'All existing client records deleted.');
+          setExistingClientsPage(1);
+          setExistingClientsList([]);
+          setExistingClientsPagination({ page: 1, limit: 10, total: 0, pages: 0 });
+          await fetchAdminData();
+        } catch (err: any) {
+          alert(err.message || 'Failed to clear records');
+        } finally {
+          setFetchingExistingClients(false);
+        }
+      }
+    });
   };
 
   // 3c. Fetch Portfolio Valuations when tab is portfolioValuations or pagination/search changes
@@ -457,33 +479,37 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleClearPortfolioValuations = async () => {
-    if (!window.confirm('Are you absolutely sure you want to delete all portfolio valuation records? This action is irreversible.')) {
-      return;
-    }
+  const handleClearPortfolioValuations = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Portfolio Valuations',
+      message: 'Are you absolutely sure you want to delete all portfolio valuation records? This action is irreversible and will permanently wipe the imported valuation sheets.',
+      danger: true,
+      onConfirm: async () => {
+        try {
+          setFetchingPortfolioValuations(true);
+          const res = await fetch(`${backendUrl}/api/admin/portfolio-valuations/clear`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+          });
 
-    try {
-      setFetchingPortfolioValuations(true);
-      const res = await fetch(`${backendUrl}/api/admin/portfolio-valuations/clear`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+          const resData = await res.json();
+          if (!res.ok) throw new Error(resData.error || 'Failed to clear portfolio valuation records');
 
-      const resData = await res.json();
-      if (!res.ok) throw new Error(resData.error || 'Failed to clear portfolio valuation records');
-
-      alert(resData.message || 'All portfolio valuation records deleted.');
-      setPortfolioValuationsPage(1);
-      setPortfolioValuationsList([]);
-      setPortfolioValuationsPagination({ page: 1, limit: 10, total: 0, pages: 0 });
-      await fetchAdminData();
-    } catch (err: any) {
-      alert(err.message || 'Failed to clear records');
-    } finally {
-      setFetchingPortfolioValuations(false);
-    }
+          alert(resData.message || 'All portfolio valuation records deleted.');
+          setPortfolioValuationsPage(1);
+          setPortfolioValuationsList([]);
+          setPortfolioValuationsPagination({ page: 1, limit: 10, total: 0, pages: 0 });
+          await fetchAdminData();
+        } catch (err: any) {
+          alert(err.message || 'Failed to clear records');
+        } finally {
+          setFetchingPortfolioValuations(false);
+        }
+      }
+    });
   };
 
   const fetchAdminData = async (showFullLoader = false) => {
@@ -2914,6 +2940,44 @@ export default function AdminDashboard() {
             </div>
             <div className="text-[10px] text-neutral-500 font-mono mt-4 text-center">
               Click outside the modal or click the close icon to dismiss.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Confirm Modal */}
+      {confirmModal.isOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div 
+            className="absolute inset-0 bg-neutral-900/60 backdrop-blur-sm"
+            onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+          />
+          <div className="relative z-[70] bg-white border border-neutral-200 rounded-[2rem] p-8 max-w-md w-full shadow-2xl flex flex-col items-center text-center overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-5 ${confirmModal.danger ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-amber-50 text-amber-600 border border-amber-200'}`}>
+              <ShieldAlert className="w-8 h-8" />
+            </div>
+            
+            <h3 className="text-lg font-bold text-neutral-900 mb-2 font-clash">{confirmModal.title}</h3>
+            <p className="text-xs text-neutral-500 leading-relaxed font-sans mb-6">{confirmModal.message}</p>
+            
+            <div className="flex gap-4 w-full">
+              <button
+                type="button"
+                onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                className="flex-1 py-3 text-xs font-semibold border border-neutral-200 bg-white hover:bg-neutral-50 rounded-xl transition duration-200 text-neutral-700 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  confirmModal.onConfirm();
+                  setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                }}
+                className={`flex-1 py-3 text-xs font-bold text-white rounded-xl transition duration-200 cursor-pointer ${confirmModal.danger ? 'bg-red-600 hover:bg-red-700' : 'bg-neutral-900 hover:bg-neutral-800'}`}
+              >
+                Confirm
+              </button>
             </div>
           </div>
         </div>
