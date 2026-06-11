@@ -1845,17 +1845,8 @@ export default function UserDashboard() {
               Quick Links<span className="text-[9px] text-primary font-mono leading-none align-super">(4)</span>
             </span>
             <a href="/sip-calculator" className="text-neutral-500 hover:text-primary transition duration-200 text-sm">SIP Calculator</a>
-            <a href="/pricing" className="text-neutral-500 hover:text-primary transition duration-200 text-sm">Pricing</a>
             <a href="/onboarding" className="text-neutral-500 hover:text-primary transition duration-200 text-sm">Onboarding</a>
             <a href="/contact" className="text-neutral-500 hover:text-primary transition duration-200 text-sm">Contact</a>
-          </div>
-
-          <div className="flex flex-col gap-2.5">
-            <span className="text-primary font-medium text-xs tracking-wider uppercase font-mono">Socials</span>
-            <a href="/" className="text-neutral-500 hover:text-primary transition duration-200 text-sm">Instagram</a>
-            <a href="/" className="text-neutral-500 hover:text-primary transition duration-200 text-sm">LinkedIn</a>
-            <a href="/" className="text-neutral-500 hover:text-primary transition duration-200 text-sm">Newsletter</a>
-            <a href="/" className="text-neutral-500 hover:text-primary transition duration-200 text-sm">Medium</a>
           </div>
 
           <div className="flex flex-col gap-2.5">

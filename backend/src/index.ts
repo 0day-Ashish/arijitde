@@ -14,6 +14,7 @@ import leadsRouter from './routes/leads';
 import paymentsRouter from './routes/payments';
 import adminRouter from './routes/admin';
 import chatRouter from './routes/chat';
+import contactRouter from './routes/contact';
 import { errorHandler } from './middleware/error';
 import { authMiddleware } from './middleware/auth';
 
@@ -106,6 +107,7 @@ app.use('/api/leads', leadsRouter);
 app.use('/api/payments', paymentsRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/chat', chatRouter);
+app.use('/api/contact', contactRouter);
 
 // Global Error Handler
 app.use(errorHandler);

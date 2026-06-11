@@ -798,6 +798,21 @@ router.delete('/portfolio-valuations/clear', async (req: AuthenticatedRequest, r
   }
 });
 
+// 14. GET /api/admin/contact-messages
+router.get('/contact-messages', async (req: AuthenticatedRequest, res: Response, next) => {
+  try {
+    const messages = await prisma.contactMessage.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json({
+      success: true,
+      data: messages,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;
 
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 interface NavbarProps {
   isLoaded?: boolean;
@@ -11,6 +11,11 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [dashboardUrl, setDashboardUrl] = useState('/onboarding');
+  const [isWalletOpen, setIsWalletOpen] = useState(false);
+  const [finPoints, setFinPoints] = useState<number>(500);
+
+  const desktopWalletRef = useRef<HTMLDivElement>(null);
+  const mobileWalletRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -35,6 +40,43 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
       setIsLoggedIn(false);
       setDashboardUrl('/onboarding');
     }
+
+    // Load FinPoints Balance
+    const savedPoints = localStorage.getItem('finPointsBalance');
+    if (savedPoints !== null) {
+      setFinPoints(Number(savedPoints));
+    } else {
+      setFinPoints(500);
+    }
+  }, []);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Node;
+      if (
+        (desktopWalletRef.current && !desktopWalletRef.current.contains(target)) &&
+        (mobileWalletRef.current && !mobileWalletRef.current.contains(target))
+      ) {
+        setIsWalletOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handlePointsUpdate = () => {
+      const savedPoints = localStorage.getItem('finPointsBalance');
+      if (savedPoints !== null) {
+        setFinPoints(Number(savedPoints));
+      }
+    };
+    window.addEventListener('points-updated', handlePointsUpdate);
+    return () => {
+      window.removeEventListener('points-updated', handlePointsUpdate);
+    };
   }, []);
 
   return (
@@ -45,7 +87,7 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
     >
       {/* Centered Floating Navbar */}
       <div className="w-full max-w-5xl px-6 mt-4">
-        <header className="w-full border border-border rounded-2xl backdrop-blur-2xl bg-white/35 shadow-md overflow-hidden transition-all duration-350 ease-in-out">
+        <header className="w-full border border-border rounded-2xl backdrop-blur-2xl bg-white/35 shadow-md transition-all duration-350 ease-in-out">
           {/* Top Navbar Row */}
           <div className="w-full px-6 py-3.5 flex items-center justify-between">
             {/* Left: Brand Name */}
@@ -84,20 +126,113 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
             </nav>
 
             {/* Right: Desktop CTA Buttons */}
-            <div className="hidden md:flex items-center gap-4">
+            <div className="hidden md:flex items-center gap-3">
               {isLoggedIn ? (
-                <a href={dashboardUrl} className="px-5 py-2.5 bg-primary text-primary-foreground font-bold text-xs rounded-xl hover:bg-primary/90 transition duration-200 shadow-sm text-center">
+                <div className="relative" ref={desktopWalletRef}>
+                  <button
+                    onClick={() => setIsWalletOpen(!isWalletOpen)}
+                    title="My Wallet & FinPoints"
+                    className="p-2.5 border border-border bg-white/50 hover:bg-white rounded-xl transition duration-200 cursor-pointer flex items-center justify-center shrink-0"
+                  >
+                    <svg className="w-4 h-4 text-neutral-700 hover:text-primary transition-colors duration-200" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 12V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 00-2-2h-3a2 2 0 00-2 2v1a2 2 0 002 2h3" />
+                    </svg>
+                  </button>
+                  
+                  {isWalletOpen && (
+                    <div className="absolute right-0 mt-2.5 w-64 p-5 rounded-2xl bg-white/75 backdrop-blur-2xl border border-border shadow-xl text-left flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-300 z-50">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider block font-bold">FinPoints Balance</span>
+                        <div className="flex items-baseline gap-1.5 mt-0.5">
+                          <span className="text-3xl font-bold font-clash text-primary leading-none">{finPoints}</span>
+                          <span className="text-xs font-sans font-semibold text-neutral-500">FP</span>
+                        </div>
+                      </div>
+                      
+                      <p className="text-[10px] leading-relaxed text-muted-foreground font-sans">
+                        Earn more FinPoints by submitting portfolios, answering quizzes, or booking advisory reviews.
+                      </p>
+                      
+                      <a
+                        href={dashboardUrl}
+                        onClick={() => setIsWalletOpen(false)}
+                        className="w-full text-center py-2 text-xs font-bold text-white bg-primary rounded-xl hover:bg-primary/95 transition duration-200 uppercase tracking-wider"
+                      >
+                        Manage Portfolio
+                      </a>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <a
+                  href="/onboarding"
+                  title="Login to view wallet"
+                  className="px-3.5 py-2 border border-border bg-white/50 hover:bg-white rounded-xl transition duration-200 cursor-pointer flex items-center gap-2 shrink-0 text-xs font-bold text-neutral-700 hover:text-primary"
+                >
+                  <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 12V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 00-2-2h-3a2 2 0 00-2 2v1a2 2 0 002 2h3" />
+                  </svg>
+                  <span>Login to view wallet</span>
+                </a>
+              )}
+              {isLoggedIn ? (
+                <a href={dashboardUrl} className="px-5 py-2.5 bg-primary text-primary-foreground font-bold text-xs rounded-xl hover:bg-primary/90 transition duration-200 shadow-sm text-center whitespace-nowrap">
                   Dashboard
                 </a>
               ) : (
-                <a href="/onboarding" className="px-5 py-2.5 bg-primary text-primary-foreground font-bold text-xs rounded-xl hover:bg-primary/90 transition duration-200 shadow-sm text-center">
+                <a href="/onboarding" className="px-5 py-2.5 bg-primary text-primary-foreground font-bold text-xs rounded-xl hover:bg-primary/90 transition duration-200 shadow-sm text-center whitespace-nowrap">
                   Get Started
                 </a>
               )}
             </div>
 
             {/* Right: Mobile Hamburger Button */}
-            <div className="flex md:hidden">
+            <div className="flex md:hidden items-center gap-3">
+              {isLoggedIn ? (
+                <div className="relative" ref={mobileWalletRef}>
+                  <button
+                    onClick={() => setIsWalletOpen(!isWalletOpen)}
+                    title="My Wallet & FinPoints"
+                    className="p-2 border border-border bg-white/50 hover:bg-white rounded-xl transition duration-200 cursor-pointer flex items-center justify-center shrink-0"
+                  >
+                    <svg className="w-4 h-4 text-neutral-700 hover:text-primary transition-colors duration-200" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 12V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 00-2-2h-3a2 2 0 00-2 2v1a2 2 0 002 2h3" />
+                    </svg>
+                  </button>
+                  
+                  {isWalletOpen && (
+                    <div className="absolute right-0 mt-2 w-56 p-4 rounded-2xl bg-white/80 backdrop-blur-2xl border border-border shadow-xl text-left flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-300 z-50">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[9px] font-mono text-muted-foreground uppercase tracking-wider block font-bold">FinPoints Balance</span>
+                        <div className="flex items-baseline gap-1 mt-0.5">
+                          <span className="text-2xl font-bold font-clash text-primary leading-none">{finPoints}</span>
+                          <span className="text-[10px] font-sans font-semibold text-neutral-500">FP</span>
+                        </div>
+                      </div>
+                      
+                      <a
+                        href={dashboardUrl}
+                        onClick={() => setIsWalletOpen(false)}
+                        className="w-full text-center py-2 text-[10px] font-bold text-white bg-primary rounded-lg hover:bg-primary/95 transition duration-200 uppercase tracking-wider"
+                      >
+                        Manage Portfolio
+                      </a>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <a
+                  href="/onboarding"
+                  title="Login to view wallet"
+                  className="px-2.5 py-1.5 border border-border bg-white/50 hover:bg-white rounded-xl transition duration-200 cursor-pointer flex items-center gap-1.5 shrink-0 text-[10px] font-bold text-neutral-700 hover:text-primary"
+                >
+                  <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 12V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 00-2-2h-3a2 2 0 00-2 2v1a2 2 0 002 2h3" />
+                  </svg>
+                  <span className="hidden sm:inline">Login to view wallet</span>
+                  <span className="sm:hidden">Login</span>
+                </a>
+              )}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 className="text-primary hover:text-primary/80 focus:outline-none p-1"

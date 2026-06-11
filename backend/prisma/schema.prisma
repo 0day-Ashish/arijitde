@@ -385,3 +385,14 @@ model PortfolioValuation {
   @@index([iwellCode])
   @@index([iwellCode2])
 }
+
+model ContactMessage {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  message   String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+

@@ -51,20 +51,9 @@ export default function Footer({ footerRef }: FooterProps) {
             Quick Links<span className="text-[9px] text-primary font-mono leading-none align-super">(4)</span>
           </span>
           <a href="/sip-calculator" className="text-muted-foreground hover:text-primary transition duration-200 text-sm">SIP Calculator</a>
-          <a href="/pricing" className="text-muted-foreground hover:text-primary transition duration-200 text-sm">Pricing</a>
           <a href="/onboarding" className="text-muted-foreground hover:text-primary transition duration-200 text-sm">Onboarding</a>
           <a href="/onboarding" className="text-muted-foreground hover:text-primary transition duration-200 text-sm">Get Started</a>
         </div>
-
-        {/* Socials */}
-        <div className="flex flex-col gap-2.5">
-          <span className="text-primary font-semibold text-xs tracking-wider uppercase font-mono">Socials</span>
-          <a href="#" className="text-muted-foreground hover:text-primary transition duration-200 text-sm">Instagram</a>
-          <a href="#" className="text-muted-foreground hover:text-primary transition duration-200 text-sm">LinkedIn</a>
-          <a href="#" className="text-muted-foreground hover:text-primary transition duration-200 text-sm">Newsletter</a>
-          <a href="#" className="text-muted-foreground hover:text-primary transition duration-200 text-sm">Medium</a>
-        </div>
-
         {/* Contact / Subscribe */}
         <div className="flex flex-col gap-3">
           <span className="text-primary font-semibold text-xs tracking-wider uppercase font-mono">Subscribe</span>
@@ -78,6 +67,17 @@ export default function Footer({ footerRef }: FooterProps) {
               Subscribe Now
             </button>
           </form>
+        </div>
+
+        {/* Preloader Animation Showcase Column */}
+        <div className="col-span-2 md:col-span-1">
+          <div className="w-64 md:w-68 h-auto rounded-xl overflow-hidden border border-border bg-[#F2F0EF] lg:ml-20 shadow-sm animate-fade-in">
+            <img
+              src="/assets/video.gif"
+              alt="FinAnalysis Flow"
+              className="w-full h-auto opacity-90 hover:opacity-100 transition-opacity duration-300"
+            />
+          </div>
         </div>
       </div>
 

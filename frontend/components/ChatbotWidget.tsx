@@ -33,7 +33,7 @@ export default function ChatbotWidget({
     }
   };
   const [messages, setMessages] = useState<Message[]>([
-    { id: 1, sender: "bot", text: "Hello! I am your FinAnalysis AI assistant. How can I help you optimize your portfolio today?" }
+    { id: 1, sender: "bot", text: "Yo! I'm Finsync AI, your personal financial advisor. What's cooking? Let's check if your portfolio is looking sus or if you're actually cooking, fr fr. 😤📈" }
   ]);
   const [inputVal, setInputVal] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -166,7 +166,7 @@ export default function ChatbotWidget({
               type="text"
               value={inputVal}
               onChange={(e) => setInputVal(e.target.value)}
-              placeholder="Ask about scoring criteria, anomalies..."
+              placeholder="Is my portfolio looking sus or cooked? Ask me..."
               className="flex-1 px-4 py-2 text-xs rounded-xl bg-white/40 border border-neutral-200 text-neutral-800 focus:outline-none focus:border-primary placeholder-neutral-400 font-clash"
               disabled={isTyping}
             />
@@ -184,7 +184,7 @@ export default function ChatbotWidget({
       {/* Speech Bubble */}
       {!isChatOpen && (
         <div className="absolute bottom-16 right-2 mb-2.5 bg-white/80 border border-primary/10 rounded-xl px-3 py-1.5 text-xs text-black tracking-wide shadow-lg whitespace-nowrap select-none font-clash">
-          Ask me <span className="font-semibold">anything !</span>
+          Is your portfolio <span className="font-semibold text-red-500">sus?</span> Ask here fr!
         </div>
       )}
 
