@@ -16,7 +16,7 @@ interface ChatbotWidgetProps {
   onOpenChange?: (open: boolean) => void;
 }
 
-export default function ChatbotWidget({ 
+export default function ChatbotWidget({
   isFooterIntersecting = false,
   isOpen,
   onOpenChange
@@ -33,7 +33,7 @@ export default function ChatbotWidget({
     }
   };
   const [messages, setMessages] = useState<Message[]>([
-    { id: 1, sender: "bot", text: "Yo! I'm Finsync AI, your personal financial advisor. What's cooking? Let's check if your portfolio is looking sus or if you're actually cooking, fr fr. 😤📈" }
+    { id: 1, sender: "bot", text: "Yo! I'm Cleo AI, your personal financial advisor. What's cooking? Let's check if your portfolio is looking sus or if you're actually cooking, fr fr. 😤📈" }
   ]);
   const [inputVal, setInputVal] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -60,7 +60,7 @@ export default function ChatbotWidget({
 
     const userMessageText = inputVal.trim();
     const userMsg: Message = { id: Date.now(), sender: "user", text: userMessageText };
-    
+
     // Update local messages and clear input
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
@@ -89,7 +89,7 @@ export default function ChatbotWidget({
       });
 
       const data = await res.json();
-      
+
       if (data.success) {
         setMessages(prev => [...prev, { id: Date.now() + 1, sender: "bot", text: data.text }]);
       } else {
@@ -120,7 +120,7 @@ export default function ChatbotWidget({
             <div className="flex items-center gap-3">
               <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
               <div className="flex flex-col text-left">
-                <span className="text-sm font-bold text-primary tracking-wide font-clash">Finsync AI</span>
+                <span className="text-sm font-bold text-primary tracking-wide font-clash">Cleo AI</span>
                 <span className="text-[10px] text-neutral-400 font-mono">AI AGENT • ONLINE</span>
               </div>
             </div>
@@ -133,7 +133,7 @@ export default function ChatbotWidget({
           </div>
 
           {/* Message List */}
-          <div 
+          <div
             data-lenis-prevent
             className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 scrollbar-thin scrollbar-thumb-border select-text"
           >

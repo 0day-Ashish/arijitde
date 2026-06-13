@@ -188,12 +188,12 @@ export default function ClientDashboard() {
   // Quiz States (if needed to update lifecycle)
   const [showQuiz, setShowQuiz] = useState(false);
   const [quizStep, setQuizStep] = useState(1);
-  const [quizAgeRange, setQuizAgeRange] = useState<string>("");
+  const [quizAgeRange, setQuizAgeRange] = useState<string>("25-35");
   const [quizAge, setQuizAge] = useState<number>(30);
   const [quizLifeStage, setQuizLifeStage] = useState<string>("");
   const [quizGoal, setQuizGoal] = useState<string>("WEALTH_CREATION");
   const [quizInvestmentTenure, setQuizInvestmentTenure] = useState<string>("");
-  const [quizIsCompletePortfolio, setQuizIsCompletePortfolio] = useState<boolean | null>(null);
+  const [quizIsCompletePortfolio, setQuizIsCompletePortfolio] = useState<boolean | null>(true);
   const [quizInvestmentStyle, setQuizInvestmentStyle] = useState<string>("");
   const [quizExpectedReturn, setQuizExpectedReturn] = useState<string>("");
   const [quizRiskBehavior, setQuizRiskBehavior] = useState<string>("");
@@ -1210,35 +1210,11 @@ export default function ClientDashboard() {
           <div className="w-full max-w-md mx-auto bg-white/30 border border-white/30 rounded-3xl p-8 shadow-2xl backdrop-blur-xl animate-in zoom-in-95 duration-300">
             <div className="flex justify-between items-center text-[10px] font-mono text-neutral-500 mb-6 uppercase tracking-widest">
               <span>Client Targets Quiz</span>
-              <span>Step {quizStep} of 8</span>
+              <span>Step {quizStep} of 6</span>
             </div>
 
-            {/* Step 1: Age Range */}
+            {/* Step 1: Life Stage */}
             {quizStep === 1 && (
-              <div className="space-y-6">
-                <div className="space-y-2 text-left">
-                  <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">How old are you?</h2>
-                  <p className="text-neutral-500 text-xs font-sans leading-relaxed">Age-based asset allocation benchmark.</p>
-                </div>
-                <div className="grid grid-cols-1 gap-2">
-                  {AGE_RANGE_OPTIONS.map((opt) => {
-                    const isSelected = quizAgeRange === opt.value;
-                    return (
-                      <button key={opt.value} onClick={() => { setQuizAgeRange(opt.value); setQuizAge(opt.numericAge); }}
-                        className={`w-full py-3.5 px-4 rounded-xl border text-xs font-medium transition duration-150 cursor-pointer text-center ${isSelected ? "bg-primary/10 border-primary text-neutral-900" : "bg-white/40 border-white/20 text-neutral-600 hover:text-neutral-900"}`}
-                      >{opt.label}</button>
-                    );
-                  })}
-                </div>
-                <button onClick={() => { if (!quizAgeRange) { setError("Please select your age range."); return; } setError(null); setQuizStep(2); }}
-                  className="w-full py-3.5 bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition cursor-pointer">
-                  Continue <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            )}
-
-            {/* Step 2: Life Stage */}
-            {quizStep === 2 && (
               <div className="space-y-6">
                 <div className="space-y-2 text-left">
                   <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">Which best describes your current stage?</h2>
@@ -1254,16 +1230,15 @@ export default function ClientDashboard() {
                     );
                   })}
                 </div>
-                <div className="flex gap-2">
-                  <button onClick={() => setQuizStep(1)} className="flex-1 py-3 bg-white/40 border border-border text-neutral-600 text-xs font-semibold rounded-xl hover:bg-white/60 transition cursor-pointer">Back</button>
-                  <button onClick={() => { if (!quizLifeStage) { setError("Please select your life stage."); return; } setError(null); setQuizStep(3); }}
-                    className="flex-1 py-3 bg-primary text-primary-foreground font-bold text-xs rounded-xl hover:bg-primary/95 transition cursor-pointer flex items-center justify-center gap-1.5">Continue <ArrowRight className="w-3.5 h-3.5" /></button>
-                </div>
+                <button onClick={() => { if (!quizLifeStage) { setError("Please select your life stage."); return; } setError(null); setQuizStep(2); }}
+                  className="w-full py-3.5 bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition cursor-pointer">
+                  Continue <ArrowRight className="w-3.5 h-3.5" />
+                </button>
               </div>
             )}
 
-            {/* Step 3: Investment Goal */}
-            {quizStep === 3 && (
+            {/* Step 2: Investment Goal */}
+            {quizStep === 2 && (
               <div className="space-y-6">
                 <div className="space-y-2 text-left">
                   <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">What is your primary reason for investing?</h2>
@@ -1292,15 +1267,15 @@ export default function ClientDashboard() {
                   </div>
                 )}
                 <div className="flex gap-2">
-                  <button onClick={() => setQuizStep(2)} className="flex-1 py-3 bg-white/40 border border-border text-neutral-600 text-xs font-semibold rounded-xl hover:bg-white/60 transition cursor-pointer">Back</button>
-                  <button onClick={() => { if (!quizGoal) { setError("Please choose an investment goal."); return; } setError(null); setQuizStep(4); }}
+                  <button onClick={() => setQuizStep(1)} className="flex-1 py-3 bg-white/40 border border-border text-neutral-600 text-xs font-semibold rounded-xl hover:bg-white/60 transition cursor-pointer">Back</button>
+                  <button onClick={() => { if (!quizGoal) { setError("Please choose an investment goal."); return; } setError(null); setQuizStep(3); }}
                     className="flex-1 py-3 bg-primary text-primary-foreground font-bold text-xs rounded-xl hover:bg-primary/95 transition cursor-pointer flex items-center justify-center gap-1.5">Continue <ArrowRight className="w-3.5 h-3.5" /></button>
                 </div>
               </div>
             )}
 
-            {/* Step 4: Investment Tenure */}
-            {quizStep === 4 && (
+            {/* Step 3: Investment Tenure */}
+            {quizStep === 3 && (
               <div className="space-y-6">
                 <div className="space-y-2 text-left">
                   <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">When do you expect to use this money?</h2>
@@ -1317,40 +1292,15 @@ export default function ClientDashboard() {
                   })}
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => setQuizStep(3)} className="flex-1 py-3 bg-white/40 border border-border text-neutral-600 text-xs font-semibold rounded-xl hover:bg-white/60 transition cursor-pointer">Back</button>
-                  <button onClick={() => { if (!quizInvestmentTenure) { setError("Please select your investment tenure."); return; } setError(null); setQuizStep(5); }}
+                  <button onClick={() => setQuizStep(2)} className="flex-1 py-3 bg-white/40 border border-border text-neutral-600 text-xs font-semibold rounded-xl hover:bg-white/60 transition cursor-pointer">Back</button>
+                  <button onClick={() => { if (!quizInvestmentTenure) { setError("Please select your investment tenure."); return; } setError(null); setQuizStep(4); }}
                     className="flex-1 py-3 bg-primary text-primary-foreground font-bold text-xs rounded-xl hover:bg-primary/95 transition cursor-pointer flex items-center justify-center gap-1.5">Continue <ArrowRight className="w-3.5 h-3.5" /></button>
                 </div>
               </div>
             )}
 
-            {/* Step 5: Is Complete Portfolio? */}
-            {quizStep === 5 && (
-              <div className="space-y-6">
-                <div className="space-y-2 text-left">
-                  <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">Is this your complete mutual fund portfolio?</h2>
-                  <p className="text-neutral-500 text-xs font-sans leading-relaxed">Avoid misleading scores.</p>
-                </div>
-                <div className="grid grid-cols-1 gap-2">
-                  {[{ value: true, label: "Yes" }, { value: false, label: "No, only part of it" }].map((opt) => {
-                    const isSelected = quizIsCompletePortfolio === opt.value;
-                    return (
-                      <button key={String(opt.value)} onClick={() => setQuizIsCompletePortfolio(opt.value)}
-                        className={`w-full py-3.5 px-4 rounded-xl border text-xs font-medium transition duration-150 cursor-pointer text-center ${isSelected ? "bg-primary/10 border-primary text-neutral-900" : "bg-white/40 border-white/20 text-neutral-600 hover:text-neutral-900"}`}
-                      >{opt.label}</button>
-                    );
-                  })}
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={() => setQuizStep(4)} className="flex-1 py-3 bg-white/40 border border-border text-neutral-600 text-xs font-semibold rounded-xl hover:bg-white/60 transition cursor-pointer">Back</button>
-                  <button onClick={() => { if (quizIsCompletePortfolio === null) { setError("Please answer this question."); return; } setError(null); setQuizStep(6); }}
-                    className="flex-1 py-3 bg-primary text-primary-foreground font-bold text-xs rounded-xl hover:bg-primary/95 transition cursor-pointer flex items-center justify-center gap-1.5">Continue <ArrowRight className="w-3.5 h-3.5" /></button>
-                </div>
-              </div>
-            )}
-
-            {/* Step 6: Investment Style */}
-            {quizStep === 6 && (
+            {/* Step 4: Investment Style */}
+            {quizStep === 4 && (
               <div className="space-y-6">
                 <div className="space-y-2 text-left">
                   <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">How do you usually invest?</h2>
@@ -1367,15 +1317,15 @@ export default function ClientDashboard() {
                   })}
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => setQuizStep(5)} className="flex-1 py-3 bg-white/40 border border-border text-neutral-600 text-xs font-semibold rounded-xl hover:bg-white/60 transition cursor-pointer">Back</button>
-                  <button onClick={() => { if (!quizInvestmentStyle) { setError("Please select how you invest."); return; } setError(null); setQuizStep(7); }}
+                  <button onClick={() => setQuizStep(3)} className="flex-1 py-3 bg-white/40 border border-border text-neutral-600 text-xs font-semibold rounded-xl hover:bg-white/60 transition cursor-pointer">Back</button>
+                  <button onClick={() => { if (!quizInvestmentStyle) { setError("Please select how you invest."); return; } setError(null); setQuizStep(5); }}
                     className="flex-1 py-3 bg-primary text-primary-foreground font-bold text-xs rounded-xl hover:bg-primary/95 transition cursor-pointer flex items-center justify-center gap-1.5">Continue <ArrowRight className="w-3.5 h-3.5" /></button>
                 </div>
               </div>
             )}
 
-            {/* Step 7: Expected Return */}
-            {quizStep === 7 && (
+            {/* Step 5: Expected Return */}
+            {quizStep === 5 && (
               <div className="space-y-6">
                 <div className="space-y-2 text-left">
                   <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">What annual return are you expecting?</h2>
@@ -1392,15 +1342,15 @@ export default function ClientDashboard() {
                   })}
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => setQuizStep(6)} className="flex-1 py-3 bg-white/40 border border-border text-neutral-600 text-xs font-semibold rounded-xl hover:bg-white/60 transition cursor-pointer">Back</button>
-                  <button onClick={() => { if (!quizExpectedReturn) { setError("Please select your expected return."); return; } setError(null); setQuizStep(8); }}
+                  <button onClick={() => setQuizStep(4)} className="flex-1 py-3 bg-white/40 border border-border text-neutral-600 text-xs font-semibold rounded-xl hover:bg-white/60 transition cursor-pointer">Back</button>
+                  <button onClick={() => { if (!quizExpectedReturn) { setError("Please select your expected return."); return; } setError(null); setQuizStep(6); }}
                     className="flex-1 py-3 bg-primary text-primary-foreground font-bold text-xs rounded-xl hover:bg-primary/95 transition cursor-pointer flex items-center justify-center gap-1.5">Continue <ArrowRight className="w-3.5 h-3.5" /></button>
                 </div>
               </div>
             )}
 
-            {/* Step 8: Risk Behavior */}
-            {quizStep === 8 && (
+            {/* Step 6: Risk Behavior */}
+            {quizStep === 6 && (
               <div className="space-y-6">
                 <div className="space-y-2 text-left">
                   <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">If your portfolio falls by 20%, what would you do?</h2>
@@ -1417,7 +1367,7 @@ export default function ClientDashboard() {
                   })}
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => setQuizStep(7)} className="flex-1 py-3 bg-white/40 border border-border text-neutral-600 text-xs font-semibold rounded-xl hover:bg-white/60 transition cursor-pointer">Back</button>
+                  <button onClick={() => setQuizStep(5)} className="flex-1 py-3 bg-white/40 border border-border text-neutral-600 text-xs font-semibold rounded-xl hover:bg-white/60 transition cursor-pointer">Back</button>
                   <button onClick={handleQuizSubmit} disabled={apiLoading || !quizRiskBehavior}
                     className="flex-1 py-3 bg-primary text-primary-foreground font-bold text-xs rounded-xl hover:bg-primary/95 transition cursor-pointer disabled:opacity-40">
                     {apiLoading ? "Submitting..." : "Finish & Update"}

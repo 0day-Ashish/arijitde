@@ -64,7 +64,7 @@ export default function CookiesPolicy() {
           <ul className="list-disc pl-5 space-y-1">
             <li><strong>Essential & Authentication:</strong> To maintain secure customer login sessions, coordinate multi-factor OTP tokens, and verify that transactions are executed under authentic contexts.</li>
             <li><strong>Functional Preferences:</strong> To remember your configuration settings (such as calculations run on our calculator models, inputs selected, or custom diagnostic filters).</li>
-            <li><strong>Analytics & Diagnostics:</strong> To track anonymized usage metrics, loading latency, and API performance. This helps us optimize calculations, debug error logs, and train Finsync AI based on general query success metrics.</li>
+            <li><strong>Analytics & Diagnostics:</strong> To track anonymized usage metrics, loading latency, and API performance. This helps us optimize calculations, debug error logs, and train Cleo AI based on general query success metrics.</li>
           </ul>
         </div>
       )

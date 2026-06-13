@@ -6,9 +6,11 @@ import {
   LogOut,
   Layout,
   User,
+  Users,
   Sparkles,
   TrendingUp,
   Calendar,
+  Clock,
   Compass,
   ShieldAlert,
   FileSpreadsheet,
@@ -18,6 +20,7 @@ import {
   Loader2,
   ArrowRight,
   ArrowLeft,
+  RefreshCw,
   Download,
   CreditCard,
   ChevronRight,
@@ -112,11 +115,11 @@ interface ScoreData {
 
 export default function UserDashboard() {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [userData, setUserData] = useState<{ id: string; name?: string; email?: string; role?: string } | null>(null);
+  const [userData, setUserData] = useState<{ id: string; name?: string; email?: string; phone?: string; role?: string } | null>(null);
   const [token, setToken] = useState<string | null>(null);
 
   // Flow & State control
-  const [dashboardStage, setDashboardStage] = useState<"LOADING" | "QUIZ" | "ANALYZE" | "REPORT" | "CLIENT_STATUS">("LOADING");
+  const [dashboardStage, setDashboardStage] = useState<"LOADING" | "QUIZ" | "PAYMENT_CHOICE" | "BOOKING" | "ANALYZE" | "REPORT" | "CLIENT_STATUS">("LOADING");
   const [error, setError] = useState<string | null>(null);
   const [apiLoading, setApiLoading] = useState(false);
   const [statusMsg, setStatusMsg] = useState("");
@@ -134,12 +137,12 @@ export default function UserDashboard() {
 
   // Quiz State
   const [quizStep, setQuizStep] = useState(1);
-  const [quizAgeRange, setQuizAgeRange] = useState<string>("");
+  const [quizAgeRange, setQuizAgeRange] = useState<string>("25-35");
   const [quizAge, setQuizAge] = useState<number>(30);
   const [quizLifeStage, setQuizLifeStage] = useState<string>("");
   const [quizGoal, setQuizGoal] = useState<string>("");
   const [quizInvestmentTenure, setQuizInvestmentTenure] = useState<string>("");
-  const [quizIsCompletePortfolio, setQuizIsCompletePortfolio] = useState<boolean | null>(null);
+  const [quizIsCompletePortfolio, setQuizIsCompletePortfolio] = useState<boolean | null>(true);
   const [quizInvestmentStyle, setQuizInvestmentStyle] = useState<string>("");
   const [quizExpectedReturn, setQuizExpectedReturn] = useState<string>("");
   const [quizRiskBehavior, setQuizRiskBehavior] = useState<string>("");
@@ -150,6 +153,14 @@ export default function UserDashboard() {
   const [activePortfolioId, setActivePortfolioId] = useState<string | null>(null);
   const [scoreReport, setScoreReport] = useState<ScoreData | null>(null);
   const [payments, setPayments] = useState<any[]>([]);
+
+  // Booking & availability state variables
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [freeSlots, setFreeSlots] = useState<string[]>([]);
+  const [fetchingSlots, setFetchingSlots] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+  const [bookingName, setBookingName] = useState('');
+  const [bookingPhone, setBookingPhone] = useState('');
 
   // Analyze Section State
   const [analyzeTab, setAnalyzeTab] = useState<"FILE" | "MANUAL">("FILE");
@@ -223,6 +234,64 @@ export default function UserDashboard() {
     };
   }, []);
 
+  const fetchFreeSlots = async () => {
+    try {
+      setFetchingSlots(true);
+      const headers = { "Authorization": `Bearer ${token}` };
+      const res = await fetch(`${backendUrl}/api/leads/availability`, { headers });
+      const resData = await res.json();
+      setFreeSlots(resData.data || []);
+    } catch (err) {
+      console.error("Error fetching free slots:", err);
+    } finally {
+      setFetchingSlots(false);
+    }
+  };
+
+  const handleBookMeeting = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedSlot) {
+      setError("Please select a time slot.");
+      return;
+    }
+
+    const finalName = userData?.name || "Valued Client";
+    const finalPhone = userData?.phone || "";
+
+    setError(null);
+    setApiLoading(true);
+    setStatusMsg("Booking your advisor consultation...");
+
+    try {
+      const headers = { 
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      };
+      const res = await fetch(`${backendUrl}/api/leads`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          name: finalName,
+          phone: finalPhone,
+          slot: selectedSlot
+        })
+      });
+      const resData = await res.json();
+
+      if (resData.success) {
+        alert("Advisor consultation booked successfully!");
+        await fetchDashboardState();
+      } else {
+        setError(resData.error || "Failed to book consultation.");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Network error while booking consultation.");
+    } finally {
+      setApiLoading(false);
+    }
+  };
+
   // Fetch complete database state for user when token is ready
   useEffect(() => {
     if (!token) return;
@@ -270,6 +339,12 @@ export default function UserDashboard() {
       const userPayments = payData.success ? payData.data : [];
       setPayments(userPayments);
 
+      // Fetch bookings
+      const leadsRes = await fetch(`${backendUrl}/api/leads/my-bookings`, { headers });
+      const leadsData = await leadsRes.json();
+      const userBookings = leadsData.success ? leadsData.data : [];
+      setBookings(userBookings);
+
       // If user is already approved CLIENT or has pending payment, show the status panel
       const hasPendingOrApproved = currentRole === "CLIENT" || userPayments.some((p: any) => p.status === "PENDING" || p.status === "APPROVED");
 
@@ -294,6 +369,23 @@ export default function UserDashboard() {
       if (latestAssessment.investmentStyle) setQuizInvestmentStyle(latestAssessment.investmentStyle);
       if (latestAssessment.expectedReturn) setQuizExpectedReturn(latestAssessment.expectedReturn);
       if (latestAssessment.riskBehavior) setQuizRiskBehavior(latestAssessment.riskBehavior);
+
+      // Routing checks based on payment
+      const validPayments = userPayments.filter((p: any) => p.status === "PENDING" || p.status === "APPROVED");
+      const hasPaid249 = validPayments.some((p: any) => p.amount === 249);
+      const hasPaid499 = validPayments.some((p: any) => p.amount === 499);
+
+      if (!hasPaid249 && !hasPaid499) {
+        setDashboardStage("PAYMENT_CHOICE");
+        return;
+      }
+
+      // If they paid ₹499 (Advisor Scan) but haven't booked yet
+      const hasBookedSlot = userBookings.some((b: any) => b.slot !== null);
+      if (hasPaid499 && !hasBookedSlot) {
+        setDashboardStage("BOOKING");
+        return;
+      }
 
       // 4. Fetch portfolios
       const portRes = await fetch(`${backendUrl}/api/portfolio`, { headers });
@@ -398,7 +490,7 @@ export default function UserDashboard() {
       setModalSubmitting(false);
     }
   };
-  const handleMockPaySubmit = async () => {
+  const handleMockPaySubmit = async (amount: number) => {
     setError(null);
     setApiLoading(true);
     setStatusMsg("Processing mock payment secure transaction...");
@@ -411,13 +503,13 @@ export default function UserDashboard() {
           "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({
-          amount: 499
+          amount
         })
       });
       const data = await res.json();
 
       if (data.success) {
-        // Refresh dashboard state, which will detect the pending payment and route to CLIENT_STATUS
+        // Refresh dashboard state
         await fetchDashboardState();
       } else {
         setError(data.error || "Failed to register mock payment");
@@ -465,7 +557,7 @@ export default function UserDashboard() {
 
       if (resData.success) {
         setActiveAssessmentId(resData.data.assessmentId);
-        setDashboardStage("ANALYZE");
+        await fetchDashboardState();
       } else {
         setError(resData.error || "Failed to submit assessment");
       }
@@ -703,6 +795,8 @@ export default function UserDashboard() {
     }
   };
 
+  const isAdvisorScan = payments.some((p: any) => p.amount === 499 && (p.status === "PENDING" || p.status === "APPROVED"));
+
   return (
     <main className="w-full min-h-screen bg-transparent text-neutral-900 flex flex-col relative font-clash select-none overflow-x-hidden">
       {/* Fixed Background container with User's Gradient Theme */}
@@ -768,62 +862,17 @@ export default function UserDashboard() {
           </div>
         )}
 
-        {/* ----------------- STAGE 1: ASSESSMENT QUIZ (8 Steps) ----------------- */}
+        {/* ----------------- STAGE 1: ASSESSMENT QUIZ (6 Steps) ----------------- */}
         {dashboardStage === "QUIZ" && (
           <div className="w-full max-w-md bg-white/30 border border-white/30 rounded-3xl p-8 shadow-2xl backdrop-blur-xl animate-in zoom-in-95 duration-300">
             {/* Step header */}
             <div className="flex justify-between items-center text-[10px] font-mono text-neutral-500 mb-6 uppercase tracking-widest">
               <span>Stage 01: Profile Assessment</span>
-              <span>Step {quizStep} of 8</span>
+              <span>Step {quizStep} of 6</span>
             </div>
 
-            {/* Step 1: Age Range */}
+            {/* Step 1: Life Stage */}
             {quizStep === 1 && (
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">How old are you?</h2>
-                  <p className="text-neutral-500 text-xs font-sans leading-relaxed">
-                    Age-based asset allocation benchmark.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 gap-2">
-                  {AGE_RANGE_OPTIONS.map((opt) => {
-                    const isSelected = quizAgeRange === opt.value;
-                    return (
-                      <button
-                        key={opt.value}
-                        onClick={() => {
-                          setQuizAgeRange(opt.value);
-                          setQuizAge(opt.numericAge);
-                        }}
-                        className={`w-full py-3.5 px-4 rounded-xl border text-xs font-medium transition duration-150 cursor-pointer text-center ${isSelected
-                          ? "bg-primary/10 border-primary text-neutral-900"
-                          : "bg-white/40 border-white/30 hover:border-neutral-300 text-neutral-600 hover:text-neutral-900"
-                        }`}
-                      >
-                        {opt.label}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <button
-                  onClick={() => {
-                    if (!quizAgeRange) { setError("Please select your age range."); return; }
-                    setError(null);
-                    setQuizStep(2);
-                  }}
-                  className="w-full py-3.5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition duration-200 cursor-pointer"
-                >
-                  Continue
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            )}
-
-            {/* Step 2: Life Stage */}
-            {quizStep === 2 && (
               <div className="space-y-6">
                 <div className="space-y-2">
                   <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">Which best describes your current stage?</h2>
@@ -850,30 +899,22 @@ export default function UserDashboard() {
                   })}
                 </div>
 
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setQuizStep(1)}
-                    className="flex-1 py-3.5 bg-white/40 border border-border hover:bg-white/60 text-neutral-700 text-xs font-semibold rounded-xl transition cursor-pointer"
-                  >
-                    Back
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (!quizLifeStage) { setError("Please select your life stage."); return; }
-                      setError(null);
-                      setQuizStep(3);
-                    }}
-                    className="flex-1 py-3.5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition duration-200 cursor-pointer"
-                  >
-                    Continue
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+                <button
+                  onClick={() => {
+                    if (!quizLifeStage) { setError("Please select your life stage."); return; }
+                    setError(null);
+                    setQuizStep(2);
+                  }}
+                  className="w-full py-3.5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition duration-200 cursor-pointer"
+                >
+                  Continue
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
               </div>
             )}
 
-            {/* Step 3: Investment Goal */}
-            {quizStep === 3 && (
+            {/* Step 2: Investment Goal */}
+            {quizStep === 2 && (
               <div className="space-y-6">
                 <div className="space-y-2">
                   <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">What is your primary reason for investing?</h2>
@@ -925,7 +966,7 @@ export default function UserDashboard() {
 
                 <div className="flex gap-3">
                   <button
-                    onClick={() => setQuizStep(2)}
+                    onClick={() => setQuizStep(1)}
                     className="flex-1 py-3.5 bg-white/40 border border-border hover:bg-white/60 text-neutral-700 text-xs font-semibold rounded-xl transition cursor-pointer"
                   >
                     Back
@@ -934,7 +975,7 @@ export default function UserDashboard() {
                     onClick={() => {
                       if (!quizGoal) { setError("Please choose an investment goal."); return; }
                       setError(null);
-                      setQuizStep(4);
+                      setQuizStep(3);
                     }}
                     className="flex-1 py-3.5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition duration-200 cursor-pointer"
                   >
@@ -945,8 +986,8 @@ export default function UserDashboard() {
               </div>
             )}
 
-            {/* Step 4: Investment Tenure */}
-            {quizStep === 4 && (
+            {/* Step 3: Investment Tenure */}
+            {quizStep === 3 && (
               <div className="space-y-6">
                 <div className="space-y-2">
                   <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">When do you expect to use this money?</h2>
@@ -975,7 +1016,7 @@ export default function UserDashboard() {
 
                 <div className="flex gap-3">
                   <button
-                    onClick={() => setQuizStep(3)}
+                    onClick={() => setQuizStep(2)}
                     className="flex-1 py-3.5 bg-white/40 border border-border hover:bg-white/60 text-neutral-700 text-xs font-semibold rounded-xl transition cursor-pointer"
                   >
                     Back
@@ -984,7 +1025,7 @@ export default function UserDashboard() {
                     onClick={() => {
                       if (!quizInvestmentTenure) { setError("Please select your investment tenure."); return; }
                       setError(null);
-                      setQuizStep(5);
+                      setQuizStep(4);
                     }}
                     className="flex-1 py-3.5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition duration-200 cursor-pointer"
                   >
@@ -995,58 +1036,8 @@ export default function UserDashboard() {
               </div>
             )}
 
-            {/* Step 5: Is Complete Portfolio? */}
-            {quizStep === 5 && (
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">Is this your complete mutual fund portfolio?</h2>
-                  <p className="text-neutral-500 text-xs font-sans leading-relaxed">
-                    Avoid misleading scores.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 gap-2">
-                  {[{ value: true, label: "Yes" }, { value: false, label: "No, only part of it" }].map((opt) => {
-                    const isSelected = quizIsCompletePortfolio === opt.value;
-                    return (
-                      <button
-                        key={String(opt.value)}
-                        onClick={() => setQuizIsCompletePortfolio(opt.value)}
-                        className={`w-full py-3.5 px-4 rounded-xl border text-xs font-medium transition duration-150 cursor-pointer text-center ${isSelected
-                          ? "bg-primary/10 border-primary text-neutral-900"
-                          : "bg-white/40 border-white/30 hover:border-neutral-300 text-neutral-600 hover:text-neutral-900"
-                        }`}
-                      >
-                        {opt.label}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setQuizStep(4)}
-                    className="flex-1 py-3.5 bg-white/40 border border-border hover:bg-white/60 text-neutral-700 text-xs font-semibold rounded-xl transition cursor-pointer"
-                  >
-                    Back
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (quizIsCompletePortfolio === null) { setError("Please answer this question."); return; }
-                      setError(null);
-                      setQuizStep(6);
-                    }}
-                    className="flex-1 py-3.5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition duration-200 cursor-pointer"
-                  >
-                    Continue
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Step 6: Investment Style */}
-            {quizStep === 6 && (
+            {/* Step 4: Investment Style */}
+            {quizStep === 4 && (
               <div className="space-y-6">
                 <div className="space-y-2">
                   <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">How do you usually invest?</h2>
@@ -1075,7 +1066,7 @@ export default function UserDashboard() {
 
                 <div className="flex gap-3">
                   <button
-                    onClick={() => setQuizStep(5)}
+                    onClick={() => setQuizStep(3)}
                     className="flex-1 py-3.5 bg-white/40 border border-border hover:bg-white/60 text-neutral-700 text-xs font-semibold rounded-xl transition cursor-pointer"
                   >
                     Back
@@ -1084,7 +1075,7 @@ export default function UserDashboard() {
                     onClick={() => {
                       if (!quizInvestmentStyle) { setError("Please select how you invest."); return; }
                       setError(null);
-                      setQuizStep(7);
+                      setQuizStep(5);
                     }}
                     className="flex-1 py-3.5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition duration-200 cursor-pointer"
                   >
@@ -1095,8 +1086,8 @@ export default function UserDashboard() {
               </div>
             )}
 
-            {/* Step 7: Expected Return */}
-            {quizStep === 7 && (
+            {/* Step 5: Expected Return */}
+            {quizStep === 5 && (
               <div className="space-y-6">
                 <div className="space-y-2">
                   <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">What annual return are you expecting?</h2>
@@ -1125,7 +1116,7 @@ export default function UserDashboard() {
 
                 <div className="flex gap-3">
                   <button
-                    onClick={() => setQuizStep(6)}
+                    onClick={() => setQuizStep(4)}
                     className="flex-1 py-3.5 bg-white/40 border border-border hover:bg-white/60 text-neutral-700 text-xs font-semibold rounded-xl transition cursor-pointer"
                   >
                     Back
@@ -1134,7 +1125,7 @@ export default function UserDashboard() {
                     onClick={() => {
                       if (!quizExpectedReturn) { setError("Please select your expected return."); return; }
                       setError(null);
-                      setQuizStep(8);
+                      setQuizStep(6);
                     }}
                     className="flex-1 py-3.5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition duration-200 cursor-pointer"
                   >
@@ -1145,8 +1136,8 @@ export default function UserDashboard() {
               </div>
             )}
 
-            {/* Step 8: Risk Behavior */}
-            {quizStep === 8 && (
+            {/* Step 6: Risk Behavior */}
+            {quizStep === 6 && (
               <div className="space-y-6">
                 <div className="space-y-2">
                   <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">If your portfolio falls by 20% next month, what would you do?</h2>
@@ -1175,7 +1166,7 @@ export default function UserDashboard() {
 
                 <div className="flex gap-3 mt-8">
                   <button
-                    onClick={() => setQuizStep(7)}
+                    onClick={() => setQuizStep(5)}
                     className="flex-1 py-3.5 bg-white/40 border border-border hover:bg-white/60 text-neutral-700 text-xs font-semibold rounded-xl transition cursor-pointer"
                   >
                     Back
@@ -1186,7 +1177,6 @@ export default function UserDashboard() {
                     className="flex-1 py-3.5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition duration-200 cursor-pointer disabled:opacity-40"
                   >
                     {apiLoading ? "Submitting..." : "Finish & Score"}
-                    <CheckCircle2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
@@ -1194,9 +1184,208 @@ export default function UserDashboard() {
           </div>
         )}
 
+        {/* ----------------- STAGE 1.5: PAYMENT CHOICE ----------------- */}
+        {dashboardStage === "PAYMENT_CHOICE" && (
+          <div className="w-full max-w-4xl flex flex-col items-center gap-8 animate-in fade-in duration-500">
+            <div className="text-center max-w-2xl space-y-3">
+              <span className="text-[10px] font-mono text-primary border border-primary/30 bg-primary/5 px-3 py-1 rounded-full uppercase tracking-wider">
+                Unlock Your Advanced Scan
+              </span>
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold font-clash text-neutral-900 tracking-tight leading-none">
+                Choose Your Scanning Method
+              </h1>
+              <p className="text-neutral-500 text-xs font-sans leading-relaxed">
+                Take the next step to analyze your mutual fund portfolio. Select AI-driven automated analysis or 1-on-1 advisor review.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
+              
+              {/* Option A: AI Model Scan */}
+              <div className="border border-neutral-200 bg-white/40 backdrop-blur-xl rounded-3xl p-8 flex flex-col justify-between hover:border-primary/40 hover:shadow-2xl transition-all duration-300 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-all duration-300"></div>
+                
+                <div className="space-y-6">
+                  <div className="flex justify-between items-start">
+                    <span className="p-3 bg-primary/10 rounded-2xl">
+                      <Sparkles className="w-6 h-6 text-primary" />
+                    </span>
+                    <span className="px-2.5 py-1 text-[9px] font-mono uppercase font-bold tracking-widest bg-primary/10 text-primary border border-primary/20 rounded-full">
+                      Automated ML
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h2 className="text-2xl font-bold font-clash text-neutral-900">Advanced AI ML Scan</h2>
+                    <p className="text-neutral-600 text-xs font-sans leading-relaxed">
+                      Instant evaluation using our proprietary ML model. Uncovers asset allocations, overlap insights, and performance benchmarks instantly.
+                    </p>
+                  </div>
+
+                  <ul className="space-y-3 text-xs text-neutral-600 font-sans border-t border-neutral-100 pt-6">
+                    <li className="flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                      <span>Instant upload & processing</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                      <span>AI Diversification & Asset Allocation breakdown</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                      <span>Cost-efficient self-service portal</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="mt-8 pt-6 border-t border-neutral-100 flex items-center justify-between gap-4">
+                  <div>
+                    <span className="text-[10px] text-neutral-400 line-through block font-mono">₹999</span>
+                    <span className="text-3xl font-bold text-neutral-900 font-chillax">₹249</span>
+                  </div>
+                  <button
+                    onClick={() => handleMockPaySubmit(249)}
+                    disabled={apiLoading}
+                    className="px-6 py-3.5 bg-neutral-900 hover:bg-neutral-800 text-white font-bold text-xs rounded-xl transition duration-200 cursor-pointer shadow-lg disabled:opacity-40"
+                  >
+                    Select AI Scan
+                  </button>
+                </div>
+              </div>
+
+              {/* Option B: Trusted Advisor Scan */}
+              <div className="border border-primary/20 bg-[radial-gradient(circle_at_top_right,rgba(138,92,255,0.06)_0%,transparent_60%)] bg-white/30 backdrop-blur-xl rounded-3xl p-8 flex flex-col justify-between hover:border-primary/50 hover:shadow-2xl transition-all duration-300 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/25 transition-all duration-300"></div>
+
+                <div className="space-y-6">
+                  <div className="flex justify-between items-start">
+                    <span className="p-3 bg-primary/10 rounded-2xl">
+                      <Users className="w-6 h-6 text-primary" />
+                    </span>
+                    <span className="px-2.5 py-1 text-[9px] font-mono uppercase font-bold tracking-widest bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 rounded-full">
+                      Human Advisor
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h2 className="text-2xl font-bold font-clash text-neutral-900">Advisor Consult</h2>
+                    <p className="text-neutral-600 text-xs font-sans leading-relaxed">
+                      1-on-1 session with SEBI registered advisor Arijit De. In-depth custom roadmap, tax restructuring advice, and active rebalancing strategy.
+                    </p>
+                  </div>
+
+                  <ul className="space-y-3 text-xs text-neutral-600 font-sans border-t border-neutral-100 pt-6">
+                    <li className="flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                      <span>Live 1-on-1 strategy video consultation</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                      <span>Tax optimization & restructuring audit</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                      <span>Direct Q&A session with Arijit De</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="mt-8 pt-6 border-t border-neutral-100 flex items-center justify-between gap-4">
+                  <div>
+                    <span className="text-[10px] text-neutral-400 line-through block font-mono">₹1,999</span>
+                    <span className="text-3xl font-bold text-neutral-900 font-chillax">₹499</span>
+                  </div>
+                  <button
+                    onClick={() => handleMockPaySubmit(499)}
+                    disabled={apiLoading}
+                    className="px-6 py-3.5 bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-xs rounded-xl transition duration-200 cursor-pointer shadow-lg disabled:opacity-40"
+                  >
+                    Select Advisor Scan
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        )}
+
+        {/* ----------------- STAGE 1.7: ADVISOR BOOKING CALENDAR ----------------- */}
+        {dashboardStage === "BOOKING" && (
+          <div className="w-full max-w-xl border border-primary/20 bg-[radial-gradient(circle_at_top_right,rgba(138,92,255,0.06)_0%,transparent_60%)] bg-white/30 backdrop-blur-xl rounded-3xl p-8 md:p-10 flex flex-col gap-6 shadow-2xl relative overflow-hidden animate-in fade-in duration-500 text-left">
+            <div className="space-y-2">
+              <h2 className="text-3xl font-semibold text-neutral-900 tracking-wide font-clash">Schedule Consultation</h2>
+              <p className="text-neutral-600 text-xs font-sans leading-relaxed">
+                You have selected the Advisor Scan. Please select your preferred date and time slot for the 1-on-1 meeting.
+              </p>
+            </div>
+
+            <form onSubmit={handleBookMeeting} className="space-y-6">
+              
+              {/* Preferred Date & Time Selector */}
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase font-bold text-neutral-500 tracking-wider block font-mono">Preferred Date & Time</label>
+                <input
+                  type="datetime-local"
+                  required
+                  value={selectedSlot || ""}
+                  onChange={(e) => setSelectedSlot(e.target.value)}
+                  min={new Date(Date.now() + 3600000).toISOString().slice(0, 16)} // Minimum 1 hour from now
+                  className="w-full bg-white/50 border border-neutral-200 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-primary text-neutral-950 font-mono"
+                />
+              </div>
+
+
+
+              <div className="flex gap-4 pt-2">
+                <button
+                  type="submit"
+                  disabled={apiLoading || !selectedSlot}
+                  className="w-full py-3.5 bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition duration-200 cursor-pointer shadow-lg disabled:opacity-40"
+                >
+                  {apiLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Booking Consultation...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Confirm Booking Slot</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </>
+                  )}
+                </button>
+              </div>
+
+            </form>
+          </div>
+        )}
+
         {/* ----------------- STAGE 2: ANALYZE PORTFOLIO ----------------- */}
         {dashboardStage === "ANALYZE" && (
           <div className="w-full max-w-3xl flex flex-col gap-8 animate-in fade-in duration-400">
+            {/* Advisor Booking Confirmation Alert */}
+            {bookings.some((b: any) => b.slot !== null) && (
+              <div className="w-full border border-emerald-500/20 bg-emerald-500/5 backdrop-blur-xl rounded-3xl p-6 flex items-start gap-4 text-left animate-in fade-in duration-300">
+                <span className="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-600">
+                  <Calendar className="w-5 h-5 text-emerald-600" />
+                </span>
+                <div className="space-y-1">
+                  <h4 className="text-sm font-bold text-neutral-900">Advisor Consultation Booked!</h4>
+                  <p className="text-xs text-neutral-600 font-sans leading-relaxed">
+                    Your 1-on-1 strategy call with advisor Arijit De is scheduled for{" "}
+                    <strong className="text-neutral-900 font-semibold font-mono">
+                      {new Date(bookings.find((b: any) => b.slot !== null).slot).toLocaleString(undefined, {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </strong>. We will reach out to you at <span className="font-semibold font-mono">{bookings.find((b: any) => b.slot !== null).phone}</span>.
+                  </p>
+                </div>
+              </div>
+            )}
             {/* Context Profile Header */}
             <div className="w-full p-6 bg-white/30 border border-white/30 rounded-3xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 backdrop-blur-xl">
               <div className="space-y-1">
@@ -1225,241 +1414,334 @@ export default function UserDashboard() {
               </button>
             </div>
 
-            {/* Analysis Header */}
-            <div className="text-center max-w-xl mx-auto space-y-2">
-              <h1 className="text-3xl md:text-4xl font-semibold tracking-wide text-neutral-900">Analyze Investments</h1>
-              <p className="text-neutral-500 text-xs font-sans leading-relaxed">
-                Provide your current investment details. We'll run them through our scoring algorithm and flag any structural errors or anomalies.
-              </p>
-            </div>
+            {isAdvisorScan ? (
+              /* Premium glassmorphic Consultation Cockpit */
+              <div className="w-full border border-primary/20 bg-[radial-gradient(circle_at_top_right,rgba(138,92,255,0.06)_0%,transparent_60%)] bg-white/35 backdrop-blur-xl rounded-3xl p-8 md:p-10 shadow-2xl flex flex-col gap-8 text-left animate-in fade-in duration-500">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-neutral-200/50 pb-6">
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-mono text-primary uppercase tracking-widest font-semibold bg-primary/10 border border-primary/20 px-3 py-1 rounded-full">
+                      Exclusive Advisory Portal
+                    </span>
+                    <h2 className="text-3xl font-bold font-clash text-neutral-900 mt-3">Your Roadmap is Being Prepared</h2>
+                    <p className="text-neutral-600 text-xs font-sans leading-relaxed max-w-lg">
+                      You are in safe hands. Sebi-registered advisor Arijit De is currently analyzing your active financial profile parameters to prepare a tailormade strategy.
+                    </p>
+                  </div>
+                  <div className="bg-white/60 border border-neutral-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center shadow-sm shrink-0 min-w-[160px]">
+                    <Clock className="w-6 h-6 text-primary mb-2 stroke-[1.5]" />
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-neutral-400 font-bold">Session Type</span>
+                    <span className="text-xs font-semibold text-neutral-800 mt-0.5">1-on-1 Video Call</span>
+                  </div>
+                </div>
 
-            {/* Form Section */}
-            <div className="w-full border border-white/30 bg-white/30 backdrop-blur-xl rounded-3xl p-6 md:p-8 shadow-2xl flex flex-col">
-              {/* Tab Selector */}
-              <div className="flex border-b border-border mb-8">
-                <button
-                  onClick={() => { setError(null); setAnalyzeTab("FILE"); }}
-                  className={`pb-4 px-6 text-xs font-semibold tracking-wider uppercase border-b-2 transition duration-200 cursor-pointer ${analyzeTab === "FILE"
-                      ? "border-primary text-neutral-900"
-                      : "border-transparent text-neutral-500 hover:text-neutral-800"
-                    }`}
-                >
-                  Excel / CSV Upload
-                </button>
-                <button
-                  onClick={() => { setError(null); setAnalyzeTab("MANUAL"); }}
-                  className={`pb-4 px-6 text-xs font-semibold tracking-wider uppercase border-b-2 transition duration-200 cursor-pointer ${analyzeTab === "MANUAL"
-                      ? "border-primary text-neutral-900"
-                      : "border-transparent text-neutral-500 hover:text-neutral-800"
-                    }`}
-                >
-                  Manual Entry
-                </button>
-              </div>
-
-              {/* Tab 1: File Uploader */}
-              {analyzeTab === "FILE" && (
-                <form onSubmit={handleFileUploadSubmit} className="space-y-6">
-                  <div className="space-y-3 text-left">
-                    <div className="flex justify-between items-end">
-                      <label className="block text-[10px] font-mono uppercase tracking-wider text-neutral-500">Portfolio Data File</label>
-                      <button
-                        type="button"
-                        onClick={downloadCsvTemplate}
-                        className="text-[10px] font-mono text-primary hover:underline flex items-center gap-1 cursor-pointer bg-white/40 border border-border px-2.5 py-1 rounded-lg hover:bg-white/60 transition"
-                      >
-                        <Download className="w-3 h-3" />
-                        Download Template CSV
-                      </button>
-                    </div>
-
-                    {/* Drag & Drop uploader area */}
-                    <div
-                      className={`relative border-2 border-dashed rounded-2xl p-10 flex flex-col items-center justify-center text-center transition duration-200 bg-white/20 ${uploadedFile
-                          ? "border-primary bg-primary/[0.01]"
-                          : "border-border hover:border-neutral-300"
-                        }`}
-                    >
-                      <input
-                        type="file"
-                        accept=".xlsx,.csv"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) setUploadedFile(file);
-                        }}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                      />
-                      <div className={`w-12 h-12 rounded-xl border flex items-center justify-center mb-4 transition ${uploadedFile ? "bg-primary/10 border-primary/20 text-primary" : "bg-white/40 border border-border text-neutral-500"
-                        }`}>
-                        {uploadedFile ? <CheckCircle2 className="w-5 h-5" /> : <FileSpreadsheet className="w-5 h-5 stroke-[1.5]" />}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-neutral-900 tracking-wider uppercase font-mono">Next Steps Checklist</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Step 1 */}
+                    <div className="border border-neutral-200/40 bg-white/20 rounded-2xl p-5 flex items-start gap-4">
+                      <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-600 shrink-0">
+                        <CheckCircle2 className="w-4 h-4" />
                       </div>
+                      <div className="space-y-1">
+                        <h4 className="text-xs font-bold text-neutral-800">1. Synchronize Assessment</h4>
+                        <p className="text-[11px] text-neutral-600 font-sans leading-normal">
+                          Your risk preference and investment goals were captured and stored securely in the database.
+                        </p>
+                      </div>
+                    </div>
 
-                      {uploadedFile ? (
-                        <div className="space-y-1">
-                          <span className="text-xs font-semibold text-neutral-900 block">{uploadedFile.name}</span>
-                          <span className="text-[10px] text-neutral-500 font-mono block">{(uploadedFile.size / 1024).toFixed(1)} KB</span>
-                        </div>
-                      ) : (
-                        <div className="space-y-1">
-                          <span className="text-xs font-semibold text-neutral-700 block">Click or Drag Excel/CSV file to upload</span>
-                          <span className="text-[10px] text-neutral-500 block leading-relaxed font-sans mt-1">
-                            Supported: .xlsx, .csv (Must contain exactly 6 columns in matching template order)
-                          </span>
-                        </div>
-                      )}
+                    {/* Step 2 */}
+                    <div className="border border-neutral-200/40 bg-white/20 rounded-2xl p-5 flex items-start gap-4">
+                      <div className="p-2 bg-primary/10 rounded-xl text-primary shrink-0">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      </div>
+                      <div className="space-y-1">
+                        <h4 className="text-xs font-bold text-neutral-800">2. Advisor Telemetry Audit</h4>
+                        <p className="text-[11px] text-neutral-600 font-sans leading-normal">
+                          Arijit De will audit your selected age limits, expectations, and risk thresholds prior to the consultation call.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Step 3 */}
+                    <div className="border border-neutral-200/40 bg-white/20 rounded-2xl p-5 flex items-start gap-4">
+                      <div className="p-2 bg-neutral-100 rounded-xl text-neutral-500 shrink-0">
+                        <Calendar className="w-4 h-4" />
+                      </div>
+                      <div className="space-y-1">
+                        <h4 className="text-xs font-bold text-neutral-800">3. Live 1-on-1 Consultation</h4>
+                        <p className="text-[11px] text-neutral-600 font-sans leading-normal">
+                          Join the strategy review call at your scheduled time to design a custom asset allocation and select top-performing funds.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Step 4 */}
+                    <div className="border border-neutral-200/40 bg-white/20 rounded-2xl p-5 flex items-start gap-4">
+                      <div className="p-2 bg-neutral-100 rounded-xl text-neutral-500 shrink-0">
+                        <FileText className="w-4 h-4" />
+                      </div>
+                      <div className="space-y-1">
+                        <h4 className="text-xs font-bold text-neutral-800">4. Tailored Action Roadmap</h4>
+                        <p className="text-[11px] text-neutral-600 font-sans leading-normal">
+                          Receive your personalized action PDF detailing restructuring directions, tax optimizations, and rebalancing guidelines.
+                        </p>
+                      </div>
                     </div>
                   </div>
+                </div>
 
-                  <button
-                    type="submit"
-                    disabled={apiLoading || !uploadedFile}
-                    className="w-full py-4 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition duration-200 cursor-pointer disabled:opacity-40"
-                  >
-                    {apiLoading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>{statusMsg || "Processing file..."}</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>Analyze Uploaded Portfolio</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </>
-                    )}
-                  </button>
-                </form>
-              )}
-
-              {/* Tab 2: Manual Entry Form */}
-              {analyzeTab === "MANUAL" && (
-                <form onSubmit={handleManualSubmit} className="space-y-6">
-                  <div className="overflow-x-auto select-text">
-                    <table className="w-full text-left border-collapse text-xs">
-                      <thead>
-                        <tr className="border-b border-border text-[9px] font-mono uppercase tracking-wider text-neutral-500">
-                          <th className="py-3 px-2 font-normal">Fund / Asset Name</th>
-                          <th className="py-3 px-2 font-normal w-[100px]">Type</th>
-                          <th className="py-3 px-2 font-normal w-[120px]">Start Date</th>
-                          <th className="py-3 px-2 font-normal w-[110px]">Monthly SIP</th>
-                          <th className="py-3 px-2 font-normal w-[110px]">Total Invested</th>
-                          <th className="py-3 px-2 font-normal w-[110px]">Current Value</th>
-                          <th className="py-3 px-1 font-normal w-[40px]"></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {manualRows.map((row, idx) => (
-                          <tr key={idx} className="border-b border-border/40 hover:bg-white/20">
-                            <td className="py-2.5 px-2">
-                              <input
-                                type="text"
-                                required
-                                placeholder="e.g. Parag Parikh Flexi"
-                                value={row.fundName}
-                                onChange={(e) => handleManualRowChange(idx, "fundName", e.target.value)}
-                                className="w-full bg-white/40 border border-border focus:border-primary focus:bg-white/60 rounded-lg p-2 text-neutral-900 font-sans text-xs focus:outline-none placeholder-neutral-400"
-                              />
-                            </td>
-                            <td className="py-2.5 px-2">
-                              <select
-                                value={row.type}
-                                onChange={(e) => handleManualRowChange(idx, "type", e.target.value)}
-                                className="w-full bg-white/40 border border-border rounded-lg p-2 text-neutral-900 font-sans text-xs focus:outline-none"
-                              >
-                                <option className="bg-white text-neutral-900" value="SIP">SIP</option>
-                                <option className="bg-white text-neutral-900" value="LUMPSUM">Lumpsum</option>
-                              </select>
-                            </td>
-                            <td className="py-2.5 px-2">
-                              <input
-                                type="date"
-                                required
-                                value={row.startDate}
-                                onChange={(e) => handleManualRowChange(idx, "startDate", e.target.value)}
-                                className="w-full bg-white/40 border border-border rounded-lg p-1.5 text-neutral-900 font-sans text-xs focus:outline-none"
-                              />
-                            </td>
-                            <td className="py-2.5 px-2">
-                              <input
-                                type="number"
-                                required
-                                min={0}
-                                disabled={row.type === "LUMPSUM"}
-                                value={row.sipAmount || ""}
-                                onChange={(e) => handleManualRowChange(idx, "sipAmount", e.target.value)}
-                                className="w-full bg-white/40 border border-border disabled:opacity-40 rounded-lg p-2 text-neutral-900 font-mono text-xs focus:outline-none text-right"
-                              />
-                            </td>
-                            <td className="py-2.5 px-2">
-                              <input
-                                type="number"
-                                required
-                                min={1}
-                                value={row.invested || ""}
-                                onChange={(e) => handleManualRowChange(idx, "invested", e.target.value)}
-                                className="w-full bg-white/40 border border-border rounded-lg p-2 text-neutral-900 font-mono text-xs focus:outline-none text-right"
-                              />
-                            </td>
-                            <td className="py-2.5 px-2">
-                              <input
-                                type="number"
-                                required
-                                min={1}
-                                value={row.currentValue || ""}
-                                onChange={(e) => handleManualRowChange(idx, "currentValue", e.target.value)}
-                                className="w-full bg-white/40 border border-border rounded-lg p-2 text-neutral-900 font-mono text-xs focus:outline-none text-right"
-                              />
-                            </td>
-                            <td className="py-2.5 px-1 text-center">
-                              {manualRows.length > 1 && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleRemoveManualRow(idx)}
-                                  className="text-neutral-400 hover:text-red-600 p-1 transition cursor-pointer"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row justify-between gap-4 mt-2">
-                    <button
-                      type="button"
-                      onClick={handleAddManualRow}
-                      className="py-2.5 px-4 bg-white/40 border border-border hover:bg-white/60 text-neutral-700 text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 transition cursor-pointer self-start"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      Add Investment Row
-                    </button>
-                    <span className="text-[10px] text-neutral-500 font-mono self-end">
-                      {manualRows.length} of 15 Max Rows
+                <div className="border-t border-neutral-200/50 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 mt-2">
+                  <div className="flex items-center gap-3">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span className="text-[11px] font-sans font-medium text-neutral-600">
+                      Advisor review status: <strong className="text-emerald-700 font-semibold font-mono">Assigned & Preparing</strong>
                     </span>
                   </div>
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* Analysis Header */}
+                <div className="text-center max-w-xl mx-auto space-y-2">
+                  <h1 className="text-3xl md:text-4xl font-semibold tracking-wide text-neutral-900">Analyze Investments</h1>
+                  <p className="text-neutral-500 text-xs font-sans leading-relaxed">
+                    Provide your current investment details. We'll run them through our scoring algorithm and flag any structural errors or anomalies.
+                  </p>
+                </div>
 
-                  <button
-                    type="submit"
-                    disabled={apiLoading}
-                    className="w-full py-4 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition duration-200 cursor-pointer disabled:opacity-40"
-                  >
-                    {apiLoading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>{statusMsg || "Creating analysis profile..."}</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>Validate & Analyze Investments</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </>
-                    )}
-                  </button>
-                </form>
-              )}
-            </div>
+                {/* Form Section */}
+                <div className="w-full border border-white/30 bg-white/30 backdrop-blur-xl rounded-3xl p-6 md:p-8 shadow-2xl flex flex-col">
+                  {/* Tab Selector */}
+                  <div className="flex border-b border-border mb-8">
+                    <button
+                      onClick={() => { setError(null); setAnalyzeTab("FILE"); }}
+                      className={`pb-4 px-6 text-xs font-semibold tracking-wider uppercase border-b-2 transition duration-200 cursor-pointer ${analyzeTab === "FILE"
+                          ? "border-primary text-neutral-900"
+                          : "border-transparent text-neutral-500 hover:text-neutral-800"
+                        }`}
+                    >
+                      Excel / CSV Upload
+                    </button>
+                    <button
+                      onClick={() => { setError(null); setAnalyzeTab("MANUAL"); }}
+                      className={`pb-4 px-6 text-xs font-semibold tracking-wider uppercase border-b-2 transition duration-200 cursor-pointer ${analyzeTab === "MANUAL"
+                          ? "border-primary text-neutral-900"
+                          : "border-transparent text-neutral-500 hover:text-neutral-800"
+                        }`}
+                    >
+                      Manual Entry
+                    </button>
+                  </div>
+
+                  {/* Tab 1: File Uploader */}
+                  {analyzeTab === "FILE" && (
+                    <form onSubmit={handleFileUploadSubmit} className="space-y-6">
+                      <div className="space-y-3 text-left">
+                        <div className="flex justify-between items-end">
+                          <label className="block text-[10px] font-mono uppercase tracking-wider text-neutral-500">Portfolio Data File</label>
+                          <button
+                            type="button"
+                            onClick={downloadCsvTemplate}
+                            className="text-[10px] font-mono text-primary hover:underline flex items-center gap-1 cursor-pointer bg-white/40 border border-border px-2.5 py-1 rounded-lg hover:bg-white/60 transition"
+                          >
+                            <Download className="w-3 h-3" />
+                            Download Template CSV
+                          </button>
+                        </div>
+
+                        {/* Drag & Drop uploader area */}
+                        <div
+                          className={`relative border-2 border-dashed rounded-2xl p-10 flex flex-col items-center justify-center text-center transition duration-200 bg-white/20 ${uploadedFile
+                              ? "border-primary bg-primary/[0.01]"
+                              : "border-border hover:border-neutral-300"
+                            }`}
+                        >
+                          <input
+                            type="file"
+                            accept=".xlsx,.csv"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) setUploadedFile(file);
+                            }}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                          />
+                          <div className={`w-12 h-12 rounded-xl border flex items-center justify-center mb-4 transition ${uploadedFile ? "bg-primary/10 border-primary/20 text-primary" : "bg-white/40 border border-border text-neutral-500"
+                            }`}>
+                            {uploadedFile ? <CheckCircle2 className="w-5 h-5" /> : <FileSpreadsheet className="w-5 h-5 stroke-[1.5]" />}
+                          </div>
+
+                          {uploadedFile ? (
+                            <div className="space-y-1">
+                              <span className="text-xs font-semibold text-neutral-900 block">{uploadedFile.name}</span>
+                              <span className="text-[10px] text-neutral-500 font-mono block">{(uploadedFile.size / 1024).toFixed(1)} KB</span>
+                            </div>
+                          ) : (
+                            <div className="space-y-1">
+                              <span className="text-xs font-semibold text-neutral-700 block">Click or Drag Excel/CSV file to upload</span>
+                              <span className="text-[10px] text-neutral-500 block leading-relaxed font-sans mt-1">
+                                Supported: .xlsx, .csv (Must contain exactly 6 columns in matching template order)
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={apiLoading || !uploadedFile}
+                        className="w-full py-4 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition duration-200 cursor-pointer disabled:opacity-40"
+                      >
+                        {apiLoading ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>{statusMsg || "Processing file..."}</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>Analyze Uploaded Portfolio</span>
+                            <ArrowRight className="w-4 h-4" />
+                          </>
+                        )}
+                      </button>
+                    </form>
+                  )}
+
+                  {/* Tab 2: Manual Entry Form */}
+                  {analyzeTab === "MANUAL" && (
+                    <form onSubmit={handleManualSubmit} className="space-y-6">
+                      <div className="overflow-x-auto select-text">
+                        <table className="w-full text-left border-collapse text-xs">
+                          <thead>
+                            <tr className="border-b border-border text-[9px] font-mono uppercase tracking-wider text-neutral-500">
+                              <th className="py-3 px-2 font-normal">Fund / Asset Name</th>
+                              <th className="py-3 px-2 font-normal w-[100px]">Type</th>
+                              <th className="py-3 px-2 font-normal w-[120px]">Start Date</th>
+                              <th className="py-3 px-2 font-normal w-[110px]">Monthly SIP</th>
+                              <th className="py-3 px-2 font-normal w-[110px]">Total Invested</th>
+                              <th className="py-3 px-2 font-normal w-[110px]">Current Value</th>
+                              <th className="py-3 px-1 font-normal w-[40px]"></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {manualRows.map((row, idx) => (
+                              <tr key={idx} className="border-b border-border/40 hover:bg-white/20">
+                                <td className="py-2.5 px-2">
+                                  <input
+                                    type="text"
+                                    required
+                                    placeholder="e.g. Parag Parikh Flexi"
+                                    value={row.fundName}
+                                    onChange={(e) => handleManualRowChange(idx, "fundName", e.target.value)}
+                                    className="w-full bg-white/40 border border-border focus:border-primary focus:bg-white/60 rounded-lg p-2 text-neutral-900 font-sans text-xs focus:outline-none placeholder-neutral-400"
+                                  />
+                                </td>
+                                <td className="py-2.5 px-2">
+                                  <select
+                                    value={row.type}
+                                    onChange={(e) => handleManualRowChange(idx, "type", e.target.value)}
+                                    className="w-full bg-white/40 border border-border rounded-lg p-2 text-neutral-900 font-sans text-xs focus:outline-none"
+                                  >
+                                    <option className="bg-white text-neutral-900" value="SIP">SIP</option>
+                                    <option className="bg-white text-neutral-900" value="LUMPSUM">Lumpsum</option>
+                                  </select>
+                                </td>
+                                <td className="py-2.5 px-2">
+                                  <input
+                                    type="date"
+                                    required
+                                    value={row.startDate}
+                                    onChange={(e) => handleManualRowChange(idx, "startDate", e.target.value)}
+                                    className="w-full bg-white/40 border border-border rounded-lg p-1.5 text-neutral-900 font-sans text-xs focus:outline-none"
+                                  />
+                                </td>
+                                <td className="py-2.5 px-2">
+                                  <input
+                                    type="number"
+                                    required
+                                    min={0}
+                                    disabled={row.type === "LUMPSUM"}
+                                    value={row.sipAmount || ""}
+                                    onChange={(e) => handleManualRowChange(idx, "sipAmount", e.target.value)}
+                                    className="w-full bg-white/40 border border-border disabled:opacity-40 rounded-lg p-2 text-neutral-900 font-mono text-xs focus:outline-none text-right"
+                                  />
+                                </td>
+                                <td className="py-2.5 px-2">
+                                  <input
+                                    type="number"
+                                    required
+                                    min={1}
+                                    value={row.invested || ""}
+                                    onChange={(e) => handleManualRowChange(idx, "invested", e.target.value)}
+                                    className="w-full bg-white/40 border border-border rounded-lg p-2 text-neutral-900 font-mono text-xs focus:outline-none text-right"
+                                  />
+                                </td>
+                                <td className="py-2.5 px-2">
+                                  <input
+                                    type="number"
+                                    required
+                                    min={1}
+                                    value={row.currentValue || ""}
+                                    onChange={(e) => handleManualRowChange(idx, "currentValue", e.target.value)}
+                                    className="w-full bg-white/40 border border-border rounded-lg p-2 text-neutral-900 font-mono text-xs focus:outline-none text-right"
+                                  />
+                                </td>
+                                <td className="py-2.5 px-1 text-center">
+                                  {manualRows.length > 1 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveManualRow(idx)}
+                                      className="text-neutral-400 hover:text-red-600 p-1 transition cursor-pointer"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row justify-between gap-4 mt-2">
+                        <button
+                          type="button"
+                          onClick={handleAddManualRow}
+                          className="py-2.5 px-4 bg-white/40 border border-border hover:bg-white/60 text-neutral-700 text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 transition cursor-pointer self-start"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          Add Investment Row
+                        </button>
+                        <span className="text-[10px] text-neutral-500 font-mono self-end">
+                          {manualRows.length} of 15 Max Rows
+                        </span>
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={apiLoading}
+                        className="w-full py-4 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition duration-200 cursor-pointer disabled:opacity-40"
+                      >
+                        {apiLoading ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>{statusMsg || "Creating analysis profile..."}</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>Validate & Analyze Investments</span>
+                            <ArrowRight className="w-4 h-4" />
+                          </>
+                        )}
+                      </button>
+                    </form>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -1640,7 +1922,7 @@ export default function UserDashboard() {
                   <span className="text-[9px] font-mono text-neutral-400 uppercase tracking-widest mt-1">One-time booking fee</span>
 
                   <button
-                    onClick={handleMockPaySubmit}
+                    onClick={() => handleMockPaySubmit(499)}
                     disabled={apiLoading}
                     className="w-full mt-6 py-3.5 bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition duration-200 cursor-pointer shadow-lg disabled:opacity-40"
                   >

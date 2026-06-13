@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import type { Response } from 'express';
 import { z } from 'zod';
+import fs from 'fs';
+import path from 'path';
 import { prisma } from '../lib/prisma';
 import { authMiddleware } from '../middleware/auth';
 import type { AuthenticatedRequest } from '../middleware/auth';
@@ -166,6 +168,62 @@ router.put('/:id/status', authMiddleware, adminMiddleware, async (req: Authentic
     res.json({
       success: true,
       data: updatedLead,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 4. GET /api/leads/my-bookings (user bookings)
+router.get('/my-bookings', authMiddleware, async (req: AuthenticatedRequest, res: Response, next) => {
+  try {
+    const userId = req.user!.id;
+    const leads = await prisma.lead.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json({
+      success: true,
+      data: leads,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 5. GET /api/leads/availability (available slots for user)
+router.get('/availability', authMiddleware, async (req: AuthenticatedRequest, res: Response, next) => {
+  try {
+    const AVAILABILITY_FILE = path.join(__dirname, '../../uploads/availability.json');
+    let slots: string[] = [];
+    if (fs.existsSync(AVAILABILITY_FILE)) {
+      const fileContent = fs.readFileSync(AVAILABILITY_FILE, 'utf-8');
+      slots = JSON.parse(fileContent) || [];
+    }
+
+    // Fetch all booked lead slots
+    const bookedLeads = await prisma.lead.findMany({
+      where: {
+        slot: { not: null },
+      },
+      select: {
+        slot: true,
+      },
+    });
+
+    const bookedTimes = bookedLeads
+      .map((l) => (l.slot ? new Date(l.slot).getTime() : 0))
+      .filter((t) => t > 0);
+
+    // Filter out slots that are already booked
+    const freeSlots = slots.filter((slotStr) => {
+      const slotTime = new Date(slotStr).getTime();
+      return !bookedTimes.includes(slotTime);
+    });
+
+    res.json({
+      success: true,
+      data: freeSlots,
     });
   } catch (error) {
     next(error);

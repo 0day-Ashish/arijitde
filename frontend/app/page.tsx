@@ -54,10 +54,6 @@ const faqData = [
     answer: "While apps rely solely on static algorithms, we combine advanced data analytics (like our ML anomaly detection models) with over 35 years of human market experience. This means your portfolio gets both structural precision and real-world wisdom."
   },
   {
-    question: "What does the SEBI-certified Mutual Fund Distributor model mean for me?",
-    answer: "It ensures all mutual fund advisory, distribution, and systematic transactions are fully compliant with SEBI regulations, structured, and aligned with standard security requirements, guaranteeing absolute transparency."
-  },
-  {
     question: "What dimensions are used to score my investment portfolio?",
     answer: "We evaluate your portfolio on 5 core pillars: Goal Alignment, Asset Allocation, Diversification, Systematic Investment Plan (SIP) Discipline, and Fee Efficiency to give you a clear, comprehensive scorecard."
   },
@@ -488,7 +484,7 @@ export default function Home() {
               pointerEvents: heroProgress < 0.4 ? "auto" : "none",
               transition: "opacity 0.15s ease-out, transform 0.15s ease-out",
             }}
-            className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 pt-20 sm:pt-0 z-10"
+            className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 -pt-20 sm:-pt-15 z-10"
           >
             <h1 className="text-4xl sm:text-5xl md:text-8xl font-bold text-primary font-chillax leading-none tracking-tighter uppercase select-none">
               Preserving Legacy<br />
@@ -721,8 +717,21 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Human Advisory Visual Section */}
+      <div className="w-full relative z-10 pt-16 pb-4 px-6">
+        <div className="w-full max-w-5xl mx-auto overflow-hidden hover:-translate-y-1 transition-all duration-300">
+          <div className="relative w-full overflow-hidden" style={{ aspectRatio: '2808 / 1920' }}>
+            <img
+              src="/assets/visual.png"
+              alt="Human Advisory vs Robo-Advisors"
+              className="absolute inset-0 w-full h-full object-cover object-top mix-blend-multiply"
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Interactive Chatbot Promo Section */}
-      <div className="w-full relative z-10 py-16 px-6 overflow-hidden">
+      <div className="w-full relative z-10 pt-4 pb-16 px-6 overflow-hidden">
         {/* Ambient backing glow */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-[radial-gradient(circle,rgba(46,125,50,0.03)_0%,transparent_70%)] pointer-events-none select-none" />
 
@@ -732,15 +741,15 @@ export default function Home() {
               Instant Advisory
             </span>
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-primary font-clash">
-              Meet Finsync AI: Real-Time Insights, Zero Waiting.
+              Meet Cleo AI: Real-Time Insights, Zero Waiting.
             </h2>
             <p className="text-[#64748B] text-sm leading-relaxed font-sans">
-              Have questions about how we check anomalies, calculate fee efficiency, or structure systematic portfolios? Finsync AI is trained directly on our 35-year advisory playbook to answer your investment questions instantly.
+              Have questions about how we check anomalies, calculate fee efficiency, or structure systematic portfolios? Cleo AI is trained directly on our 35-year advisory playbook to answer your investment questions instantly.
             </p>
           </div>
 
           <div className="w-full md:w-auto shrink-0 flex flex-col items-center justify-center p-6 bg-white/45 backdrop-blur-2xl border border-border rounded-2xl md:min-w-[280px] shadow-sm text-center relative group">
-            <span className="text-lg font-semibold text-primary font-clash">Try Finsync AI Now</span>
+            <span className="text-lg font-semibold text-primary font-clash">Try Cleo AI Now</span>
 
             <button
               onClick={() => setIsChatOpen(true)}
@@ -929,31 +938,31 @@ export default function Home() {
                     </text>
                   </svg>
                 </div>
- 
+
                 {/* Profile Breakdown Badges */}
                 <div className="grid grid-cols-3 gap-2.5 mt-2 relative z-10">
                   <div className="p-3 bg-[#FAF6F0] border border-[#C4A484]/30 rounded-2xl flex flex-col items-center gap-1 text-center hover:-translate-y-0.5 hover:shadow-md hover:bg-[#EAE1D4]/60 hover:border-[#8D6E63]/40 transition-all duration-300 cursor-default select-none text-foreground">
-                    <span className="text-[9px] font-mono text-foreground/70 tracking-wider block">🐅 Elephant</span>
+                    <span className="text-[9px] font-mono text-foreground/70 tracking-wider block">🐘 Elephant</span>
                     <span className="text-xs font-bold text-foreground font-clash">20%</span>
                   </div>
- 
+
                   <div className="p-3 bg-gradient-to-b from-foreground/10 to-foreground/5 border border-foreground/30 rounded-2xl flex flex-col items-center gap-1 text-center shadow-sm hover:-translate-y-0.5 hover:shadow-md hover:border-foreground/50 transition-all duration-300 relative overflow-hidden cursor-default select-none text-foreground">
                     <div className="absolute top-0 inset-x-0 h-1 bg-foreground" />
-                    <span className="text-[9px] font-mono text-foreground tracking-wider font-bold block">🐘 Tiger</span>
+                    <span className="text-[9px] font-mono text-foreground tracking-wider font-bold block">🐅 Tiger</span>
                     <span className="text-xs font-bold text-foreground font-clash">65%</span>
                   </div>
- 
+
                   <div className="p-3 bg-[#FAF6F0] border border-[#C4A484]/30 rounded-2xl flex flex-col items-center gap-1 text-center hover:-translate-y-0.5 hover:shadow-md hover:bg-[#EAE1D4]/60 hover:border-[#8D6E63]/40 transition-all duration-300 cursor-default select-none text-foreground">
                     <span className="text-[9px] font-mono text-foreground/70 tracking-wider block">🦊 Fox</span>
                     <span className="text-xs font-bold text-foreground font-clash">15%</span>
                   </div>
                 </div>
- 
+
                 {/* Footer / Active Category Display */}
                 <div className="bg-[#FAF6F0]/85 border border-[#C4A484]/30 rounded-2xl p-3.5 flex items-center justify-between gap-4 mt-2 relative z-10 shadow-inner hover:bg-[#FAF6F0] transition duration-200">
                   <div className="text-left flex items-center gap-3">
                     <div className="w-8 h-8 rounded-xl bg-foreground/10 border border-foreground/20 flex items-center justify-center text-base shadow-inner select-none">
-                      🐘
+                      🐅
                     </div>
                     <div>
                       <span className="text-[9px] font-mono text-foreground/70 uppercase block tracking-wider">Primary Archetype</span>

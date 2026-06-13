@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { 
   Users, 
   User,
-  CreditCard, 
   PhoneCall, 
   CheckCircle, 
   XCircle, 
@@ -27,7 +26,10 @@ import {
   ExternalLink,
   ShieldAlert,
   Loader2,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Plus,
+  Trash2,
+  Save
 } from 'lucide-react';
 
 // Goal Mapping helper
@@ -138,6 +140,12 @@ export default function AdminDashboard() {
   const [leadStatus, setLeadStatus] = useState<'NEW' | 'CONTACTED' | 'CONVERTED'>('NEW');
   const [leadNotes, setLeadNotes] = useState('');
   const [savingLeadStatus, setSavingLeadStatus] = useState(false);
+
+  // Availability state variables
+  const [availabilitySlots, setAvailabilitySlots] = useState<string[]>([]);
+  const [newSlotDateTime, setNewSlotDateTime] = useState<string>('');
+  const [savingAvailability, setSavingAvailability] = useState(false);
+  const [fetchingAvailability, setFetchingAvailability] = useState(false);
 
   const [screenshotModalUrl, setScreenshotModalUrl] = useState<string | null>(null);
   const [processingPaymentId, setProcessingPaymentId] = useState<string | null>(null);
@@ -532,6 +540,45 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchAvailabilitySlots = async () => {
+    try {
+      setFetchingAvailability(true);
+      const headers = { 'Authorization': `Bearer ${token}` };
+      const res = await fetch(`${backendUrl}/api/admin/availability`, { headers });
+      if (!res.ok) throw new Error('Failed to retrieve availability slots');
+      const resData = await res.json();
+      setAvailabilitySlots(resData.data || []);
+    } catch (err: any) {
+      console.error(err);
+    } finally {
+      setFetchingAvailability(false);
+    }
+  };
+
+  const handleSaveAvailability = async (updatedSlots: string[]) => {
+    try {
+      setSavingAvailability(true);
+      const headers = { 
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      };
+      const res = await fetch(`${backendUrl}/api/admin/availability`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ slots: updatedSlots })
+      });
+      if (!res.ok) throw new Error('Failed to save availability');
+      const resData = await res.json();
+      setAvailabilitySlots(resData.data || []);
+      alert('Availability slots saved successfully!');
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'Failed to save availability slots');
+    } finally {
+      setSavingAvailability(false);
+    }
+  };
+
   const fetchAdminData = async (showFullLoader = false) => {
     try {
       if (showFullLoader) {
@@ -569,6 +616,7 @@ export default function AdminDashboard() {
       
       // Fetch contact messages
       await fetchContactMessages();
+      await fetchAvailabilitySlots();
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'An unexpected error occurred while fetching admin datasets');
@@ -883,24 +931,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Stats Summary Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6 text-left">
-
-          {/* Card 3: Pending Payments */}
-          <div 
-            onClick={() => setActiveTab('payments')}
-            className={`border rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition duration-300 cursor-pointer ${
-              stats.pendingPayments > 0 ? 'bg-amber-500/10 border-amber-300/40 text-amber-900' : 'bg-white border-neutral-200'
-            }`}
-          >
-            <div className="flex items-start sm:items-center justify-between gap-2 mb-3">
-              <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-neutral-500 font-clash leading-tight">Pending Payments</span>
-              <div className={`p-1.5 sm:p-2 rounded-xl shrink-0 ${stats.pendingPayments > 0 ? 'bg-amber-500/20 text-amber-700' : 'bg-neutral-100 text-neutral-900'}`}>
-                <CreditCard className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${stats.pendingPayments > 0 ? 'animate-pulse' : ''}`} />
-              </div>
-            </div>
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-neutral-900 font-clash">{stats.pendingPayments}</h3>
-            <p className="text-[10px] text-neutral-500 font-mono mt-1">Awaiting receipt approval</p>
-          </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 text-left">
 
           {/* Card 4: Consultations */}
           <div 
@@ -1169,7 +1200,7 @@ export default function AdminDashboard() {
                                 onClick={() => selectUserForDetails(user)}
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-neutral-200 bg-white hover:bg-neutral-900 hover:text-white rounded-lg transition duration-200 text-xs font-semibold cursor-pointer text-neutral-900"
                               >
-                                Audit User
+                                View Details
                                 <ChevronRight className="w-3.5 h-3.5" />
                               </button>
                             </td>

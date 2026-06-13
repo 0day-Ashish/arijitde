@@ -3,6 +3,8 @@ import type { Response } from 'express';
 import { z } from 'zod';
 import multer from 'multer';
 import * as XLSX from 'xlsx';
+import fs from 'fs';
+import path from 'path';
 import { prisma } from '../lib/prisma';
 import { authMiddleware } from '../middleware/auth';
 import type { AuthenticatedRequest } from '../middleware/auth';
@@ -809,6 +811,43 @@ router.get('/contact-messages', async (req: AuthenticatedRequest, res: Response,
     res.json({
       success: true,
       data: messages,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 15. GET /api/admin/availability
+router.get('/availability', async (req: AuthenticatedRequest, res: Response, next) => {
+  try {
+    const AVAILABILITY_FILE = path.join(__dirname, '../../uploads/availability.json');
+    let slots: string[] = [];
+    if (fs.existsSync(AVAILABILITY_FILE)) {
+      const fileContent = fs.readFileSync(AVAILABILITY_FILE, 'utf-8');
+      slots = JSON.parse(fileContent) || [];
+    }
+    res.json({
+      success: true,
+      data: slots,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 16. POST /api/admin/availability
+router.post('/availability', async (req: AuthenticatedRequest, res: Response, next) => {
+  try {
+    const { slots } = z.object({ slots: z.array(z.string()) }).parse(req.body);
+    const UPLOAD_DIR = path.join(__dirname, '../../uploads');
+    if (!fs.existsSync(UPLOAD_DIR)) {
+      fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+    }
+    const AVAILABILITY_FILE = path.join(UPLOAD_DIR, 'availability.json');
+    fs.writeFileSync(AVAILABILITY_FILE, JSON.stringify(slots, null, 2), 'utf-8');
+    res.json({
+      success: true,
+      data: slots,
     });
   } catch (error) {
     next(error);
