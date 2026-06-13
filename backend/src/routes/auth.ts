@@ -121,6 +121,7 @@ router.post('/otp/verify', authLimiter, async (req, res, next) => {
           email: user.email,
           name: user.name,
           role: user.role,
+          finPoints: user.finPoints,
         },
       },
     });
@@ -205,6 +206,7 @@ router.post('/google', authLimiter, async (req, res, next) => {
           role: user.role,
           phone: user.phone,
           pan: user.pan,
+          finPoints: user.finPoints,
         },
       },
     });
@@ -342,6 +344,7 @@ router.post('/pan/login', authLimiter, async (req, res, next) => {
           role: user.role,
           phone: user.phone,
           pan: user.pan,
+          finPoints: user.finPoints,
         },
       },
     });
@@ -634,8 +637,58 @@ router.post('/activation/verify-otp', authLimiter, async (req, res, next) => {
           role: user.role,
           pan: user.pan,
           phone: user.phone,
+          finPoints: user.finPoints,
         }
       }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 12. POST /api/auth/claim-daily-reward
+const claimRewardSchema = z.object({
+  clientDate: z.string().min(1, 'Client date string is required'),
+});
+
+router.post('/claim-daily-reward', authMiddleware, async (req: AuthenticatedRequest, res: Response, next) => {
+  try {
+    const { clientDate } = claimRewardSchema.parse(req.body);
+    const userId = req.user!.id;
+
+    // Fetch fresh user data to compare dates
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      res.status(404).json({ success: false, error: 'User not found' });
+      return;
+    }
+
+    if (user.lastQuoteFlipDate === clientDate) {
+      res.status(400).json({ success: false, error: 'Already claimed today' });
+      return;
+    }
+
+    // Roll random points (1 to 5)
+    const points = Math.floor(Math.random() * 5) + 1;
+    const newBalance = user.finPoints + points;
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        finPoints: newBalance,
+        lastQuoteFlipDate: clientDate,
+      },
+    });
+
+    res.json({
+      success: true,
+      data: {
+        pointsClaimed: points,
+        newBalance,
+      },
     });
   } catch (error) {
     next(error);

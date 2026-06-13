@@ -141,7 +141,7 @@ export default function Home() {
     }
   };
 
-  const handleCardFlip = () => {
+  const handleCardFlip = async () => {
     const nextFlipped = !isFlipped;
     setIsFlipped(nextFlipped);
 
@@ -156,22 +156,41 @@ export default function Home() {
         const today = new Date().toDateString();
 
         if (claimedDate !== today) {
-          // Roll 1 to 5 points
-          const points = Math.floor(Math.random() * 5) + 1;
-          const currentBalanceStr = localStorage.getItem("finPointsBalance");
-          const currentBalance = currentBalanceStr ? Number(currentBalanceStr) : 500;
-          const newBalance = currentBalance + points;
+          try {
+            const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+            const res = await fetch(`${backendUrl}/api/auth/claim-daily-reward`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({ clientDate: today })
+            });
+            const data = await res.json();
+            if (data.success && data.data) {
+              const points = data.data.pointsClaimed;
+              const newBalance = data.data.newBalance;
 
-          localStorage.setItem("finPointsBalance", newBalance.toString());
-          localStorage.setItem("dailyRewardClaimedDate", today);
-          localStorage.setItem("lastRewardAmount", points.toString());
+              localStorage.setItem("finPointsBalance", newBalance.toString());
+              localStorage.setItem("dailyRewardClaimedDate", today);
+              localStorage.setItem("lastRewardAmount", points.toString());
 
-          setRewardAmount(points);
-          setRewardClaimed(true);
-          setHasClaimedToday(true);
+              setRewardAmount(points);
+              setRewardClaimed(true);
+              setHasClaimedToday(true);
 
-          // Notify navbar
-          window.dispatchEvent(new Event("points-updated"));
+              // Notify navbar
+              window.dispatchEvent(new Event("points-updated"));
+            } else {
+              if (data.error === 'Already claimed today') {
+                localStorage.setItem("dailyRewardClaimedDate", today);
+                setHasClaimedToday(true);
+                setRewardClaimed(true);
+              }
+            }
+          } catch (err) {
+            console.error("Failed to claim daily reward from DB", err);
+          }
         }
       }
     }
@@ -473,7 +492,7 @@ export default function Home() {
           >
             <h1 className="text-4xl sm:text-5xl md:text-8xl font-bold text-primary font-chillax leading-none tracking-tighter uppercase select-none">
               Preserving Legacy<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-neutral-700 to-primary/80">Finance Growth</span>
+              <span className="text-primary">Finance Growth</span>
             </h1>
             <p className="text-muted-foreground text-xs sm:text-sm md:text-lg max-w-2xl mt-4 sm:mt-8 font-sans leading-relaxed">
               Combining 35+ years of generation-spanning trust with modern portfolio analytics and machine learning anomaly detection to secure your wealth.
@@ -513,8 +532,8 @@ export default function Home() {
               {/* Assets Under Advisory Widget */}
               <div className="flex-1 flex flex-col gap-2.5 sm:gap-3.5 p-4 sm:p-5 rounded-3xl bg-white/30 backdrop-blur-2xl border border-white/40 shadow-sm text-left hover:-translate-y-1.5 hover:shadow-md transition-all duration-350">
                 <div className="flex items-center gap-2 justify-between">
-                  <span className="text-[9px] font-mono text-[#E65100] font-bold uppercase tracking-wider bg-[#E65100]/10 border border-[#E65100]/20 px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 bg-[#E65100] rounded-full animate-pulse" />
+                  <span className="text-[9px] font-mono text-foreground font-bold uppercase tracking-wider bg-foreground/5 border border-foreground/15 px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 bg-foreground/70 rounded-full animate-pulse" />
                     Yield Tracker
                   </span>
                   <span className="text-[9px] font-mono text-slate-400">CAGR AVG</span>
@@ -721,7 +740,6 @@ export default function Home() {
           </div>
 
           <div className="w-full md:w-auto shrink-0 flex flex-col items-center justify-center p-6 bg-white/45 backdrop-blur-2xl border border-border rounded-2xl md:min-w-[280px] shadow-sm text-center relative group">
-            <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest mb-1.5 block">interactive demo</span>
             <span className="text-lg font-semibold text-primary font-clash">Try Finsync AI Now</span>
 
             <button
@@ -759,7 +777,7 @@ export default function Home() {
         >
           {/* Main Statements */}
           <ScrollBlurReveal className="max-w-6xl text-center mb-20 flex flex-col gap-6 font-chillax">
-            <p className="text-xl md:text-5xl text-primary leading-relaxed font-semibold tracking-tight">
+            <p className="text-2xl md:text-5xl text-primary leading-relaxed font-semibold tracking-tight">
               For over 35 years, the name De has stood for one thing in personal finance — trust.
             </p>
             <p className="text-xl md:text-2xl text-muted-foreground font-normal leading-relaxed max-w-4xl mx-auto">
@@ -790,20 +808,20 @@ export default function Home() {
             {/* Left Column: Details */}
             <div className="flex-1 flex flex-col justify-between space-y-8 relative z-10">
               <div className="space-y-4">
-                <span className="text-[10px] font-mono text-[#C2410C] border border-[#C2410C]/35 bg-[#C2410C]/10 px-3 py-1 rounded-full uppercase tracking-wider font-bold">
+                <span className="text-[10px] font-mono text-primary border border-primary/35 bg-primary/10 px-3 py-1 rounded-full uppercase tracking-wider font-bold">
                   Investor Profiling
                 </span>
-                <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-[#3E2723] font-clash leading-tight">
+                <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-foreground font-clash leading-tight">
                   Know what kind of investor you are!
                 </h2>
-                <p className="text-[#5D4037]/90 text-sm md:text-base leading-relaxed font-sans max-w-md">
+                <p className="text-foreground/80 text-sm md:text-base leading-relaxed font-sans max-w-md">
                   Are you a Conservative Protector, a Strategic Compounder, or an Aggressive Visionary? Take our quick 2-minute diagnostic to analyze your risk preference and discover the asset mix that fits your lifestyle.
                 </p>
 
                 {/* Animal Badges */}
                 <div className="flex flex-wrap gap-2 pt-2">
                   {["🐅 Tiger", "🐘 Elephant", "🦌 Deer", "🦊 Fox", "🦁 Lion"].map((animal, idx) => (
-                    <span key={idx} className="text-xs font-semibold font-mono text-[#5D4037] bg-[#FAF6F0] border border-[#C4A484]/40 px-2.5 py-1 rounded-lg select-none hover:scale-105 hover:bg-[#EAE1D4] hover:border-[#8D6E63]/60 transition duration-200">
+                    <span key={idx} className="text-xs font-semibold font-mono text-foreground bg-[#FAF6F0] border border-[#C4A484]/40 px-2.5 py-1 rounded-lg select-none hover:scale-105 hover:bg-[#EAE1D4] hover:border-[#8D6E63]/60 transition duration-200">
                       {animal}
                     </span>
                   ))}
@@ -813,7 +831,7 @@ export default function Home() {
               <div className="pt-2">
                 <a
                   href="/quiz"
-                  className="inline-flex items-center gap-2.5 px-8 py-4 bg-gradient-to-r from-[#D84315] to-[#E65100] hover:from-[#BF360C] hover:to-[#D84315] text-white font-extrabold text-xs rounded-2xl transition duration-200 shadow-[0_4px_20px_rgba(216,67,21,0.2)] hover:shadow-[0_6px_25px_rgba(216,67,21,0.35)] uppercase tracking-wider group cursor-pointer"
+                  className="inline-flex items-center gap-2.5 px-8 py-4 bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-xs rounded-2xl transition duration-200 shadow-md uppercase tracking-wider group cursor-pointer"
                 >
                   <span className="font-bold">Start Quiz</span>
                   <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-200 stroke-white" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
@@ -903,46 +921,46 @@ export default function Home() {
                     />
 
                     {/* Score display inside the arch */}
-                    <text x="100" y="86" textAnchor="middle" className="fill-[#3E2723] font-clash text-base font-bold">
-                      Match: <tspan className="fill-[#E65100]">Tiger</tspan>
+                    <text x="100" y="86" textAnchor="middle" className="fill-foreground font-clash text-base font-bold">
+                      Match: <tspan className="fill-foreground">Tiger</tspan>
                     </text>
-                    <text x="100" y="102" textAnchor="middle" className="fill-[#8D6E63]/85 font-mono text-[8px] uppercase tracking-wider font-bold">
+                    <text x="100" y="102" textAnchor="middle" className="fill-foreground/80 font-mono text-[8px] uppercase tracking-wider font-bold">
                       Steady Compounding
                     </text>
                   </svg>
                 </div>
-
+ 
                 {/* Profile Breakdown Badges */}
                 <div className="grid grid-cols-3 gap-2.5 mt-2 relative z-10">
-                  <div className="p-3 bg-[#FAF6F0] border border-[#C4A484]/30 rounded-2xl flex flex-col items-center gap-1 text-center hover:-translate-y-0.5 hover:shadow-md hover:bg-[#EAE1D4]/60 hover:border-[#8D6E63]/40 transition-all duration-300 cursor-default select-none text-[#5D4037]">
-                    <span className="text-[9px] font-mono text-[#8D6E63] tracking-wider block">🐅 Elephant</span>
-                    <span className="text-xs font-bold text-[#3E2723] font-clash">20%</span>
+                  <div className="p-3 bg-[#FAF6F0] border border-[#C4A484]/30 rounded-2xl flex flex-col items-center gap-1 text-center hover:-translate-y-0.5 hover:shadow-md hover:bg-[#EAE1D4]/60 hover:border-[#8D6E63]/40 transition-all duration-300 cursor-default select-none text-foreground">
+                    <span className="text-[9px] font-mono text-foreground/70 tracking-wider block">🐅 Elephant</span>
+                    <span className="text-xs font-bold text-foreground font-clash">20%</span>
                   </div>
-
-                  <div className="p-3 bg-gradient-to-b from-[#E65100]/12 to-[#E65100]/5 border border-[#E65100] rounded-2xl flex flex-col items-center gap-1 text-center shadow-[0_4px_12px_rgba(230,81,0,0.1)] hover:-translate-y-0.5 hover:shadow-lg hover:border-[#BF360C] transition-all duration-300 relative overflow-hidden cursor-default select-none text-[#E65100]">
-                    <div className="absolute top-0 inset-x-0 h-1 bg-[#E65100]" />
-                    <span className="text-[9px] font-mono text-[#E65100] tracking-wider font-bold block">🐘 Tiger</span>
-                    <span className="text-xs font-bold text-[#E65100] font-clash">65%</span>
+ 
+                  <div className="p-3 bg-gradient-to-b from-foreground/10 to-foreground/5 border border-foreground/30 rounded-2xl flex flex-col items-center gap-1 text-center shadow-sm hover:-translate-y-0.5 hover:shadow-md hover:border-foreground/50 transition-all duration-300 relative overflow-hidden cursor-default select-none text-foreground">
+                    <div className="absolute top-0 inset-x-0 h-1 bg-foreground" />
+                    <span className="text-[9px] font-mono text-foreground tracking-wider font-bold block">🐘 Tiger</span>
+                    <span className="text-xs font-bold text-foreground font-clash">65%</span>
                   </div>
-
-                  <div className="p-3 bg-[#FAF6F0] border border-[#C4A484]/30 rounded-2xl flex flex-col items-center gap-1 text-center hover:-translate-y-0.5 hover:shadow-md hover:bg-[#EAE1D4]/60 hover:border-[#8D6E63]/40 transition-all duration-300 cursor-default select-none text-[#5D4037]">
-                    <span className="text-[9px] font-mono text-[#8D6E63] tracking-wider block">🦊 Fox</span>
-                    <span className="text-xs font-bold text-[#3E2723] font-clash">15%</span>
+ 
+                  <div className="p-3 bg-[#FAF6F0] border border-[#C4A484]/30 rounded-2xl flex flex-col items-center gap-1 text-center hover:-translate-y-0.5 hover:shadow-md hover:bg-[#EAE1D4]/60 hover:border-[#8D6E63]/40 transition-all duration-300 cursor-default select-none text-foreground">
+                    <span className="text-[9px] font-mono text-foreground/70 tracking-wider block">🦊 Fox</span>
+                    <span className="text-xs font-bold text-foreground font-clash">15%</span>
                   </div>
                 </div>
-
+ 
                 {/* Footer / Active Category Display */}
                 <div className="bg-[#FAF6F0]/85 border border-[#C4A484]/30 rounded-2xl p-3.5 flex items-center justify-between gap-4 mt-2 relative z-10 shadow-inner hover:bg-[#FAF6F0] transition duration-200">
                   <div className="text-left flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-[#E65100]/10 border border-[#E65100]/20 flex items-center justify-center text-base shadow-inner select-none">
+                    <div className="w-8 h-8 rounded-xl bg-foreground/10 border border-foreground/20 flex items-center justify-center text-base shadow-inner select-none">
                       🐘
                     </div>
                     <div>
-                      <span className="text-[9px] font-mono text-[#8D6E63]/75 uppercase block tracking-wider">Primary Archetype</span>
-                      <span className="text-sm font-bold text-[#E65100] font-clash leading-tight">Aggressive Tiger</span>
+                      <span className="text-[9px] font-mono text-foreground/70 uppercase block tracking-wider">Primary Archetype</span>
+                      <span className="text-sm font-bold text-foreground font-clash leading-tight">Aggressive Tiger</span>
                     </div>
                   </div>
-                  <span className="text-[9px] bg-[#E65100]/10 text-[#E65100] border border-[#E65100]/25 px-3 py-1 rounded-xl font-bold uppercase tracking-wider shadow-sm select-none">
+                  <span className="text-[9px] bg-foreground/10 text-foreground border border-foreground/25 px-3 py-1 rounded-xl font-bold uppercase tracking-wider shadow-sm select-none">
                     Optimal Fit
                   </span>
                 </div>
@@ -1092,17 +1110,6 @@ export default function Home() {
             <p className="text-[#64748B] text-sm leading-relaxed font-sans mt-3 max-w-2xl">
               Use our suite of interactive financial calculators to project systematic investments, model recurring deposits, optimize fees, and visualize prepayment schedules.
             </p>
-            <div className="mt-6 flex flex-wrap gap-4">
-              <a
-                href="/quiz"
-                className="inline-flex items-center gap-2 px-6 py-3.5 bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-xs rounded-xl transition duration-200 shadow-md uppercase tracking-wider group"
-              >
-                <span>Start Quiz</span>
-                <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              </a>
-            </div>
           </div>
 
           {/* Calculator Grid */}

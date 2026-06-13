@@ -47,7 +47,7 @@ type GradualBlurProps = PropsWithChildren<{
 const DEFAULT_CONFIG: Partial<GradualBlurProps> = {
   position: 'bottom',
   strength: 2,
-  height: '6rem',
+  height: '5rem',
   divCount: 5,
   exponential: false,
   zIndex: 1000,

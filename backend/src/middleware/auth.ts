@@ -13,6 +13,7 @@ export interface AuthenticatedRequest extends Request {
     pan: string | null;
     dob: Date | null;
     anniversary: Date | null;
+    finPoints: number;
     client?: {
       activePlan: string | null;
       advisorNotes: string | null;
@@ -59,6 +60,7 @@ export async function authMiddleware(
         pan: true,
         dob: true,
         anniversary: true,
+        finPoints: true,
         client: {
           select: {
             activePlan: true,

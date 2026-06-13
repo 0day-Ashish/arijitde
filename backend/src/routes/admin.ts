@@ -7,7 +7,7 @@ import { prisma } from '../lib/prisma';
 import { authMiddleware } from '../middleware/auth';
 import type { AuthenticatedRequest } from '../middleware/auth';
 import { adminMiddleware } from '../middleware/admin';
-import { Role, PaymentStatus, Prisma } from '@prisma/client';
+import { Role, PaymentStatus, Prisma, LeadStatus } from '@prisma/client';
 
 const router = Router();
 
@@ -38,11 +38,12 @@ router.use(adminMiddleware);
 // 1. GET /api/admin/stats
 router.get('/stats', async (req: AuthenticatedRequest, res: Response, next) => {
   try {
-    const [totalUsers, totalClients, pendingPayments, totalLeads, totalFolios, totalExistingClients, totalPortfolioValuations] = await Promise.all([
+    const [totalUsers, totalClients, pendingPayments, totalLeads, attendedLeads, totalFolios, totalExistingClients, totalPortfolioValuations] = await Promise.all([
       prisma.user.count(),
       prisma.user.count({ where: { role: Role.CLIENT } }),
       prisma.payment.count({ where: { status: PaymentStatus.PENDING } }),
       prisma.lead.count(),
+      prisma.lead.count({ where: { status: { in: [LeadStatus.CONTACTED, LeadStatus.CONVERTED] } } }),
       prisma.folio.count(),
       prisma.existingClient.count(),
       prisma.portfolioValuation.count(),
@@ -55,6 +56,7 @@ router.get('/stats', async (req: AuthenticatedRequest, res: Response, next) => {
         totalClients,
         pendingPayments,
         totalLeads,
+        attendedLeads,
         totalFolios,
         totalExistingClients,
         totalPortfolioValuations,

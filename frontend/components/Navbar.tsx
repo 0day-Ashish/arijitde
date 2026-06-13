@@ -12,12 +12,19 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [dashboardUrl, setDashboardUrl] = useState('/onboarding');
   const [isWalletOpen, setIsWalletOpen] = useState(false);
-  const [finPoints, setFinPoints] = useState<number>(500);
+  const [finPoints, setFinPoints] = useState<number>(0);
+  const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
   const desktopWalletRef = useRef<HTMLDivElement>(null);
   const mobileWalletRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // One-time migration to clear all existing points to 0
+    if (!localStorage.getItem('finPointsCleared_v1')) {
+      localStorage.setItem('finPointsBalance', '0');
+      localStorage.setItem('finPointsCleared_v1', 'true');
+    }
+
     const token = localStorage.getItem('token');
     const userStr = localStorage.getItem('user');
     if (token && userStr) {
@@ -46,7 +53,28 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
     if (savedPoints !== null) {
       setFinPoints(Number(savedPoints));
     } else {
-      setFinPoints(500);
+      setFinPoints(0);
+    }
+
+    // Fetch latest finPoints from database to keep it synced
+    if (token) {
+      fetch(`${backendUrl}/api/auth/me`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data) {
+          const fetchedPoints = data.data.finPoints ?? 0;
+          setFinPoints(fetchedPoints);
+          localStorage.setItem('finPointsBalance', fetchedPoints.toString());
+          localStorage.setItem('user', JSON.stringify(data.data));
+        }
+      })
+      .catch(err => {
+        console.error("Failed to sync finPoints from DB", err);
+      });
     }
   }, []);
 
@@ -146,6 +174,7 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
                         <div className="flex items-baseline gap-1.5 mt-0.5">
                           <span className="text-3xl font-bold font-clash text-primary leading-none">{finPoints}</span>
                           <span className="text-xs font-sans font-semibold text-neutral-500">FP</span>
+                          <span className="text-xs font-sans font-medium text-emerald-600 ml-1.5">(≈ ₹{(finPoints * 0.5).toFixed(2)})</span>
                         </div>
                       </div>
                       
@@ -207,6 +236,7 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
                         <div className="flex items-baseline gap-1 mt-0.5">
                           <span className="text-2xl font-bold font-clash text-primary leading-none">{finPoints}</span>
                           <span className="text-[10px] font-sans font-semibold text-neutral-500">FP</span>
+                          <span className="text-[10px] font-sans font-medium text-emerald-600 ml-1.5">(≈ ₹{(finPoints * 0.5).toFixed(2)})</span>
                         </div>
                       </div>
                       

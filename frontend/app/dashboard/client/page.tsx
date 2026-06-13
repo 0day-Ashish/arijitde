@@ -206,7 +206,7 @@ export default function ClientDashboard() {
   const [scoreReport, setScoreReport] = useState<ScoreData | null>(null);
 
   // Client specifics
-  const [finPoints, setFinPoints] = useState<number>(500);
+  const [finPoints, setFinPoints] = useState<number>(0);
   const [lastQuoteFlipTime, setLastQuoteFlipTime] = useState<string | null>(null);
   const [isClientQuoteFlipped, setIsClientQuoteFlipped] = useState(false);
   const [usePointsForDiscount, setUsePointsForDiscount] = useState(false);
@@ -308,8 +308,8 @@ export default function ClientDashboard() {
       if (savedPoints) {
         setFinPoints(Number(savedPoints));
       } else {
-        localStorage.setItem("finPointsBalance", "500");
-        setFinPoints(500);
+        localStorage.setItem("finPointsBalance", "0");
+        setFinPoints(0);
       }
 
       const savedFlipTime = localStorage.getItem("lastQuoteFlipTime");
@@ -352,6 +352,10 @@ export default function ClientDashboard() {
         const uObj = meData.data;
         setUserData(uObj);
         localStorage.setItem("user", JSON.stringify(uObj));
+        if (uObj.finPoints !== undefined) {
+          setFinPoints(uObj.finPoints);
+          localStorage.setItem("finPointsBalance", uObj.finPoints.toString());
+        }
       }
 
       // 2. Fetch assessments
@@ -408,20 +412,43 @@ export default function ClientDashboard() {
   };
 
   // Flip quote reward
-  const handleClientQuoteFlip = () => {
+  const handleClientQuoteFlip = async () => {
     if (!isClientQuoteFlipped) {
-      const now = Date.now();
-      const oneDay = 24 * 60 * 60 * 1000;
-      const lastFlip = lastQuoteFlipTime ? Number(lastQuoteFlipTime) : 0;
+      const today = new Date().toDateString();
+      const claimedDate = localStorage.getItem('dailyRewardClaimedDate');
 
-      if (now - lastFlip >= oneDay) {
-        const earned = Math.floor(Math.random() * 51) + 100; // Earn 100-150 FinPoints
-        const newBalance = finPoints + earned;
-        setFinPoints(newBalance);
-        setPointsEarnedToday(earned);
-        localStorage.setItem("finPointsBalance", newBalance.toString());
-        localStorage.setItem("lastQuoteFlipTime", now.toString());
-        setLastQuoteFlipTime(now.toString());
+      if (claimedDate !== today) {
+        try {
+          const res = await fetch(`${backendUrl}/api/auth/claim-daily-reward`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ clientDate: today })
+          });
+          const data = await res.json();
+          if (data.success && data.data) {
+            const points = data.data.pointsClaimed;
+            const newBalance = data.data.newBalance;
+
+            setFinPoints(newBalance);
+            setPointsEarnedToday(points);
+            localStorage.setItem("finPointsBalance", newBalance.toString());
+            localStorage.setItem("dailyRewardClaimedDate", today);
+            
+            // Notify other components
+            window.dispatchEvent(new Event("points-updated"));
+          } else {
+            if (data.error === 'Already claimed today') {
+              localStorage.setItem("dailyRewardClaimedDate", today);
+              setPointsEarnedToday(0);
+            }
+          }
+        } catch (err) {
+          console.error("Failed to claim daily reward from dashboard", err);
+          setPointsEarnedToday(0);
+        }
       } else {
         setPointsEarnedToday(0);
       }
@@ -432,14 +459,10 @@ export default function ClientDashboard() {
   };
 
   const getRemainingFlipTime = () => {
-    if (!lastQuoteFlipTime) return "";
-    const lastFlip = Number(lastQuoteFlipTime);
-    const target = lastFlip + 24 * 60 * 60 * 1000;
-    const diff = target - Date.now();
-    if (diff <= 0) return "Ready to flip!";
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    return `Next flip in: ${hours}h ${minutes}m`;
+    const claimedDate = localStorage.getItem('dailyRewardClaimedDate');
+    const today = new Date().toDateString();
+    if (claimedDate !== today) return "Ready to flip!";
+    return "Come back tomorrow!";
   };
 
   // 1-Click Booking
@@ -449,9 +472,6 @@ export default function ClientDashboard() {
     setStatusMsg("Registering premium advisory call booking...");
 
     try {
-      const discountAmount = usePointsForDiscount ? Math.min(finPoints, 499) : 0;
-      const amountPaid = 499 - discountAmount;
-
       const res = await fetch(`${backendUrl}/api/leads`, {
         method: "POST",
         headers: {
@@ -475,17 +495,11 @@ export default function ClientDashboard() {
           hour: '2-digit',
           minute: '2-digit'
         });
-        const newBooking = `1-on-1 Strategy Session - Confirmed for ${formattedSlot} (Paid ₹${amountPaid} using FinPoints)`;
+        const newBooking = `1-on-1 Strategy Session - Confirmed for ${formattedSlot} (Free)`;
         const updatedBookings = [newBooking, ...clientBookings];
         setClientBookings(updatedBookings);
         localStorage.setItem("clientBookings", JSON.stringify(updatedBookings));
 
-        if (usePointsForDiscount) {
-          const newPointsBalance = finPoints - discountAmount;
-          setFinPoints(newPointsBalance);
-          localStorage.setItem("finPointsBalance", newPointsBalance.toString());
-          setUsePointsForDiscount(false);
-        }
         setShowBookingSuccess(true);
       } else {
         setError(data.error || "Failed to book call.");
@@ -743,8 +757,8 @@ export default function ClientDashboard() {
         if (savedPoints) {
           setFinPoints(Number(savedPoints));
         } else {
-          localStorage.setItem("finPointsBalance", "500");
-          setFinPoints(500);
+          localStorage.setItem("finPointsBalance", "0");
+          setFinPoints(0);
         }
 
         const savedFlipTime = localStorage.getItem("lastQuoteFlipTime");
@@ -1476,7 +1490,7 @@ export default function ClientDashboard() {
                     <Wallet className="w-4 h-4 text-primary" />
                     FinWallet Balance
                   </h3>
-                  <span className="text-[9px] font-mono text-primary font-bold">1 FP = ₹1</span>
+                  <span className="text-[9px] font-mono text-primary font-bold">1 FP = ₹0.5</span>
                 </div>
 
                 <div className="py-2.5 text-center bg-primary/5 rounded-2xl border border-primary/10">
@@ -1484,25 +1498,8 @@ export default function ClientDashboard() {
                   <div className="text-3xl font-bold font-mono text-neutral-900 mt-1">
                     {finPoints} <span className="text-xs font-sans font-medium text-neutral-500 font-semibold">FP</span>
                   </div>
+                  <span className="text-xs font-sans font-medium text-emerald-600 block mt-1">(≈ ₹{(finPoints * 0.5).toFixed(2)})</span>
                 </div>
-
-                {finPoints > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setUsePointsForDiscount(!usePointsForDiscount)}
-                    className={`w-full p-3 rounded-2xl border text-xs flex justify-between items-center transition cursor-pointer ${
-                      usePointsForDiscount 
-                        ? "bg-primary/10 border-primary/40 text-primary font-semibold" 
-                        : "bg-white/40 border-white/30 text-neutral-600 hover:bg-white/60"
-                    }`}
-                  >
-                    <span className="flex items-center gap-1.5">
-                      <Percent className="w-3.5 h-3.5 text-primary" />
-                      Apply Points Discount
-                    </span>
-                    <span className="font-mono font-bold">-₹{Math.min(finPoints, 499)}</span>
-                  </button>
-                )}
               </div>
 
               {/* 1-Click Booking Widget */}
@@ -1516,7 +1513,7 @@ export default function ClientDashboard() {
                 </div>
 
                 <p className="text-[11px] text-neutral-500 font-sans leading-relaxed">
-                  Book a priority review session. Applied FinPoints deduct from standard ₹499 fee.
+                  Book a priority 1-on-1 strategy session with our advisors. Free of charge for active clients.
                 </p>
 
                 <div className="space-y-1">
@@ -1534,8 +1531,8 @@ export default function ClientDashboard() {
 
                 <div className="p-3 bg-neutral-900/5 rounded-2xl flex justify-between items-center text-xs">
                   <span className="text-neutral-500 font-semibold">Total Price</span>
-                  <span className="text-neutral-900 font-bold font-mono text-sm">
-                    ₹{Math.max(0, 499 - (usePointsForDiscount ? Math.min(finPoints, 499) : 0))}
+                  <span className="text-emerald-600 font-bold text-sm">
+                    Free
                   </span>
                 </div>
 

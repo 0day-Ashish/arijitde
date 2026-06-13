@@ -77,32 +77,32 @@
     --bg-glow-end: rgba(250, 246, 240, 0);
 
     --background: #FAF6F0;
-    --foreground: #2B1A08;
+    --foreground: #000000;
     --card: #FFFDF9;
-    --card-foreground: #2B1A08;
+    --card-foreground: #000000;
     --popover: #FFFDF9;
-    --popover-foreground: #2B1A08;
-    --primary: #C2410C;
+    --popover-foreground: #000000;
+    --primary: #000000;
     --primary-foreground: #FFFFFF;
-    --secondary: #6B4724;
+    --secondary: #333333;
     --secondary-foreground: #FFFFFF;
     --accent: #E29E2B;
     --accent-foreground: #FFFFFF;
     --destructive: #EF4444;
-    --border: rgba(120, 53, 15, 0.12);
-    --input: rgba(120, 53, 15, 0.12);
-    --ring: #C2410C;
-    --muted: rgba(120, 53, 15, 0.05);
-    --muted-foreground: #8C6239;
+    --border: rgba(0, 0, 0, 0.1);
+    --input: rgba(0, 0, 0, 0.1);
+    --ring: #000000;
+    --muted: rgba(0, 0, 0, 0.04);
+    --muted-foreground: #555555;
     --radius: 0.625rem;
     --sidebar: #FFFDF9;
-    --sidebar-foreground: #2B1A08;
-    --sidebar-primary: #C2410C;
+    --sidebar-foreground: #000000;
+    --sidebar-primary: #000000;
     --sidebar-primary-foreground: #FFFFFF;
-    --sidebar-accent: rgba(120, 53, 15, 0.05);
-    --sidebar-accent-foreground: #2B1A08;
-    --sidebar-border: rgba(120, 53, 15, 0.12);
-    --sidebar-ring: #C2410C;
+    --sidebar-accent: rgba(0, 0, 0, 0.04);
+    --sidebar-accent-foreground: #000000;
+    --sidebar-border: rgba(0, 0, 0, 0.1);
+    --sidebar-ring: #000000;
 }
 
 .dark {
@@ -112,31 +112,31 @@
     --bg-glow-end: rgba(250, 246, 240, 0);
 
     --background: #FAF6F0;
-    --foreground: #2B1A08;
+    --foreground: #000000;
     --card: #FFFDF9;
-    --card-foreground: #2B1A08;
+    --card-foreground: #000000;
     --popover: #FFFDF9;
-    --popover-foreground: #2B1A08;
-    --primary: #C2410C;
+    --popover-foreground: #000000;
+    --primary: #000000;
     --primary-foreground: #FFFFFF;
-    --secondary: #6B4724;
+    --secondary: #333333;
     --secondary-foreground: #FFFFFF;
     --accent: #E29E2B;
     --accent-foreground: #FFFFFF;
     --destructive: #EF4444;
-    --border: rgba(120, 53, 15, 0.12);
-    --input: rgba(120, 53, 15, 0.12);
-    --ring: #C2410C;
-    --muted: rgba(120, 53, 15, 0.05);
-    --muted-foreground: #8C6239;
+    --border: rgba(0, 0, 0, 0.1);
+    --input: rgba(0, 0, 0, 0.1);
+    --ring: #000000;
+    --muted: rgba(0, 0, 0, 0.04);
+    --muted-foreground: #555555;
     --sidebar: #FFFDF9;
-    --sidebar-foreground: #2B1A08;
-    --sidebar-primary: #C2410C;
+    --sidebar-foreground: #000000;
+    --sidebar-primary: #000000;
     --sidebar-primary-foreground: #FFFFFF;
-    --sidebar-accent: rgba(120, 53, 15, 0.05);
-    --sidebar-accent-foreground: #2B1A08;
-    --sidebar-border: rgba(120, 53, 15, 0.12);
-    --sidebar-ring: #C2410C;
+    --sidebar-accent: rgba(0, 0, 0, 0.04);
+    --sidebar-accent-foreground: #000000;
+    --sidebar-border: rgba(0, 0, 0, 0.1);
+    --sidebar-ring: #000000;
 }
 
 @layer base {
@@ -239,4 +239,11 @@ html.lenis, html.lenis body {
 
 .animate-diagonal-bounce {
   animation: diagonal-bounce 1s ease-in-out infinite;
+}
+
+/* Hide page-level bottom blur on mobile/small screens to prevent overlap with footer text and address bars */
+@media (max-width: 400px) {
+  .gradual-blur-page {
+    display: none !important;
+  }
 }

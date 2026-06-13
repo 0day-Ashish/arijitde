@@ -22,12 +22,14 @@ model User {
   googleId    String?      @unique
   dob         DateTime?
   anniversary DateTime?
-  createdAt   DateTime     @default(now())
-  assessments Assessment[]
-  portfolios  Portfolio[]
-  leads       Lead[]
-  payments    Payment[]
-  client      Client?
+  createdAt         DateTime     @default(now())
+  finPoints         Int          @default(10)
+  lastQuoteFlipDate String?
+  assessments       Assessment[]
+  portfolios        Portfolio[]
+  leads             Lead[]
+  payments          Payment[]
+  client            Client?
 }
 
 enum Role {

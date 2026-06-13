@@ -151,6 +151,18 @@ router.put('/:id/status', authMiddleware, adminMiddleware, async (req: Authentic
       },
     });
 
+    // Award 10 points if transitioned to CONVERTED (booking completion)
+    if (existingLead.status !== 'CONVERTED' && status === 'CONVERTED') {
+      await prisma.user.update({
+        where: { id: existingLead.userId },
+        data: {
+          finPoints: {
+            increment: 10,
+          },
+        },
+      });
+    }
+
     res.json({
       success: true,
       data: updatedLead,

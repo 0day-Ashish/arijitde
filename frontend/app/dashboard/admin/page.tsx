@@ -67,6 +67,7 @@ export default function AdminDashboard() {
     totalClients: 0,
     pendingPayments: 0,
     totalLeads: 0,
+    attendedLeads: 0,
     totalFolios: 0,
     totalExistingClients: 0,
     totalPortfolioValuations: 0,
@@ -706,6 +707,7 @@ export default function AdminDashboard() {
       setSelectedLeadId(null);
       setLeadNotes('');
       alert('Consultation lead updated successfully!');
+      fetchAdminData(false);
     } catch (err: any) {
       alert(err.message || 'Failed to update lead status');
     } finally {
@@ -881,31 +883,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Stats Summary Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4 md:gap-6">
-          
-          {/* Card 1: Users */}
-          <div className="border border-neutral-200 bg-white rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition duration-300">
-            <div className="flex items-start sm:items-center justify-between gap-2 mb-3">
-              <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-neutral-500 font-clash leading-tight">Total Users</span>
-              <div className="p-1.5 sm:p-2 bg-neutral-100 rounded-xl shrink-0">
-                <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-900" />
-              </div>
-            </div>
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-neutral-900 font-clash">{stats.totalUsers}</h3>
-            <p className="text-[10px] text-neutral-500 font-mono mt-1">Registrations in database</p>
-          </div>
-
-          {/* Card 2: Clients */}
-          <div className="border border-neutral-200 bg-white rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition duration-300">
-            <div className="flex items-start sm:items-center justify-between gap-2 mb-3">
-              <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-neutral-500 font-clash leading-tight">Active Clients</span>
-              <div className="p-1.5 sm:p-2 bg-neutral-100 rounded-xl shrink-0">
-                <UserCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-900" />
-              </div>
-            </div>
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-neutral-900 font-clash">{stats.totalClients}</h3>
-            <p className="text-[10px] text-neutral-500 font-mono mt-1">Premium users activated</p>
-          </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6 text-left">
 
           {/* Card 3: Pending Payments */}
           <div 
@@ -937,8 +915,8 @@ export default function AdminDashboard() {
                 <PhoneCall className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${activeTab === 'consultations' ? 'text-white' : 'text-neutral-900'}`} />
               </div>
             </div>
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight font-clash">{stats.totalLeads}</h3>
-            <p className={`text-[10px] font-mono mt-1 ${activeTab === 'consultations' ? 'text-neutral-400' : 'text-neutral-500'}`}>Booked advisory leads</p>
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight font-clash">{stats.attendedLeads}/{stats.totalLeads}</h3>
+            <p className={`text-[10px] font-mono mt-1 ${activeTab === 'consultations' ? 'text-neutral-400' : 'text-neutral-500'}`}>Attended / Total Booked</p>
           </div>
 
           {/* Card 5: Total Folios */}
@@ -1024,11 +1002,6 @@ export default function AdminDashboard() {
             }`}
           >
             Consultation Leads
-            {stats.totalLeads > 0 && (
-              <span className="px-2 py-0.5 text-[10px] bg-neutral-900 text-white rounded-full font-bold">
-                {stats.totalLeads}
-              </span>
-            )}
           </button>
           <button
             onClick={() => setActiveTab('folios')}
@@ -2437,7 +2410,6 @@ export default function AdminDashboard() {
                             >
                               <option value="NEW">NEW - Awaiting Contact</option>
                               <option value="CONTACTED">CONTACTED - Call Completed</option>
-                              <option value="CONVERTED">CONVERTED - Signed Premium Client</option>
                             </select>
                           </div>
 
