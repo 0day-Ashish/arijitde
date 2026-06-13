@@ -980,9 +980,6 @@ export default function Home() {
             {/* Left Column: Details */}
             <div className="flex-1 flex flex-col justify-between space-y-8 relative z-10">
               <div className="space-y-4">
-                <span className="text-[10px] font-mono text-primary border border-primary/25 bg-primary/5 px-3 py-1 rounded-full uppercase tracking-wider font-semibold">
-                  Portfolio Diagnostic
-                </span>
                 <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-primary font-clash leading-tight">
                   Analyze your portfolio in real-time
                 </h2>
