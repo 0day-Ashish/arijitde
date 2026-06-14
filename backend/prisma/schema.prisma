@@ -192,6 +192,8 @@ model Client {
 
 model Folio {
   id                   String   @id @default(uuid())
+  existingClientId     String?
+  existingClient       ExistingClient? @relation(fields: [existingClientId], references: [id], onDelete: Cascade)
   clientName           String?
   clientPan            String?
   clientAadhaar        String?
@@ -259,6 +261,7 @@ model Folio {
   lastUsedArn          String?
   createdAt            DateTime @default(now())
 
+  @@index([existingClientId])
   @@index([createdAt])
   @@index([clientName])
   @@index([clientPan])
@@ -270,6 +273,7 @@ model Folio {
 
 model ExistingClient {
   id                         String   @id @default(uuid())
+  folios                     Folio[]
   title                      String?
   name                       String?
   pan                        String?
@@ -352,6 +356,18 @@ model ExistingClient {
   nominee3Relation           String?
   nominee3Dob                String?
   nominee3Percentage         String?
+  
+  // Valuation fields merged from PortfolioValuation
+  balanceUnits               Float?
+  purchaseValue              Float?
+  currentValue               Float?
+  oneDayChange               Float?
+  dividend                   Float?
+  averageHoldingDays         Float?
+  gain                       Float?
+  absoluteReturn             Float?
+  cagr                       Float?
+  
   createdAt                  DateTime @default(now())
 
   @@index([createdAt])
@@ -362,30 +378,6 @@ model ExistingClient {
   @@index([iwellCode])
   @@index([appCode])
   @@index([city])
-}
-
-model PortfolioValuation {
-  id                 String   @id @default(uuid())
-  clientName         String?
-  iwellCode          String?
-  iwellCode2         String?
-  pan                String?
-  balanceUnits       Float?
-  purchaseValue      Float?
-  currentValue       Float?
-  oneDayChange       Float?
-  dividend           Float?
-  averageHoldingDays Float?
-  gain               Float?
-  absoluteReturn     Float?
-  cagr               Float?
-  createdAt          DateTime @default(now())
-
-  @@index([createdAt])
-  @@index([clientName])
-  @@index([pan])
-  @@index([iwellCode])
-  @@index([iwellCode2])
 }
 
 model ContactMessage {

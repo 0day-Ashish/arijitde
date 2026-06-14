@@ -75,20 +75,9 @@ export default function AdminDashboard() {
     totalPortfolioValuations: 0,
   });
   const [usersList, setUsersList] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<'users' | 'payments' | 'folios' | 'existingClients' | 'portfolioValuations' | 'consultations'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'payments' | 'existingClients' | 'consultations'>('users');
 
   // Folio state variables
-  const [foliosList, setFoliosList] = useState<any[]>([]);
-  const [foliosPagination, setFoliosPagination] = useState({
-    page: 1,
-    limit: 10,
-    total: 0,
-    pages: 0,
-  });
-  const [foliosSearchQuery, setFoliosSearchQuery] = useState('');
-  const [foliosPage, setFoliosPage] = useState(1);
-  const [fetchingFolios, setFetchingFolios] = useState(false);
-  const [selectedFolio, setSelectedFolio] = useState<any>(null);
   const [uploadingFolioFile, setUploadingFolioFile] = useState(false);
 
   // Existing Client state variables
@@ -195,48 +184,6 @@ export default function AdminDashboard() {
     fetchAdminData(true);
   }, [token]);
 
-  // 3. Fetch Folios when tab is Folios or pagination/search changes
-  const fetchFolios = async (page = 1, search = '') => {
-    if (!token) return;
-    try {
-      setFetchingFolios(true);
-      const headers = { 'Authorization': `Bearer ${token}` };
-      const queryParams = new URLSearchParams({
-        page: String(page),
-        limit: '10',
-        search: search,
-      });
-
-      const res = await fetch(`${backendUrl}/api/admin/folios?${queryParams.toString()}`, { headers });
-      if (!res.ok) throw new Error('Failed to retrieve folio database records');
-      
-      const resData = await res.json();
-      setFoliosList(resData.data.folios);
-      setFoliosPagination(resData.data.pagination);
-    } catch (err: any) {
-      console.error(err);
-      alert(err.message || 'An unexpected error occurred while fetching folios');
-    } finally {
-      setFetchingFolios(false);
-    }
-  };
-
-  useEffect(() => {
-    if (activeTab === 'folios') {
-      fetchFolios(foliosPage, foliosSearchQuery);
-    }
-  }, [activeTab, foliosPage]);
-
-  useEffect(() => {
-    if (activeTab !== 'folios') return;
-    const delayDebounceFn = setTimeout(() => {
-      setFoliosPage(1);
-      fetchFolios(1, foliosSearchQuery);
-    }, 400);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [foliosSearchQuery]);
-
   const handleFolioFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -259,8 +206,8 @@ export default function AdminDashboard() {
         throw new Error(resData.error || 'Failed to upload folio records');
       }
 
-      alert(resData.message || 'Folio database imported successfully!');
-      foliosPage === 1 ? fetchFolios(1, foliosSearchQuery) : setFoliosPage(1);
+      alert(resData.message || 'Folio holdings imported and matched successfully!');
+      existingClientsPage === 1 ? fetchExistingClients(1, existingClientsSearchQuery) : setExistingClientsPage(1);
       await fetchAdminData();
     } catch (err: any) {
       alert(err.message || 'Failed to upload file');
@@ -280,7 +227,6 @@ export default function AdminDashboard() {
       danger: true,
       onConfirm: async () => {
         try {
-          setFetchingFolios(true);
           const res = await fetch(`${backendUrl}/api/admin/folios/clear`, {
             method: 'DELETE',
             headers: {
@@ -292,14 +238,10 @@ export default function AdminDashboard() {
           if (!res.ok) throw new Error(resData.error || 'Failed to clear folio records');
 
           alert(resData.message || 'All folio records deleted.');
-          setFoliosPage(1);
-          setFoliosList([]);
-          setFoliosPagination({ page: 1, limit: 10, total: 0, pages: 0 });
+          existingClientsPage === 1 ? fetchExistingClients(1, existingClientsSearchQuery) : setExistingClientsPage(1);
           await fetchAdminData();
         } catch (err: any) {
           alert(err.message || 'Failed to clear records');
-        } finally {
-          setFetchingFolios(false);
         }
       }
     });
@@ -415,47 +357,7 @@ export default function AdminDashboard() {
     });
   };
 
-  // 3c. Fetch Portfolio Valuations when tab is portfolioValuations or pagination/search changes
-  const fetchPortfolioValuations = async (page = 1, search = '') => {
-    if (!token) return;
-    try {
-      setFetchingPortfolioValuations(true);
-      const headers = { 'Authorization': `Bearer ${token}` };
-      const queryParams = new URLSearchParams({
-        page: String(page),
-        limit: '10',
-        search: search,
-      });
 
-      const res = await fetch(`${backendUrl}/api/admin/portfolio-valuations?${queryParams.toString()}`, { headers });
-      if (!res.ok) throw new Error('Failed to retrieve portfolio valuation records');
-      
-      const resData = await res.json();
-      setPortfolioValuationsList(resData.data.valuations);
-      setPortfolioValuationsPagination(resData.data.pagination);
-    } catch (err: any) {
-      console.error(err);
-      alert(err.message || 'An unexpected error occurred while fetching portfolio valuations');
-    } finally {
-      setFetchingPortfolioValuations(false);
-    }
-  };
-
-  useEffect(() => {
-    if (activeTab === 'portfolioValuations') {
-      fetchPortfolioValuations(portfolioValuationsPage, portfolioValuationsSearchQuery);
-    }
-  }, [activeTab, portfolioValuationsPage]);
-
-  useEffect(() => {
-    if (activeTab !== 'portfolioValuations') return;
-    const delayDebounceFn = setTimeout(() => {
-      setPortfolioValuationsPage(1);
-      fetchPortfolioValuations(1, portfolioValuationsSearchQuery);
-    }, 400);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [portfolioValuationsSearchQuery]);
 
   const handlePortfolioValuationsFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -479,8 +381,8 @@ export default function AdminDashboard() {
         throw new Error(resData.error || 'Failed to upload portfolio valuation records');
       }
 
-      alert(resData.message || 'Portfolio valuation database imported successfully!');
-      portfolioValuationsPage === 1 ? fetchPortfolioValuations(1, portfolioValuationsSearchQuery) : setPortfolioValuationsPage(1);
+      alert(resData.message || 'Portfolio valuation database processed successfully!');
+      existingClientsPage === 1 ? fetchExistingClients(1, existingClientsSearchQuery) : setExistingClientsPage(1);
       await fetchAdminData();
     } catch (err: any) {
       alert(err.message || 'Failed to upload file');
@@ -931,7 +833,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Stats Summary Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 text-left">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 text-left">
 
           {/* Card 4: Consultations */}
           <div 
@@ -950,23 +852,6 @@ export default function AdminDashboard() {
             <p className={`text-[10px] font-mono mt-1 ${activeTab === 'consultations' ? 'text-neutral-400' : 'text-neutral-500'}`}>Attended / Total Booked</p>
           </div>
 
-          {/* Card 5: Total Folios */}
-          <div 
-            onClick={() => setActiveTab('folios')}
-            className={`border rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition duration-300 cursor-pointer ${
-              activeTab === 'folios' ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white border-neutral-200 text-neutral-900'
-            }`}
-          >
-            <div className="flex items-start sm:items-center justify-between gap-2 mb-3">
-              <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-wider font-clash leading-tight ${activeTab === 'folios' ? 'text-neutral-300' : 'text-neutral-500'}`}>Total Folios</span>
-              <div className={`p-1.5 sm:p-2 rounded-xl shrink-0 ${activeTab === 'folios' ? 'bg-neutral-800' : 'bg-neutral-100'}`}>
-                <FileSpreadsheet className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              </div>
-            </div>
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight font-clash">{stats.totalFolios || 0}</h3>
-            <p className={`text-[10px] font-mono mt-1 ${activeTab === 'folios' ? 'text-neutral-400' : 'text-neutral-500'}`}>Parsed folio files</p>
-          </div>
-
           {/* Card 6: Existing Clients */}
           <div 
             onClick={() => setActiveTab('existingClients')}
@@ -982,23 +867,6 @@ export default function AdminDashboard() {
             </div>
             <h3 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight font-clash">{stats.totalExistingClients || 0}</h3>
             <p className={`text-[10px] font-mono mt-1 ${activeTab === 'existingClients' ? 'text-neutral-400' : 'text-neutral-500'}`}>Imported client profiles</p>
-          </div>
-
-          {/* Card 7: Portfolio Valuations */}
-          <div 
-            onClick={() => setActiveTab('portfolioValuations')}
-            className={`border rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition duration-300 cursor-pointer ${
-              activeTab === 'portfolioValuations' ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white border-neutral-200 text-neutral-900'
-            }`}
-          >
-            <div className="flex items-start sm:items-center justify-between gap-2 mb-3">
-              <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-wider font-clash leading-tight ${activeTab === 'portfolioValuations' ? 'text-neutral-300' : 'text-neutral-500'}`}>Portfolio Valuations</span>
-              <div className={`p-1.5 sm:p-2 rounded-xl shrink-0 ${activeTab === 'portfolioValuations' ? 'bg-neutral-800' : 'bg-neutral-100'}`}>
-                <FileSpreadsheet className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              </div>
-            </div>
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight font-clash">{stats.totalPortfolioValuations || 0}</h3>
-            <p className={`text-[10px] font-mono mt-1 ${activeTab === 'portfolioValuations' ? 'text-neutral-400' : 'text-neutral-500'}`}>Valuation sheets</p>
           </div>
 
         </div>
@@ -1034,19 +902,7 @@ export default function AdminDashboard() {
           >
             Consultation Leads
           </button>
-          <button
-            onClick={() => setActiveTab('folios')}
-            className={`py-3 text-sm font-bold font-clash tracking-wide border-b-2 cursor-pointer transition duration-200 flex items-center gap-2 whitespace-nowrap ${
-              activeTab === 'folios' ? 'border-neutral-900 text-neutral-900' : 'border-transparent text-neutral-500 hover:text-neutral-900'
-            }`}
-          >
-            Folios Database
-            {stats.totalFolios > 0 && (
-              <span className="px-2 py-0.5 text-[10px] bg-neutral-900 text-white rounded-full font-bold">
-                {stats.totalFolios}
-              </span>
-            )}
-          </button>
+
           <button
             onClick={() => setActiveTab('existingClients')}
             className={`py-3 text-sm font-bold font-clash tracking-wide border-b-2 cursor-pointer transition duration-200 flex items-center gap-2 whitespace-nowrap ${
@@ -1060,19 +916,7 @@ export default function AdminDashboard() {
               </span>
             )}
           </button>
-          <button
-            onClick={() => setActiveTab('portfolioValuations')}
-            className={`py-3 text-sm font-bold font-clash tracking-wide border-b-2 cursor-pointer transition duration-200 flex items-center gap-2 whitespace-nowrap ${
-              activeTab === 'portfolioValuations' ? 'border-neutral-900 text-neutral-900' : 'border-transparent text-neutral-500 hover:text-neutral-900'
-            }`}
-          >
-            Portfolio Valuations
-            {stats.totalPortfolioValuations > 0 && (
-              <span className="px-2 py-0.5 text-[10px] bg-neutral-900 text-white rounded-full font-bold">
-                {stats.totalPortfolioValuations}
-              </span>
-            )}
-          </button>
+
         </div>
 
         {/* Tab Viewport */}
@@ -1398,174 +1242,14 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {activeTab === 'folios' && (
-            <div className="space-y-6">
-              {/* Top Action Bar with Upload Zone & Clear Zone */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
-                {/* Upload Zone */}
-                <div className="md:col-span-2 border border-dashed border-neutral-300 bg-white hover:border-neutral-900 transition-colors duration-300 rounded-2xl p-6 flex flex-col items-center justify-center text-center relative min-h-[140px]">
-                  {uploadingFolioFile ? (
-                    <div className="flex flex-col items-center gap-3">
-                      <Loader2 className="w-10 h-10 text-neutral-900 animate-spin" />
-                      <span className="text-sm font-bold font-clash text-neutral-900">Uploading & Parsing Folio File...</span>
-                      <span className="text-xs text-neutral-500 font-mono">Extracting all columns to database</span>
-                    </div>
-                  ) : (
-                    <label htmlFor="folio-csv-upload" className="cursor-pointer flex flex-col items-center gap-3 w-full h-full select-none">
-                      <div className="p-3 bg-neutral-100 rounded-2xl text-neutral-900">
-                        <FileSpreadsheet className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <span className="text-sm font-bold font-clash text-neutral-900 block">Click to Upload Folio CSV / Excel</span>
-                        <span className="text-[11px] text-neutral-500 font-mono mt-1 block">Supports target mutual fund folio schemas</span>
-                      </div>
-                      <input 
-                        type="file" 
-                        id="folio-csv-upload" 
-                        accept=".csv,.xlsx" 
-                        className="hidden" 
-                        onChange={handleFolioFileUpload} 
-                      />
-                    </label>
-                  )}
-                </div>
 
-                {/* Reset & Stats box */}
-                <div className="border border-neutral-200 bg-white rounded-2xl p-6 flex flex-col justify-between shadow-sm">
-                  <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-clash">Folio Data Operations</h3>
-                    <p className="text-[11px] text-neutral-400 mt-1 font-mono">Bulk management actions</p>
-                  </div>
-                  <button
-                    onClick={handleClearFolios}
-                    disabled={fetchingFolios || stats.totalFolios === 0}
-                    className="w-full py-3 bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl transition duration-200 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
-                  >
-                    <XCircle className="w-4 h-4" />
-                    Clear All Folio Records
-                  </button>
-                </div>
-              </div>
-
-              {/* Search & Listing */}
-              <div className="space-y-4">
-                <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
-                  <div className="flex-1 relative w-full">
-                    <Search className="w-4 h-4 text-neutral-400 absolute left-4 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      placeholder="Search folios by client name, PAN, folio number or scheme..."
-                      value={foliosSearchQuery}
-                      onChange={(e) => setFoliosSearchQuery(e.target.value)}
-                      className="w-full pl-11 pr-4 py-3 text-sm border border-neutral-200 rounded-xl bg-white focus:outline-none focus:ring-1 focus:ring-neutral-900 transition duration-200 text-neutral-900 placeholder-neutral-400"
-                    />
-                  </div>
-                </div>
-
-                {/* Folios Table */}
-                <div className="border border-neutral-200 bg-white rounded-2xl overflow-hidden shadow-sm">
-                  <div className="overflow-x-auto w-full">
-                    <table className="w-full text-left text-xs font-sans text-neutral-900">
-                      <thead>
-                        <tr className="border-b border-neutral-200 bg-neutral-50 uppercase tracking-widest text-[10px] font-bold text-neutral-500 select-none">
-                          <th className="px-6 py-4">Client Name</th>
-                          <th className="px-6 py-4">PAN as per Folio</th>
-                          <th className="px-6 py-4">Folio Number</th>
-                          <th className="px-6 py-4">Scheme Name</th>
-                          <th className="px-6 py-4">Units</th>
-                          <th className="px-6 py-4">AUM</th>
-                          <th className="px-6 py-4 text-right">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-neutral-200">
-                        {fetchingFolios ? (
-                          <tr>
-                            <td colSpan={7} className="px-6 py-12 text-center text-sm text-neutral-500 font-mono">
-                              <Loader2 className="w-6 h-6 text-neutral-900 animate-spin mx-auto mb-2" />
-                              Loading folio database records...
-                            </td>
-                          </tr>
-                        ) : foliosList.length === 0 ? (
-                          <tr>
-                            <td colSpan={7} className="px-6 py-12 text-center text-sm text-neutral-500 font-mono">
-                              No folio records found in database
-                            </td>
-                          </tr>
-                        ) : (
-                          foliosList.map((folio) => (
-                            <tr key={folio.id} className="hover:bg-neutral-50 transition duration-150 group">
-                              <td className="px-6 py-4 font-sans">
-                                <div className="font-semibold text-neutral-900 text-sm group-hover:text-neutral-700 transition-colors duration-150">
-                                  {folio.clientName || 'N/A'}
-                                </div>
-                                {folio.email && <div className="text-neutral-500 font-mono text-[10px] mt-0.5">{folio.email}</div>}
-                              </td>
-                              <td className="px-6 py-4 font-mono text-neutral-700 uppercase">
-                                {folio.panAsPerFolio || folio.clientPan || 'N/A'}
-                              </td>
-                              <td className="px-6 py-4 font-mono text-neutral-900 font-semibold">
-                                {folio.folioNumber || 'N/A'}
-                              </td>
-                              <td className="px-6 py-4 font-sans text-neutral-700">
-                                {folio.schemeName || 'N/A'}
-                              </td>
-                              <td className="px-6 py-4 font-mono text-neutral-700">
-                                {folio.units !== null && folio.units !== undefined ? folio.units.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : 'N/A'}
-                              </td>
-                              <td className="px-6 py-4 font-mono text-neutral-900 font-bold">
-                                {folio.aum !== null && folio.aum !== undefined ? `₹${folio.aum.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'N/A'}
-                              </td>
-                              <td className="px-6 py-4 text-right whitespace-nowrap">
-                                <button
-                                  onClick={() => setSelectedFolio(folio)}
-                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-neutral-200 bg-white hover:bg-neutral-900 hover:text-white rounded-lg transition duration-200 text-xs font-semibold cursor-pointer text-neutral-900"
-                                >
-                                  Audit Details
-                                  <ChevronRight className="w-3.5 h-3.5" />
-                                </button>
-                              </td>
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* Pagination Controller */}
-                  {foliosPagination.pages > 1 && (
-                    <div className="border-t border-neutral-200 px-6 py-4 flex items-center justify-between bg-neutral-50">
-                      <span className="text-[11px] font-mono text-neutral-500">
-                        Showing page {foliosPagination.page} of {foliosPagination.pages} ({foliosPagination.total} total records)
-                      </span>
-                      <div className="flex gap-2">
-                        <button
-                          disabled={foliosPagination.page <= 1 || fetchingFolios}
-                          onClick={() => setFoliosPage(prev => prev - 1)}
-                          className="px-3 py-1.5 border border-neutral-200 bg-white rounded-lg text-xs font-bold text-neutral-700 hover:bg-neutral-100 disabled:opacity-50 cursor-pointer select-none"
-                        >
-                          Previous
-                        </button>
-                        <button
-                          disabled={foliosPagination.page >= foliosPagination.pages || fetchingFolios}
-                          onClick={() => setFoliosPage(prev => prev + 1)}
-                          className="px-3 py-1.5 border border-neutral-200 bg-white rounded-lg text-xs font-bold text-neutral-700 hover:bg-neutral-100 disabled:opacity-50 cursor-pointer select-none"
-                        >
-                          Next
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
 
           {activeTab === 'existingClients' && (
             <div className="space-y-6">
-              {/* Top Action Bar with Upload Zone & Clear Zone */}
+              {/* Top Action Bar with Upload Zones */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
-                {/* Upload Zone */}
-                <div className="md:col-span-2 border border-dashed border-neutral-300 bg-white hover:border-neutral-900 transition-colors duration-300 rounded-2xl p-6 flex flex-col items-center justify-center text-center relative min-h-[140px]">
+                {/* Upload Zone 1: Client Info */}
+                <div className="border border-dashed border-neutral-300 bg-white hover:border-neutral-900 transition-colors duration-300 rounded-2xl p-6 flex flex-col items-center justify-center text-center relative min-h-[140px]">
                   {uploadingExistingClientFile ? (
                     <div className="flex flex-col items-center gap-3">
                       <Loader2 className="w-10 h-10 text-neutral-900 animate-spin" />
@@ -1592,20 +1276,60 @@ export default function AdminDashboard() {
                   )}
                 </div>
 
-                {/* Reset & Stats box */}
-                <div className="border border-neutral-200 bg-white rounded-2xl p-6 flex flex-col justify-between shadow-sm">
-                  <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-clash">Client Data Operations</h3>
-                    <p className="text-[11px] text-neutral-400 mt-1 font-mono">Bulk management actions</p>
-                  </div>
-                  <button
-                    onClick={handleClearExistingClients}
-                    disabled={fetchingExistingClients || stats.totalExistingClients === 0}
-                    className="w-full py-3 bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl transition duration-200 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
-                  >
-                    <XCircle className="w-4 h-4" />
-                    Clear All Client Records
-                  </button>
+                {/* Upload Zone 2: Portfolio Valuations */}
+                <div className="border border-dashed border-neutral-300 bg-white hover:border-neutral-900 transition-colors duration-300 rounded-2xl p-6 flex flex-col items-center justify-center text-center relative min-h-[140px]">
+                  {uploadingPortfolioValuationFile ? (
+                    <div className="flex flex-col items-center gap-3">
+                      <Loader2 className="w-10 h-10 text-neutral-900 animate-spin" />
+                      <span className="text-sm font-bold font-clash text-neutral-900">Uploading & Parsing Portfolio Valuations File...</span>
+                      <span className="text-xs text-neutral-500 font-mono">Matching and updating database records</span>
+                    </div>
+                  ) : (
+                    <label htmlFor="portfolio-valuation-csv-upload" className="cursor-pointer flex flex-col items-center gap-3 w-full h-full select-none">
+                      <div className="p-3 bg-neutral-100 rounded-2xl text-neutral-900">
+                        <FileSpreadsheet className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <span className="text-sm font-bold font-clash text-neutral-900 block">Click to Upload Portfolio Valuations CSV / Excel</span>
+                        <span className="text-[11px] text-neutral-500 font-mono mt-1 block">Matches by PAN & Name to update valuation columns</span>
+                      </div>
+                      <input 
+                        type="file" 
+                        id="portfolio-valuation-csv-upload" 
+                        accept=".csv,.xlsx" 
+                        className="hidden" 
+                        onChange={handlePortfolioValuationsFileUpload} 
+                      />
+                    </label>
+                  )}
+                </div>
+
+                {/* Upload Zone 3: Folio Holdings */}
+                <div className="border border-dashed border-neutral-300 bg-white hover:border-neutral-900 transition-colors duration-300 rounded-2xl p-6 flex flex-col items-center justify-center text-center relative min-h-[140px]">
+                  {uploadingFolioFile ? (
+                    <div className="flex flex-col items-center gap-3">
+                      <Loader2 className="w-10 h-10 text-neutral-900 animate-spin" />
+                      <span className="text-sm font-bold font-clash text-neutral-900">Uploading & Parsing Folios File...</span>
+                      <span className="text-xs text-neutral-500 font-mono">Matching and updating database records</span>
+                    </div>
+                  ) : (
+                    <label htmlFor="existing-client-folio-upload" className="cursor-pointer flex flex-col items-center gap-3 w-full h-full select-none">
+                      <div className="p-3 bg-neutral-100 rounded-2xl text-neutral-900">
+                        <FileSpreadsheet className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <span className="text-sm font-bold font-clash text-neutral-900 block">Click to Upload Folio Holdings CSV / Excel</span>
+                        <span className="text-[11px] text-neutral-500 font-mono mt-1 block">Matches by PAN & Name to update mutual fund folios</span>
+                      </div>
+                      <input 
+                        type="file" 
+                        id="existing-client-folio-upload" 
+                        accept=".csv,.xlsx" 
+                        className="hidden" 
+                        onChange={handleFolioFileUpload} 
+                      />
+                    </label>
+                  )}
                 </div>
               </div>
 
@@ -1631,11 +1355,11 @@ export default function AdminDashboard() {
                       <thead>
                         <tr className="border-b border-neutral-200 bg-neutral-50 uppercase tracking-widest text-[10px] font-bold text-neutral-500 select-none">
                           <th className="px-6 py-4">Name</th>
-                          <th className="px-6 py-4">PAN</th>
-                          <th className="px-6 py-4">App/IWELL Code</th>
-                          <th className="px-6 py-4">Email/Mobile</th>
-                          <th className="px-6 py-4">City/State</th>
+                          <th className="px-6 py-4">Folio</th>
                           <th className="px-6 py-4 text-right">AUM</th>
+                          <th className="px-6 py-4 text-right">Absolute Return</th>
+                          <th className="px-6 py-4 text-right">Avg Holding</th>
+                          <th className="px-6 py-4 text-right">CAGR (%)</th>
                           <th className="px-6 py-4 text-right">Actions</th>
                         </tr>
                       </thead>
@@ -1660,25 +1384,45 @@ export default function AdminDashboard() {
                                 <div className="font-semibold text-neutral-900 text-sm group-hover:text-neutral-700 transition-colors duration-150">
                                   {client.title ? `${client.title} ` : ''}{client.name || 'N/A'}
                                 </div>
-                                {client.username && <div className="text-neutral-400 font-mono text-[9px]">@{client.username}</div>}
+                                <div className="flex flex-wrap gap-2 items-center mt-0.5">
+                                  {client.pan && <span className="text-[10px] text-neutral-500 font-mono uppercase bg-neutral-100 px-1.5 py-0.5 rounded border border-neutral-200">PAN: {client.pan}</span>}
+                                  {client.username && <span className="text-neutral-400 font-mono text-[9px]">@{client.username}</span>}
+                                </div>
                               </td>
-                              <td className="px-6 py-4 font-mono text-neutral-700 uppercase">
-                                {client.pan || 'N/A'}
-                              </td>
-                              <td className="px-6 py-4 font-mono text-neutral-600">
-                                <div>App: {client.appCode || 'N/A'}</div>
-                                <div className="text-[10px] text-neutral-400">IWELL: {client.iwellCode || 'N/A'}</div>
-                              </td>
-                              <td className="px-6 py-4 font-sans text-neutral-700">
-                                <div>{client.email || 'N/A'}</div>
-                                <div className="font-mono text-[10px] text-neutral-400">{client.mobile || 'N/A'}</div>
-                              </td>
-                              <td className="px-6 py-4 font-sans text-neutral-600">
-                                <div>{client.city || 'N/A'}</div>
-                                <div className="text-[10px] text-neutral-400">{client.state || 'N/A'}</div>
+                              <td className="px-6 py-4 font-mono text-neutral-700">
+                                {client.folios && client.folios.length > 0 ? (
+                                  client.folios.length > 1 ? (
+                                    <div className="relative inline-block w-full max-w-[160px]">
+                                      <select
+                                        className="w-full text-xs font-mono bg-neutral-50 border border-neutral-200 text-neutral-800 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-neutral-400 cursor-pointer truncate"
+                                        defaultValue={client.folios[0].folioNumber || ''}
+                                        title={`${client.folios.length} Folios (Click to view)`}
+                                      >
+                                        {client.folios.map((folio: any) => (
+                                          <option key={folio.id} value={folio.folioNumber} title={`${folio.folioNumber} - ${folio.schemeName || 'Unknown Scheme'}`}>
+                                            {folio.folioNumber} {folio.schemeName ? `(${folio.schemeName})` : ''}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                  ) : (
+                                    client.folios[0].folioNumber || 'N/A'
+                                  )
+                                ) : 'N/A'}
                               </td>
                               <td className="px-6 py-4 font-mono text-neutral-900 font-bold text-right">
-                                {client.aum !== null && client.aum !== undefined ? `₹${client.aum.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'N/A'}
+                                {client.currentValue !== null && client.currentValue !== undefined 
+                                  ? `₹${client.currentValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}` 
+                                  : (client.aum !== null && client.aum !== undefined ? `₹${client.aum.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'N/A')}
+                              </td>
+                              <td className="px-6 py-4 font-mono text-neutral-700 text-right">
+                                {client.absoluteReturn !== null && client.absoluteReturn !== undefined ? `${client.absoluteReturn.toFixed(2)}%` : 'N/A'}
+                              </td>
+                              <td className="px-6 py-4 font-mono text-neutral-700 text-right">
+                                {client.averageHoldingDays !== null && client.averageHoldingDays !== undefined ? `${Math.round(client.averageHoldingDays)} days` : 'N/A'}
+                              </td>
+                              <td className="px-6 py-4 font-mono text-neutral-900 font-bold text-right">
+                                {client.cagr !== null && client.cagr !== undefined ? `${client.cagr.toFixed(2)}%` : 'N/A'}
                               </td>
                               <td className="px-6 py-4 text-right whitespace-nowrap">
                                 <button
@@ -1713,170 +1457,6 @@ export default function AdminDashboard() {
                         <button
                           disabled={existingClientsPagination.page >= existingClientsPagination.pages || fetchingExistingClients}
                           onClick={() => setExistingClientsPage(prev => prev + 1)}
-                          className="px-3 py-1.5 border border-neutral-200 bg-white rounded-lg text-xs font-bold text-neutral-700 hover:bg-neutral-100 disabled:opacity-50 cursor-pointer select-none"
-                        >
-                          Next
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'portfolioValuations' && (
-            <div className="space-y-6">
-              {/* Top Action Bar with Upload Zone & Clear Zone */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
-                {/* Upload Zone */}
-                <div className="md:col-span-2 border border-dashed border-neutral-300 bg-white hover:border-neutral-900 transition-colors duration-300 rounded-2xl p-6 flex flex-col items-center justify-center text-center relative min-h-[140px]">
-                  {uploadingPortfolioValuationFile ? (
-                    <div className="flex flex-col items-center gap-3">
-                      <Loader2 className="w-10 h-10 text-neutral-900 animate-spin" />
-                      <span className="text-sm font-bold font-clash text-neutral-900">Uploading & Parsing Portfolio Valuations File...</span>
-                      <span className="text-xs text-neutral-500 font-mono">Extracting all columns to database</span>
-                    </div>
-                  ) : (
-                    <label htmlFor="portfolio-valuation-csv-upload" className="cursor-pointer flex flex-col items-center gap-3 w-full h-full select-none">
-                      <div className="p-3 bg-neutral-100 rounded-2xl text-neutral-900">
-                        <FileSpreadsheet className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <span className="text-sm font-bold font-clash text-neutral-900 block">Click to Upload Portfolio Valuations CSV / Excel</span>
-                        <span className="text-[11px] text-neutral-500 font-mono mt-1 block">Supports target portfolio valuation schemas</span>
-                      </div>
-                      <input 
-                        type="file" 
-                        id="portfolio-valuation-csv-upload" 
-                        accept=".csv,.xlsx" 
-                        className="hidden" 
-                        onChange={handlePortfolioValuationsFileUpload} 
-                      />
-                    </label>
-                  )}
-                </div>
-
-                {/* Reset & Stats box */}
-                <div className="border border-neutral-200 bg-white rounded-2xl p-6 flex flex-col justify-between shadow-sm">
-                  <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-clash">Portfolio Data Operations</h3>
-                    <p className="text-[11px] text-neutral-400 mt-1 font-mono">Bulk management actions</p>
-                  </div>
-                  <button
-                    onClick={handleClearPortfolioValuations}
-                    disabled={fetchingPortfolioValuations || stats.totalPortfolioValuations === 0}
-                    className="w-full py-3 bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl transition duration-200 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
-                  >
-                    <XCircle className="w-4 h-4" />
-                    Clear All Valuation Records
-                  </button>
-                </div>
-              </div>
-
-              {/* Search & Listing */}
-              <div className="space-y-4">
-                <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
-                  <div className="flex-1 relative w-full">
-                    <Search className="w-4 h-4 text-neutral-400 absolute left-4 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      placeholder="Search portfolio valuations by client name, PAN or IWELL codes..."
-                      value={portfolioValuationsSearchQuery}
-                      onChange={(e) => setPortfolioValuationsSearchQuery(e.target.value)}
-                      className="w-full pl-11 pr-4 py-3 text-sm border border-neutral-200 rounded-xl bg-white focus:outline-none focus:ring-1 focus:ring-neutral-900 transition duration-200 text-neutral-900 placeholder-neutral-400"
-                    />
-                  </div>
-                </div>
-
-                {/* Portfolio Valuations Table */}
-                <div className="border border-neutral-200 bg-white rounded-2xl overflow-hidden shadow-sm">
-                  <div className="overflow-x-auto w-full">
-                    <table className="w-full text-left text-xs font-sans text-neutral-900">
-                      <thead>
-                        <tr className="border-b border-neutral-200 bg-neutral-50 uppercase tracking-widest text-[10px] font-bold text-neutral-500 select-none">
-                          <th className="px-6 py-4">Client Name</th>
-                          <th className="px-6 py-4">PAN</th>
-                          <th className="px-6 py-4">IWELL Code</th>
-                          <th className="px-6 py-4 text-right">Balance Units</th>
-                          <th className="px-6 py-4 text-right">Purchase Value</th>
-                          <th className="px-6 py-4 text-right">Current Value</th>
-                          <th className="px-6 py-4 text-right">CAGR (%)</th>
-                          <th className="px-6 py-4 text-right">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-neutral-200">
-                        {fetchingPortfolioValuations ? (
-                          <tr>
-                            <td colSpan={8} className="px-6 py-12 text-center text-sm text-neutral-500 font-mono">
-                              <Loader2 className="w-6 h-6 text-neutral-900 animate-spin mx-auto mb-2" />
-                              Loading portfolio valuations...
-                            </td>
-                          </tr>
-                        ) : portfolioValuationsList.length === 0 ? (
-                          <tr>
-                            <td colSpan={8} className="px-6 py-12 text-center text-sm text-neutral-500 font-mono">
-                              No valuation records found in database
-                            </td>
-                          </tr>
-                        ) : (
-                          portfolioValuationsList.map((val) => (
-                            <tr key={val.id} className="hover:bg-neutral-50 transition duration-150 group">
-                              <td className="px-6 py-4 font-sans font-semibold text-neutral-900">
-                                {val.clientName || 'N/A'}
-                              </td>
-                              <td className="px-6 py-4 font-mono text-neutral-700 uppercase">
-                                {val.pan || 'N/A'}
-                              </td>
-                              <td className="px-6 py-4 font-mono text-neutral-600">
-                                <div>{val.iwellCode || 'N/A'}</div>
-                                {val.iwellCode2 && <div className="text-[10px] text-neutral-400">{val.iwellCode2}</div>}
-                              </td>
-                              <td className="px-6 py-4 font-mono text-neutral-700 text-right">
-                                {val.balanceUnits !== null && val.balanceUnits !== undefined ? val.balanceUnits.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : 'N/A'}
-                              </td>
-                              <td className="px-6 py-4 font-mono text-neutral-700 text-right">
-                                {val.purchaseValue !== null && val.purchaseValue !== undefined ? `₹${val.purchaseValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'N/A'}
-                              </td>
-                              <td className="px-6 py-4 font-mono text-neutral-900 font-bold text-right">
-                                {val.currentValue !== null && val.currentValue !== undefined ? `₹${val.currentValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'N/A'}
-                              </td>
-                              <td className="px-6 py-4 font-mono text-neutral-900 font-bold text-right">
-                                {val.cagr !== null && val.cagr !== undefined ? `${val.cagr.toFixed(2)}%` : 'N/A'}
-                              </td>
-                              <td className="px-6 py-4 text-right whitespace-nowrap">
-                                <button
-                                  onClick={() => setSelectedPortfolioValuation(val)}
-                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-neutral-200 bg-white hover:bg-neutral-900 hover:text-white rounded-lg transition duration-200 text-xs font-semibold cursor-pointer text-neutral-900"
-                                >
-                                  Audit Details
-                                  <ChevronRight className="w-3.5 h-3.5" />
-                                </button>
-                              </td>
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* Pagination Controller */}
-                  {portfolioValuationsPagination.pages > 1 && (
-                    <div className="border-t border-neutral-200 px-6 py-4 flex items-center justify-between bg-neutral-50">
-                      <span className="text-[11px] font-mono text-neutral-500">
-                        Showing page {portfolioValuationsPagination.page} of {portfolioValuationsPagination.pages} ({portfolioValuationsPagination.total} total records)
-                      </span>
-                      <div className="flex gap-2">
-                        <button
-                          disabled={portfolioValuationsPagination.page <= 1 || fetchingPortfolioValuations}
-                          onClick={() => setPortfolioValuationsPage(prev => prev - 1)}
-                          className="px-3 py-1.5 border border-neutral-200 bg-white rounded-lg text-xs font-bold text-neutral-700 hover:bg-neutral-100 disabled:opacity-50 cursor-pointer select-none"
-                        >
-                          Previous
-                        </button>
-                        <button
-                          disabled={portfolioValuationsPagination.page >= portfolioValuationsPagination.pages || fetchingPortfolioValuations}
-                          onClick={() => setPortfolioValuationsPage(prev => prev + 1)}
                           className="px-3 py-1.5 border border-neutral-200 bg-white rounded-lg text-xs font-bold text-neutral-700 hover:bg-neutral-100 disabled:opacity-50 cursor-pointer select-none"
                         >
                           Next
@@ -2568,170 +2148,7 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Folio Details Slide Drawer */}
-      {selectedFolio && (
-        <div className="fixed inset-0 z-50 flex justify-end">
-          {/* Overlay dim background */}
-          <div 
-            className="absolute inset-0 bg-black/30 backdrop-blur-sm cursor-pointer"
-            onClick={() => setSelectedFolio(null)}
-          />
 
-          {/* Drawer container */}
-          <div className="relative z-10 w-full max-w-3xl bg-white border-l border-neutral-200 h-full shadow-2xl overflow-y-auto flex flex-col p-6 md:p-8 animate-in slide-in-from-right duration-350 ease-out text-neutral-900">
-            
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-neutral-200 pb-4 mb-6">
-              <div>
-                <span className="text-[10px] text-neutral-500 font-mono uppercase tracking-wider">Folio Audit Ledger</span>
-                <h2 className="text-xl font-semibold font-clash text-neutral-900 mt-0.5">
-                  {selectedFolio.nameAsPerFolio || selectedFolio.clientName || 'Folio Details'}
-                </h2>
-                <p className="text-xs text-neutral-500 font-mono mt-0.5">Folio: {selectedFolio.folioNumber || 'N/A'}</p>
-              </div>
-              <button 
-                onClick={() => setSelectedFolio(null)}
-                className="p-2 border border-neutral-200 hover:bg-neutral-100 rounded-xl transition cursor-pointer"
-              >
-                <X className="w-4 h-4 text-neutral-500" />
-              </button>
-            </div>
-
-            {/* Scrollable details view */}
-            <div className="space-y-8 flex-1 pb-10">
-              {/* Section 1: Client Info */}
-              <div className="border border-neutral-200 bg-neutral-50 rounded-2xl p-5 space-y-4">
-                <h3 className="text-xs font-bold font-clash uppercase tracking-wider text-neutral-900 border-b border-neutral-200 pb-2">
-                  Client & Holder Profile
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <DetailField label="Client Name" value={selectedFolio.clientName} />
-                  <DetailField label="Name As Per Folio" value={selectedFolio.nameAsPerFolio} />
-                  <DetailField label="Client PAN" value={selectedFolio.clientPan} />
-                  <DetailField label="PAN As Per Folio" value={selectedFolio.panAsPerFolio} />
-                  <DetailField label="Client Aadhaar" value={selectedFolio.clientAadhaar} />
-                  <DetailField label="Date of Birth" value={selectedFolio.dob} />
-                  <DetailField label="Holding" value={selectedFolio.holding} />
-                  <DetailField label="Tax Status" value={selectedFolio.taxStatus} />
-                  <DetailField label="Family Head" value={selectedFolio.familyHead} />
-                  <DetailField label="Email Address" value={selectedFolio.email} />
-                  <DetailField label="Mobile Number" value={selectedFolio.mobile} />
-                </div>
-              </div>
-
-              {/* Section 2: Investment Details */}
-              <div className="border border-neutral-200 bg-neutral-50 rounded-2xl p-5 space-y-4">
-                <h3 className="text-xs font-bold font-clash uppercase tracking-wider text-neutral-900 border-b border-neutral-200 pb-2">
-                  Investment Data
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <DetailField label="Folio Number" value={selectedFolio.folioNumber} />
-                  <DetailField label="Scheme Name" value={selectedFolio.schemeName} />
-                  <DetailField label="Units" value={selectedFolio.units} />
-                  <DetailField label="AUM" value={selectedFolio.aum !== null && selectedFolio.aum !== undefined ? `₹${selectedFolio.aum.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'N/A'} />
-                  <DetailField label="Freeze Date" value={selectedFolio.freezeDate} />
-                  <DetailField label="FT Folio" value={selectedFolio.ftFolio} />
-                  <DetailField label="Folio Type" value={selectedFolio.folioType} />
-                  <DetailField label="Client Demat ID" value={selectedFolio.clientDematId} />
-                  <DetailField label="DP ID" value={selectedFolio.dpId} />
-                  <DetailField label="Comments" value={selectedFolio.comments} />
-                </div>
-              </div>
-
-              {/* Section 3: Bank Details */}
-              <div className="border border-neutral-200 bg-neutral-50 rounded-2xl p-5 space-y-4">
-                <h3 className="text-xs font-bold font-clash uppercase tracking-wider text-neutral-900 border-b border-neutral-200 pb-2">
-                  Bank Account Details
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <DetailField label="Bank Name" value={selectedFolio.bankName} />
-                  <DetailField label="Account Number" value={selectedFolio.accountNumber} />
-                  <DetailField label="IFSC Code" value={selectedFolio.ifscCode} />
-                  <DetailField label="Account Type" value={selectedFolio.accountType} />
-                  <div className="col-span-2">
-                    <DetailField label="Bank Address" value={selectedFolio.bankAddress} />
-                  </div>
-                </div>
-              </div>
-
-              {/* Section 4: Nominee Details */}
-              <div className="border border-neutral-200 bg-neutral-50 rounded-2xl p-5 space-y-4">
-                <h3 className="text-xs font-bold font-clash uppercase tracking-wider text-neutral-900 border-b border-neutral-200 pb-2">
-                  Nominee Allocations
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <DetailField label="Nominee Opted" value={selectedFolio.nomineeOpted} />
-                  <div className="col-span-2"></div>
-                  
-                  <DetailField label="Nominee 1 Name" value={selectedFolio.nominee1Name} />
-                  <DetailField label="Nominee 1 Relation" value={selectedFolio.nominee1Relation} />
-                  <DetailField label="Nominee 1 %" value={selectedFolio.nominee1Percentage} />
-                  
-                  <DetailField label="Nominee 2 Name" value={selectedFolio.nominee2Name} />
-                  <DetailField label="Nominee 2 Relation" value={selectedFolio.nominee2Relation} />
-                  <DetailField label="Nominee 2 %" value={selectedFolio.nominee2Percentage} />
-
-                  <DetailField label="Nominee 3 Name" value={selectedFolio.nominee3Name} />
-                  <DetailField label="Nominee 3 Relation" value={selectedFolio.nominee3Relation} />
-                  <DetailField label="Nominee 3 %" value={selectedFolio.nominee3Percentage} />
-
-                  <div className="col-span-3">
-                    <DetailField label="Nominee Details 1" value={selectedFolio.nomineeDetails} />
-                    <DetailField label="Nominee Details 2" value={selectedFolio.nomineeDetails2} />
-                    <DetailField label="Nominee Details 3" value={selectedFolio.nomineeDetails3} />
-                  </div>
-                </div>
-              </div>
-
-              {/* Section 5: Joint Holders & Guardian */}
-              <div className="border border-neutral-200 bg-neutral-50 rounded-2xl p-5 space-y-4">
-                <h3 className="text-xs font-bold font-clash uppercase tracking-wider text-neutral-900 border-b border-neutral-200 pb-2">
-                  Joint Holders & Guardian
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <DetailField label="Joint Holder 1 Name" value={selectedFolio.jointHolder1Name} />
-                  <DetailField label="Joint Holder 1 PAN" value={selectedFolio.jointHolder1Pan} />
-                  <DetailField label="Joint Holder 1 KYC" value={selectedFolio.jointHolder1Kyc} />
-                  <DetailField label="Joint Holder 1 Aadhaar" value={selectedFolio.jointHolder1Aadhaar} />
-                  <div className="col-span-2"></div>
-
-                  <DetailField label="Joint Holder 2 Name" value={selectedFolio.jointHolder2Name} />
-                  <DetailField label="Joint Holder 2 PAN" value={selectedFolio.jointHolder2Pan} />
-                  <DetailField label="Joint Holder 2 KYC" value={selectedFolio.jointHolder2Kyc} />
-                  <DetailField label="Joint Holder 2 Aadhaar" value={selectedFolio.jointHolder2Aadhaar} />
-                  <div className="col-span-2"></div>
-
-                  <DetailField label="Guardian Name" value={selectedFolio.guardianName} />
-                  <DetailField label="Guardian PAN" value={selectedFolio.guardianPan} />
-                  <DetailField label="Guardian KYC" value={selectedFolio.guardianKyc} />
-                  <DetailField label="Guardian Aadhaar" value={selectedFolio.guardianAadhaar} />
-                </div>
-              </div>
-
-              {/* Section 6: Operations & Broker Info */}
-              <div className="border border-neutral-200 bg-neutral-50 rounded-2xl p-5 space-y-4">
-                <h3 className="text-xs font-bold font-clash uppercase tracking-wider text-neutral-900 border-b border-neutral-200 pb-2">
-                  Operations & Brokerage Details
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <DetailField label="App Code" value={selectedFolio.appCode} />
-                  <DetailField label="Equity Code" value={selectedFolio.equityCode} />
-                  <DetailField label="IWELL Code" value={selectedFolio.iwellCode} />
-                  <DetailField label="IWELL Code 2" value={selectedFolio.iwellCode2} />
-                  <DetailField label="Operations" value={selectedFolio.operations} />
-                  <DetailField label="Operations Code" value={selectedFolio.operationsCode} />
-                  <DetailField label="Relationship Manager" value={selectedFolio.relationshipManager} />
-                  <DetailField label="Relationship Manager 2" value={selectedFolio.relationshipManager2} />
-                  <DetailField label="Sub Broker" value={selectedFolio.subBroker} />
-                  <DetailField label="Sub Broker Code" value={selectedFolio.subBrokerCode} />
-                  <DetailField label="Last Used ARN" value={selectedFolio.lastUsedArn} />
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Existing Client Details Slide Drawer */}
       {selectedExistingClient && (
@@ -2845,6 +2262,104 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
+              {/* Section 4.5: Portfolio Valuation Details */}
+              <div className="border border-neutral-200 bg-neutral-50 rounded-2xl p-5 space-y-4">
+                <h3 className="text-xs font-bold font-clash uppercase tracking-wider text-neutral-900 border-b border-neutral-200 pb-2">
+                  Portfolio Valuation Details (Fresh from CSV)
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <DetailField label="Balance Units" value={selectedExistingClient.balanceUnits !== null && selectedExistingClient.balanceUnits !== undefined ? selectedExistingClient.balanceUnits.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : 'N/A'} />
+                  <DetailField label="Purchase Value" value={selectedExistingClient.purchaseValue !== null && selectedExistingClient.purchaseValue !== undefined ? `₹${selectedExistingClient.purchaseValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'N/A'} />
+                  <DetailField label="Current Value (AUM)" value={selectedExistingClient.currentValue !== null && selectedExistingClient.currentValue !== undefined ? `₹${selectedExistingClient.currentValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'N/A'} />
+                  <DetailField label="One-Day Change" value={selectedExistingClient.oneDayChange !== null && selectedExistingClient.oneDayChange !== undefined ? `₹${selectedExistingClient.oneDayChange.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'N/A'} />
+                  <DetailField label="Dividend" value={selectedExistingClient.dividend !== null && selectedExistingClient.dividend !== undefined ? `₹${selectedExistingClient.dividend.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'N/A'} />
+                  <DetailField label="Average Holding Days" value={selectedExistingClient.averageHoldingDays !== null && selectedExistingClient.averageHoldingDays !== undefined ? `${selectedExistingClient.averageHoldingDays} days` : 'N/A'} />
+                  <DetailField label="Gain" value={selectedExistingClient.gain !== null && selectedExistingClient.gain !== undefined ? `₹${selectedExistingClient.gain.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'N/A'} />
+                  <DetailField label="Absolute Return" value={selectedExistingClient.absoluteReturn !== null && selectedExistingClient.absoluteReturn !== undefined ? `${selectedExistingClient.absoluteReturn.toFixed(2)}%` : 'N/A'} />
+                  <DetailField label="CAGR (%)" value={selectedExistingClient.cagr !== null && selectedExistingClient.cagr !== undefined ? `${selectedExistingClient.cagr.toFixed(2)}%` : 'N/A'} />
+                </div>
+              </div>
+
+              {/* Section 4.6: Folio Holdings / Scheme Details */}
+              <div className="border border-neutral-200 bg-neutral-50 rounded-2xl p-5 space-y-4">
+                <div className="flex justify-between items-center border-b border-neutral-200 pb-2">
+                  <h3 className="text-xs font-bold font-clash uppercase tracking-wider text-neutral-900">
+                    Folio Holdings / Scheme Details ({selectedExistingClient.folios?.length || 0})
+                  </h3>
+                </div>
+
+                {!selectedExistingClient.folios || selectedExistingClient.folios.length === 0 ? (
+                  <p className="text-xs text-neutral-500 font-mono py-2">No associated mutual fund folios found for this client.</p>
+                ) : (
+                  <div className="space-y-4">
+                    {selectedExistingClient.folios.map((folio: any, index: number) => (
+                      <div key={folio.id || index} className="bg-white border border-neutral-200 rounded-xl p-4 space-y-3">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 border-b border-neutral-100 pb-2">
+                          <div>
+                            <span className="text-[10px] text-neutral-400 font-mono uppercase tracking-wider block">Scheme Name</span>
+                            <span className="text-xs font-bold text-neutral-800">{folio.schemeName || 'N/A'}</span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[10px] text-neutral-400 font-mono uppercase tracking-wider block md:text-right">Folio Number</span>
+                            <span className="text-xs font-mono font-semibold text-neutral-900 bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200 inline-block">{folio.folioNumber || 'N/A'}</span>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-left">
+                          <div>
+                            <span className="text-[10px] text-neutral-400 font-mono uppercase tracking-wider block">Balance Units</span>
+                            <span className="text-xs font-mono font-semibold text-neutral-800">
+                              {folio.units !== null && folio.units !== undefined ? folio.units.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : 'N/A'}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-neutral-400 font-mono uppercase tracking-wider block">AUM Value</span>
+                            <span className="text-xs font-mono font-bold text-neutral-900">
+                              {folio.aum !== null && folio.aum !== undefined ? `₹${folio.aum.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'N/A'}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-neutral-400 font-mono uppercase tracking-wider block">Tax Status</span>
+                            <span className="text-xs font-semibold text-neutral-800">{folio.taxStatus || 'N/A'}</span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-neutral-400 font-mono uppercase tracking-wider block">Freeze Date</span>
+                            <span className="text-xs font-semibold text-neutral-800">{folio.freezeDate || 'N/A'}</span>
+                          </div>
+                        </div>
+
+                        {/* Collapsible/Details for bank details & nominees within folio */}
+                        <div className="mt-2 pt-2 border-t border-neutral-100 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                          {folio.bankName && (
+                            <div className="bg-neutral-50 p-2.5 rounded-lg border border-neutral-100">
+                              <span className="text-[9px] text-neutral-400 font-mono uppercase tracking-wider block mb-1">Folio Bank Details</span>
+                              <div className="font-semibold text-neutral-700">{folio.bankName}</div>
+                              <div className="text-[10px] text-neutral-500 font-mono mt-0.5">A/C: {folio.accountNumber || 'N/A'} | IFSC: {folio.ifscCode || 'N/A'} ({folio.accountType || 'N/A'})</div>
+                            </div>
+                          )}
+                          {folio.nomineeOpted && (
+                            <div className="bg-neutral-50 p-2.5 rounded-lg border border-neutral-100">
+                              <span className="text-[9px] text-neutral-400 font-mono uppercase tracking-wider block mb-1">Nominees (From Folio)</span>
+                              <div className="font-semibold text-neutral-700">Status: {folio.nomineeOpted}</div>
+                              {folio.nominee1Name && (
+                                <div className="text-[10px] text-neutral-500 mt-0.5 font-sans">
+                                  1. {folio.nominee1Name} ({folio.nominee1Relation || 'N/A'} - {folio.nominee1Percentage || '0'}%)
+                                </div>
+                              )}
+                              {folio.nominee2Name && (
+                                <div className="text-[10px] text-neutral-500 mt-0.5 font-sans">
+                                  2. {folio.nominee2Name} ({folio.nominee2Relation || 'N/A'} - {folio.nominee2Percentage || '0'}%)
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {/* Section 5: System Codes & References */}
               <div className="border border-neutral-200 bg-neutral-50 rounded-2xl p-5 space-y-4">
                 <h3 className="text-xs font-bold font-clash uppercase tracking-wider text-neutral-900 border-b border-neutral-200 pb-2">
@@ -2921,83 +2436,6 @@ export default function AdminDashboard() {
                   <DetailField label="Nominee 3 Relation" value={selectedExistingClient.nominee3Relation} />
                   <DetailField label="Nominee 3 DOB" value={selectedExistingClient.nominee3Dob} />
                   <DetailField label="Nominee 3 %" value={selectedExistingClient.nominee3Percentage} />
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Portfolio Valuation Details Slide Drawer */}
-      {selectedPortfolioValuation && (
-        <div className="fixed inset-0 z-50 flex justify-end">
-          {/* Overlay dim background */}
-          <div 
-            className="absolute inset-0 bg-black/30 backdrop-blur-sm cursor-pointer"
-            onClick={() => setSelectedPortfolioValuation(null)}
-          />
-
-          {/* Drawer container */}
-          <div className="relative z-10 w-full max-w-3xl bg-white border-l border-neutral-200 h-full shadow-2xl overflow-y-auto flex flex-col p-6 md:p-8 animate-in slide-in-from-right duration-350 ease-out text-neutral-900">
-            
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-neutral-200 pb-4 mb-6">
-              <div>
-                <span className="text-[10px] text-neutral-500 font-mono uppercase tracking-wider">Portfolio Valuation Audit</span>
-                <h2 className="text-xl font-semibold font-clash text-neutral-900 mt-0.5">
-                  {selectedPortfolioValuation.clientName || 'Valuation Details'}
-                </h2>
-                <p className="text-xs text-neutral-500 font-mono mt-0.5">PAN: {selectedPortfolioValuation.pan || 'N/A'}</p>
-              </div>
-              <button 
-                onClick={() => setSelectedPortfolioValuation(null)}
-                className="p-2 border border-neutral-200 hover:bg-neutral-100 rounded-xl transition cursor-pointer"
-              >
-                <X className="w-4 h-4 text-neutral-500" />
-              </button>
-            </div>
-
-            {/* Scrollable details view */}
-            <div className="space-y-8 flex-1 pb-10">
-              
-              {/* Section 1: General Info */}
-              <div className="border border-neutral-200 bg-neutral-50 rounded-2xl p-5 space-y-4">
-                <h3 className="text-xs font-bold font-clash uppercase tracking-wider text-neutral-900 border-b border-neutral-200 pb-2">
-                  General Info & References
-                </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <DetailField label="Client Name" value={selectedPortfolioValuation.clientName} />
-                  <DetailField label="PAN Number" value={selectedPortfolioValuation.pan} />
-                  <DetailField label="IWELL Code" value={selectedPortfolioValuation.iwellCode} />
-                  <DetailField label="IWELL Code 2" value={selectedPortfolioValuation.iwellCode2} />
-                </div>
-              </div>
-
-              {/* Section 2: Holdings & Valuation */}
-              <div className="border border-neutral-200 bg-neutral-50 rounded-2xl p-5 space-y-4">
-                <h3 className="text-xs font-bold font-clash uppercase tracking-wider text-neutral-900 border-b border-neutral-200 pb-2">
-                  Balance & Valuation
-                </h3>
-                <div className="grid grid-cols-3 gap-4">
-                  <DetailField label="Balance Units" value={selectedPortfolioValuation.balanceUnits !== null && selectedPortfolioValuation.balanceUnits !== undefined ? selectedPortfolioValuation.balanceUnits.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : 'N/A'} />
-                  <DetailField label="Purchase Value" value={selectedPortfolioValuation.purchaseValue !== null && selectedPortfolioValuation.purchaseValue !== undefined ? `₹${selectedPortfolioValuation.purchaseValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'N/A'} />
-                  <DetailField label="Current Value" value={selectedPortfolioValuation.currentValue !== null && selectedPortfolioValuation.currentValue !== undefined ? `₹${selectedPortfolioValuation.currentValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'N/A'} />
-                </div>
-              </div>
-
-              {/* Section 3: Performance Metrics */}
-              <div className="border border-neutral-200 bg-neutral-50 rounded-2xl p-5 space-y-4">
-                <h3 className="text-xs font-bold font-clash uppercase tracking-wider text-neutral-900 border-b border-neutral-200 pb-2">
-                  Performance Metrics
-                </h3>
-                <div className="grid grid-cols-3 gap-4">
-                  <DetailField label="One-Day Change" value={selectedPortfolioValuation.oneDayChange !== null && selectedPortfolioValuation.oneDayChange !== undefined ? `₹${selectedPortfolioValuation.oneDayChange.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'N/A'} />
-                  <DetailField label="Dividend" value={selectedPortfolioValuation.dividend !== null && selectedPortfolioValuation.dividend !== undefined ? `₹${selectedPortfolioValuation.dividend.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'N/A'} />
-                  <DetailField label="Average Holding Days" value={selectedPortfolioValuation.averageHoldingDays !== null && selectedPortfolioValuation.averageHoldingDays !== undefined ? `${selectedPortfolioValuation.averageHoldingDays} Days` : 'N/A'} />
-                  <DetailField label="Gain" value={selectedPortfolioValuation.gain !== null && selectedPortfolioValuation.gain !== undefined ? `₹${selectedPortfolioValuation.gain.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'N/A'} />
-                  <DetailField label="Absolute Return" value={selectedPortfolioValuation.absoluteReturn !== null && selectedPortfolioValuation.absoluteReturn !== undefined ? `${selectedPortfolioValuation.absoluteReturn.toFixed(2)}%` : 'N/A'} />
-                  <DetailField label="CAGR" value={selectedPortfolioValuation.cagr !== null && selectedPortfolioValuation.cagr !== undefined ? `${selectedPortfolioValuation.cagr.toFixed(2)}%` : 'N/A'} />
                 </div>
               </div>
 

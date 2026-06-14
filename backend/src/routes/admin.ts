@@ -48,7 +48,15 @@ router.get('/stats', async (req: AuthenticatedRequest, res: Response, next) => {
       prisma.lead.count({ where: { status: { in: [LeadStatus.CONTACTED, LeadStatus.CONVERTED] } } }),
       prisma.folio.count(),
       prisma.existingClient.count(),
-      prisma.portfolioValuation.count(),
+      prisma.existingClient.count({
+        where: {
+          OR: [
+            { balanceUnits: { not: null } },
+            { purchaseValue: { not: null } },
+            { currentValue: { not: null } },
+          ]
+        }
+      }),
     ]);
 
     res.json({
@@ -359,18 +367,97 @@ router.post('/folios/upload', upload.single('file'), async (req: AuthenticatedRe
       lastUsedArn: String(row["Last Used ARN"] || '').trim() || null,
     }));
 
-    // Save using a transaction with chunking to prevent PostgreSQL parameter limits
+    // Save using a transaction with matching and linking to existing clients
     const count = await prisma.$transaction(async (tx) => {
+      // 1. Clean existing folio database before import
+      await tx.folio.deleteMany({});
+
+      // 2. Fetch all existing clients for matching
+      const clients = await tx.existingClient.findMany({});
+      const clientByPan = new Map<string, any>();
+      const clientByName = new Map<string, any>();
+      for (const c of clients) {
+        if (c.pan) {
+          clientByPan.set(c.pan.trim().toUpperCase(), c);
+        }
+        if (c.name) {
+          clientByName.set(c.name.trim().toLowerCase(), c);
+        }
+      }
+
       let insertedCount = 0;
-      const chunkSize = 500;
-      for (let i = 0; i < parsedFolios.length; i += chunkSize) {
-        const chunk = parsedFolios.slice(i, i + chunkSize);
-        const result = await tx.folio.createMany({
-          data: chunk,
+      for (const row of parsedFolios) {
+        let match = null;
+        if (row.clientPan) {
+          match = clientByPan.get(row.clientPan.trim().toUpperCase());
+        }
+        if (!match && row.panAsPerFolio) {
+          match = clientByPan.get(row.panAsPerFolio.trim().toUpperCase());
+        }
+        if (!match && row.clientName) {
+          match = clientByName.get(row.clientName.trim().toLowerCase());
+        }
+        if (!match && row.nameAsPerFolio) {
+          match = clientByName.get(row.nameAsPerFolio.trim().toLowerCase());
+        }
+
+        let existingClientId = null;
+        if (match) {
+          existingClientId = match.id;
+        } else {
+          // Create new client first
+          const newClient = await tx.existingClient.create({
+            data: {
+              name: row.clientName || row.nameAsPerFolio,
+              pan: row.clientPan ? row.clientPan.trim().toUpperCase() : (row.panAsPerFolio ? row.panAsPerFolio.trim().toUpperCase() : null),
+              email: row.email,
+              mobile: row.mobile,
+              dob: row.dob,
+              address1: row.address1,
+              address2: row.address2,
+              address3: row.address3,
+              aadhaar: row.clientAadhaar,
+              nominee1Name: row.nominee1Name,
+              nominee1Relation: row.nominee1Relation,
+              nominee1Percentage: row.nominee1Percentage,
+              nominee2Name: row.nominee2Name,
+              nominee2Relation: row.nominee2Relation,
+              nominee2Percentage: row.nominee2Percentage,
+              nominee3Name: row.nominee3Name,
+              nominee3Relation: row.nominee3Relation,
+              nominee3Percentage: row.nominee3Percentage,
+              appCode: row.appCode,
+              iwellCode: row.iwellCode,
+              iwellCode2: row.iwellCode2,
+              familyHead: row.familyHead,
+              dpId: row.dpId,
+              aum: row.aum,
+            }
+          });
+
+          existingClientId = newClient.id;
+
+          // Put into maps so subsequent records match this client
+          if (newClient.pan) {
+            clientByPan.set(newClient.pan.trim().toUpperCase(), newClient);
+          }
+          if (newClient.name) {
+            clientByName.set(newClient.name.trim().toLowerCase(), newClient);
+          }
+        }
+
+        // Create Folio record linked to client
+        await tx.folio.create({
+          data: {
+            ...row,
+            existingClientId,
+          }
         });
-        insertedCount += result.count;
+        insertedCount++;
       }
       return insertedCount;
+    }, {
+      timeout: 60000 // 60 seconds timeout for larger transactions
     });
 
     res.status(201).json({
@@ -575,6 +662,9 @@ router.post('/existing-clients/upload', upload.single('file'), async (req: Authe
 
     // Save using a transaction with chunking to prevent PostgreSQL parameter limits
     const count = await prisma.$transaction(async (tx) => {
+      // Clean existing client database before import
+      await tx.existingClient.deleteMany({});
+
       let insertedCount = 0;
       const chunkSize = 500;
       for (let i = 0; i < parsedClients.length; i += chunkSize) {
@@ -621,6 +711,7 @@ router.get('/existing-clients', async (req: AuthenticatedRequest, res: Response,
     const [clients, total] = await Promise.all([
       prisma.existingClient.findMany({
         where,
+        include: { folios: true },
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
@@ -721,21 +812,90 @@ router.post('/portfolio-valuations/upload', upload.single('file'), async (req: A
 
     // Save using a transaction with chunking to prevent PostgreSQL parameter limits
     const count = await prisma.$transaction(async (tx) => {
-      let insertedCount = 0;
-      const chunkSize = 500;
-      for (let i = 0; i < parsedValuations.length; i += chunkSize) {
-        const chunk = parsedValuations.slice(i, i + chunkSize);
-        const result = await tx.portfolioValuation.createMany({
-          data: chunk,
-        });
-        insertedCount += result.count;
+      // 1. Reset valuation fields for all existing clients first
+      await tx.existingClient.updateMany({
+        data: {
+          balanceUnits: null,
+          purchaseValue: null,
+          currentValue: null,
+          oneDayChange: null,
+          dividend: null,
+          averageHoldingDays: null,
+          gain: null,
+          absoluteReturn: null,
+          cagr: null,
+        }
+      });
+
+      // 2. Fetch all existing clients for matching
+      const clients = await tx.existingClient.findMany({});
+      const clientByPan = new Map<string, any>();
+      const clientByName = new Map<string, any>();
+      for (const c of clients) {
+        if (c.pan) {
+          clientByPan.set(c.pan.trim().toUpperCase(), c);
+        }
+        if (c.name) {
+          clientByName.set(c.name.trim().toLowerCase(), c);
+        }
       }
-      return insertedCount;
+
+      let updatedCount = 0;
+      for (const row of parsedValuations) {
+        let match = null;
+        if (row.pan) {
+          match = clientByPan.get(row.pan.trim().toUpperCase());
+        }
+        if (!match && row.clientName) {
+          match = clientByName.get(row.clientName.trim().toLowerCase());
+        }
+
+        if (match) {
+          await tx.existingClient.update({
+            where: { id: match.id },
+            data: {
+              balanceUnits: row.balanceUnits,
+              purchaseValue: row.purchaseValue,
+              currentValue: row.currentValue,
+              oneDayChange: row.oneDayChange,
+              dividend: row.dividend,
+              averageHoldingDays: row.averageHoldingDays,
+              gain: row.gain,
+              absoluteReturn: row.absoluteReturn,
+              cagr: row.cagr,
+              iwellCode: row.iwellCode || match.iwellCode,
+              iwellCode2: row.iwellCode2 || match.iwellCode2,
+            }
+          });
+          updatedCount++;
+        } else {
+          // Create a new client record
+          await tx.existingClient.create({
+            data: {
+              name: row.clientName,
+              pan: row.pan ? row.pan.trim().toUpperCase() : null,
+              iwellCode: row.iwellCode,
+              iwellCode2: row.iwellCode2,
+              balanceUnits: row.balanceUnits,
+              purchaseValue: row.purchaseValue,
+              currentValue: row.currentValue,
+              oneDayChange: row.oneDayChange,
+              dividend: row.dividend,
+              averageHoldingDays: row.averageHoldingDays,
+              gain: row.gain,
+              absoluteReturn: row.absoluteReturn,
+              cagr: row.cagr,
+            }
+          });
+          updatedCount++;
+        }
+      }
+      return updatedCount;
     });
 
     res.status(201).json({
       success: true,
-      message: `Successfully imported ${count} portfolio valuation records.`,
+      message: `Successfully processed ${count} portfolio valuation records.`,
       data: { count },
     });
   } catch (error) {
@@ -752,24 +912,53 @@ router.get('/portfolio-valuations', async (req: AuthenticatedRequest, res: Respo
 
     const skip = (page - 1) * limit;
 
-    const where: Prisma.PortfolioValuationWhereInput = search ? {
+    const where: Prisma.ExistingClientWhereInput = {
       OR: [
-        { clientName: { contains: search, mode: 'insensitive' } },
-        { pan: { contains: search, mode: 'insensitive' } },
-        { iwellCode: { contains: search, mode: 'insensitive' } },
-        { iwellCode2: { contains: search, mode: 'insensitive' } },
-      ]
-    } : {};
+        { balanceUnits: { not: null } },
+        { purchaseValue: { not: null } },
+        { currentValue: { not: null } },
+      ],
+      ...(search ? {
+        AND: [
+          {
+            OR: [
+              { name: { contains: search, mode: 'insensitive' } },
+              { pan: { contains: search, mode: 'insensitive' } },
+              { iwellCode: { contains: search, mode: 'insensitive' } },
+              { iwellCode2: { contains: search, mode: 'insensitive' } },
+            ]
+          }
+        ]
+      } : {})
+    };
 
-    const [valuations, total] = await Promise.all([
-      prisma.portfolioValuation.findMany({
+    const [clients, total] = await Promise.all([
+      prisma.existingClient.findMany({
         where,
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
       }),
-      prisma.portfolioValuation.count({ where }),
+      prisma.existingClient.count({ where }),
     ]);
+
+    const valuations = clients.map(c => ({
+      id: c.id,
+      clientName: c.name,
+      iwellCode: c.iwellCode,
+      iwellCode2: c.iwellCode2,
+      pan: c.pan,
+      balanceUnits: c.balanceUnits,
+      purchaseValue: c.purchaseValue,
+      currentValue: c.currentValue,
+      oneDayChange: c.oneDayChange,
+      dividend: c.dividend,
+      averageHoldingDays: c.averageHoldingDays,
+      gain: c.gain,
+      absoluteReturn: c.absoluteReturn,
+      cagr: c.cagr,
+      createdAt: c.createdAt,
+    }));
 
     res.json({
       success: true,
@@ -791,10 +980,22 @@ router.get('/portfolio-valuations', async (req: AuthenticatedRequest, res: Respo
 // 13. DELETE /api/admin/portfolio-valuations/clear
 router.delete('/portfolio-valuations/clear', async (req: AuthenticatedRequest, res: Response, next) => {
   try {
-    const result = await prisma.portfolioValuation.deleteMany({});
+    const result = await prisma.existingClient.updateMany({
+      data: {
+        balanceUnits: null,
+        purchaseValue: null,
+        currentValue: null,
+        oneDayChange: null,
+        dividend: null,
+        averageHoldingDays: null,
+        gain: null,
+        absoluteReturn: null,
+        cagr: null,
+      }
+    });
     res.json({
       success: true,
-      message: `Successfully cleared all ${result.count} portfolio valuation records.`,
+      message: `Successfully cleared valuation fields for all ${result.count} client records.`,
       data: { count: result.count }
     });
   } catch (error) {
