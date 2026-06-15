@@ -1,25 +1,25 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { 
-  Users, 
+import {
+  Users,
   User,
-  PhoneCall, 
-  CheckCircle, 
-  XCircle, 
-  Search, 
-  Filter, 
-  UserCheck, 
-  TrendingUp, 
-  Sparkles, 
-  Calendar, 
-  ShieldCheck, 
-  Compass, 
-  LogOut, 
-  FileText, 
-  ChevronRight, 
-  X, 
-  RefreshCw, 
+  PhoneCall,
+  CheckCircle,
+  XCircle,
+  Search,
+  Filter,
+  UserCheck,
+  TrendingUp,
+  Sparkles,
+  Calendar,
+  ShieldCheck,
+  Compass,
+  LogOut,
+  FileText,
+  ChevronRight,
+  X,
+  RefreshCw,
   ArrowLeft,
   CheckCircle2,
   Clock,
@@ -60,7 +60,7 @@ export default function AdminDashboard() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [adminUser, setAdminUser] = useState<any>(null);
-  
+
   // Dashboard Stage & Data
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -73,9 +73,10 @@ export default function AdminDashboard() {
     totalFolios: 0,
     totalExistingClients: 0,
     totalPortfolioValuations: 0,
+    totalAUM: 0,
   });
   const [usersList, setUsersList] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<'users' | 'payments' | 'existingClients' | 'consultations'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'payments' | 'existingClients' | 'consultations' | 'aum'>('users');
 
   // Folio state variables
   const [uploadingFolioFile, setUploadingFolioFile] = useState(false);
@@ -107,6 +108,12 @@ export default function AdminDashboard() {
   const [fetchingPortfolioValuations, setFetchingPortfolioValuations] = useState(false);
   const [selectedPortfolioValuation, setSelectedPortfolioValuation] = useState<any>(null);
   const [uploadingPortfolioValuationFile, setUploadingPortfolioValuationFile] = useState(false);
+
+  // AUM breakdown state variables
+  const [aumData, setAumData] = useState<{ totalAUM: number; schemes: any[] }>({ totalAUM: 0, schemes: [] });
+  const [aumSearchQuery, setAumSearchQuery] = useState('');
+  const [fetchingAumData, setFetchingAumData] = useState(false);
+
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -150,7 +157,7 @@ export default function AdminDashboard() {
     isOpen: false,
     title: '',
     message: '',
-    onConfirm: () => {},
+    onConfirm: () => { },
     danger: false
   });
 
@@ -261,7 +268,7 @@ export default function AdminDashboard() {
 
       const res = await fetch(`${backendUrl}/api/admin/existing-clients?${queryParams.toString()}`, { headers });
       if (!res.ok) throw new Error('Failed to retrieve existing client records');
-      
+
       const resData = await res.json();
       setExistingClientsList(resData.data.clients);
       setExistingClientsPagination(resData.data.pagination);
@@ -288,6 +295,30 @@ export default function AdminDashboard() {
 
     return () => clearTimeout(delayDebounceFn);
   }, [existingClientsSearchQuery]);
+
+  const fetchAumDistribution = async () => {
+    if (!token) return;
+    try {
+      setFetchingAumData(true);
+      const headers = { 'Authorization': `Bearer ${token}` };
+      const res = await fetch(`${backendUrl}/api/admin/aum-distribution`, { headers });
+      if (!res.ok) throw new Error('Failed to retrieve AUM distribution');
+      const resData = await res.json();
+      setAumData(resData.data);
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'An unexpected error occurred while fetching AUM distribution');
+    } finally {
+      setFetchingAumData(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'aum') {
+      fetchAumDistribution();
+    }
+  }, [activeTab]);
+
 
   const handleExistingClientsFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -460,7 +491,7 @@ export default function AdminDashboard() {
   const handleSaveAvailability = async (updatedSlots: string[]) => {
     try {
       setSavingAvailability(true);
-      const headers = { 
+      const headers = {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       };
@@ -493,7 +524,7 @@ export default function AdminDashboard() {
       const meRes = await fetch(`${backendUrl}/api/auth/me`, { headers });
       if (!meRes.ok) throw new Error('Failed to verify token');
       const meData = await meRes.json();
-      
+
       if (meData.data?.role !== 'ADMIN') {
         setError('Forbidden: You are not authorized to view the admin console.');
         setLoading(false);
@@ -515,7 +546,7 @@ export default function AdminDashboard() {
 
       setStats(statsData.data);
       setUsersList(usersData.data);
-      
+
       // Fetch contact messages
       await fetchContactMessages();
       await fetchAvailabilitySlots();
@@ -538,7 +569,7 @@ export default function AdminDashboard() {
   const handleUpdateRole = async (userId: string, newRole: 'GUEST' | 'CLIENT' | 'ADMIN') => {
     try {
       setUpdatingUserRole(userId);
-      const headers = { 
+      const headers = {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       };
@@ -555,13 +586,13 @@ export default function AdminDashboard() {
       }
 
       const resData = await res.json();
-      
+
       // Update local states
       setUsersList((prev: any[]) => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
       if (selectedUser?.id === userId) {
         setSelectedUser((prev: any) => ({ ...prev, role: newRole }));
       }
-      
+
       // Refresh stats
       await fetchAdminData();
     } catch (err: any) {
@@ -584,7 +615,7 @@ export default function AdminDashboard() {
 
     try {
       setSavingClientProfile(true);
-      const headers = { 
+      const headers = {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       };
@@ -601,14 +632,14 @@ export default function AdminDashboard() {
       }
 
       const resData = await res.json();
-      
+
       // Update local states
       const updatedPan = trimmedPan === '' ? null : trimmedPan;
       setUsersList((prev: any[]) => prev.map(u => u.id === userId ? { ...u, pan: updatedPan, client: resData.data } : u));
       if (selectedUser?.id === userId) {
         setSelectedUser((prev: any) => ({ ...prev, pan: updatedPan, client: resData.data }));
       }
-      
+
       alert('Client activation details updated successfully!');
     } catch (err: any) {
       alert(err.message || 'Failed to update client profile');
@@ -622,7 +653,7 @@ export default function AdminDashboard() {
     if (!selectedLeadId || !selectedUser) return;
     try {
       setSavingLeadStatus(true);
-      const headers = { 
+      const headers = {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       };
@@ -669,7 +700,7 @@ export default function AdminDashboard() {
   const handleProcessPayment = async (paymentId: string, action: 'approve' | 'reject') => {
     try {
       setProcessingPaymentId(paymentId);
-      const headers = { 
+      const headers = {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       };
@@ -689,7 +720,7 @@ export default function AdminDashboard() {
 
       // Reload admin dataset to update role changes and receipts
       await fetchAdminData();
-      
+
       // If we are currently showing a user in details drawer, re-fetch it from usersList
       if (selectedUser) {
         const updatedUser = usersList.find(u => u.payments.some((p: any) => p.id === paymentId));
@@ -708,28 +739,34 @@ export default function AdminDashboard() {
 
   // Filtered Users List
   const filteredUsers = usersList.filter(user => {
-    const matchesSearch = 
+    const matchesSearch =
       (user.name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
       (user.email?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
       (user.phone || '').includes(searchQuery) ||
       (user.pan?.toLowerCase() || '').includes(searchQuery.toLowerCase());
-    
+
     const matchesRole = roleFilter === 'ALL' || user.role === roleFilter;
 
     return matchesSearch && matchesRole;
   });
 
   // Compile list of pending payments across all users
-  const pendingPaymentsList = usersList.flatMap(user => 
+  const pendingPaymentsList = usersList.flatMap(user =>
     (user.payments || [])
       .filter((p: any) => p.status === 'PENDING')
       .map((p: any) => ({ ...p, user }))
   );
 
   // Compile list of all leads across all users
-  const allLeadsList = usersList.flatMap(user => 
+  const allLeadsList = usersList.flatMap(user =>
     (user.leads || []).map((lead: any) => ({ ...lead, user }))
   ).sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  // Filtered AUM Schemes
+  const filteredSchemes = (aumData?.schemes || []).filter((scheme: any) =>
+    (scheme.schemeName || '').toLowerCase().includes(aumSearchQuery.toLowerCase())
+  );
+
 
   // Initialize Client edit profile inputs
   const selectUserForDetails = (user: any) => {
@@ -799,13 +836,13 @@ export default function AdminDashboard() {
             </span>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-4">
           <div className="hidden md:flex flex-col text-right">
             <span className="text-[10px] text-neutral-500 font-mono uppercase tracking-wider">Authenticated Admin</span>
             <span className="text-xs font-semibold text-neutral-900">{adminUser?.email}</span>
           </div>
-          <button 
+          <button
             onClick={handleLogout}
             className="flex items-center gap-2 px-4 py-2 border border-neutral-200 bg-white rounded-xl hover:bg-neutral-100 transition-all duration-200 text-xs font-semibold cursor-pointer text-neutral-900"
           >
@@ -816,14 +853,14 @@ export default function AdminDashboard() {
       </header>
 
       <main className="relative z-10 flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-10 flex flex-col gap-8">
-        
+
         {/* Page Title */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl md:text-3xl font-semibold tracking-tight font-clash text-neutral-900">System Dashboard</h1>
             <p className="text-[11px] md:text-xs text-neutral-500 font-mono mt-1">Real-time telemetry and user record verification</p>
           </div>
-          <button 
+          <button
             onClick={() => fetchAdminData(false)}
             className="p-2 md:p-2.5 border border-neutral-200 bg-white hover:bg-neutral-50 transition duration-200 cursor-pointer text-neutral-500 hover:text-neutral-900 rounded-xl"
             title="Refresh logs"
@@ -833,19 +870,36 @@ export default function AdminDashboard() {
         </div>
 
         {/* Stats Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 text-left">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 text-left">
+
+          {/* Card 1: Total AUM */}
+          <div
+            onClick={() => setActiveTab('aum')}
+            className={`border rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition duration-300 cursor-pointer ${activeTab === 'aum' ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white border-neutral-200 text-neutral-900'
+              }`}
+          >
+            <div className="flex items-start sm:items-center justify-between gap-2 mb-3">
+              <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-wider font-clash leading-tight ${activeTab === 'aum' ? 'text-neutral-300' : 'text-neutral-500'}`}>Total Assets Under Management</span>
+              <div className={`p-1.5 sm:p-2 rounded-xl shrink-0 ${activeTab === 'aum' ? 'bg-neutral-800' : 'bg-neutral-100'}`}>
+                <TrendingUp className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${activeTab === 'aum' ? 'text-white' : 'text-neutral-900'}`} />
+              </div>
+            </div>
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight font-clash">
+              ₹{stats.totalAUM ? stats.totalAUM.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '0.00'}
+            </h3>
+            <p className={`text-[10px] font-mono mt-1 ${activeTab === 'aum' ? 'text-neutral-400' : 'text-neutral-500'}`}>Aggregated assets value</p>
+          </div>
 
           {/* Card 4: Consultations */}
-          <div 
+          <div
             onClick={() => setActiveTab('consultations')}
-            className={`border rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition duration-300 cursor-pointer ${
-              activeTab === 'consultations' ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white border-neutral-200 text-neutral-900'
-            }`}
+            className={`border rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition duration-300 cursor-pointer ${activeTab === 'consultations' ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white border-neutral-200 text-neutral-900'
+              }`}
           >
             <div className="flex items-start sm:items-center justify-between gap-2 mb-3">
               <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-wider font-clash leading-tight ${activeTab === 'consultations' ? 'text-neutral-300' : 'text-neutral-500'}`}>Consultations</span>
               <div className={`p-1.5 sm:p-2 rounded-xl shrink-0 ${activeTab === 'consultations' ? 'bg-neutral-800' : 'bg-neutral-100'}`}>
-                <PhoneCall className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${activeTab === 'consultations' ? 'text-white' : 'text-neutral-900'}`} />
+                <PhoneCall className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${activeTab === 'consultations' ? 'text-white' : 'text-slate-900'}`} />
               </div>
             </div>
             <h3 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight font-clash">{stats.attendedLeads}/{stats.totalLeads}</h3>
@@ -853,11 +907,10 @@ export default function AdminDashboard() {
           </div>
 
           {/* Card 6: Existing Clients */}
-          <div 
+          <div
             onClick={() => setActiveTab('existingClients')}
-            className={`border rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition duration-300 cursor-pointer ${
-              activeTab === 'existingClients' ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white border-neutral-200 text-neutral-900'
-            }`}
+            className={`border rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition duration-300 cursor-pointer ${activeTab === 'existingClients' ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white border-neutral-200 text-neutral-900'
+              }`}
           >
             <div className="flex items-start sm:items-center justify-between gap-2 mb-3">
               <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-wider font-clash leading-tight ${activeTab === 'existingClients' ? 'text-neutral-300' : 'text-neutral-500'}`}>Existing Clients</span>
@@ -875,19 +928,17 @@ export default function AdminDashboard() {
         <div className="flex border-b border-neutral-200 gap-6 overflow-x-auto scrollbar-thin scrollbar-thumb-neutral-200">
           <button
             onClick={() => setActiveTab('users')}
-            className={`py-3 text-sm font-bold font-clash tracking-wide border-b-2 cursor-pointer transition duration-200 whitespace-nowrap ${
-              activeTab === 'users' ? 'border-neutral-900 text-neutral-900' : 'border-transparent text-neutral-500 hover:text-neutral-900'
-            }`}
+            className={`py-3 text-sm font-bold font-clash tracking-wide border-b-2 cursor-pointer transition duration-200 whitespace-nowrap ${activeTab === 'users' ? 'border-neutral-900 text-neutral-900' : 'border-transparent text-neutral-500 hover:text-neutral-900'
+              }`}
           >
             Users Registry ({filteredUsers.length})
           </button>
           <button
             onClick={() => setActiveTab('payments')}
-            className={`py-3 text-sm font-bold font-clash tracking-wide border-b-2 cursor-pointer transition duration-200 flex items-center gap-2 whitespace-nowrap ${
-              activeTab === 'payments' ? 'border-neutral-900 text-neutral-900' : 'border-transparent text-neutral-500 hover:text-neutral-900'
-            }`}
+            className={`py-3 text-sm font-bold font-clash tracking-wide border-b-2 cursor-pointer transition duration-200 flex items-center gap-2 whitespace-nowrap ${activeTab === 'payments' ? 'border-neutral-900 text-neutral-900' : 'border-transparent text-neutral-500 hover:text-neutral-900'
+              }`}
           >
-            Payments Verification
+            Payments Log
             {stats.pendingPayments > 0 && (
               <span className="px-2 py-0.5 text-[10px] bg-amber-500 text-white rounded-full font-bold">
                 {stats.pendingPayments}
@@ -896,18 +947,16 @@ export default function AdminDashboard() {
           </button>
           <button
             onClick={() => setActiveTab('consultations')}
-            className={`py-3 text-sm font-bold font-clash tracking-wide border-b-2 cursor-pointer transition duration-200 flex items-center gap-2 whitespace-nowrap ${
-              activeTab === 'consultations' ? 'border-neutral-900 text-neutral-900' : 'border-transparent text-neutral-500 hover:text-neutral-900'
-            }`}
+            className={`py-3 text-sm font-bold font-clash tracking-wide border-b-2 cursor-pointer transition duration-200 flex items-center gap-2 whitespace-nowrap ${activeTab === 'consultations' ? 'border-neutral-900 text-neutral-900' : 'border-transparent text-neutral-500 hover:text-neutral-900'
+              }`}
           >
             Consultation Leads
           </button>
 
           <button
             onClick={() => setActiveTab('existingClients')}
-            className={`py-3 text-sm font-bold font-clash tracking-wide border-b-2 cursor-pointer transition duration-200 flex items-center gap-2 whitespace-nowrap ${
-              activeTab === 'existingClients' ? 'border-neutral-900 text-neutral-900' : 'border-transparent text-neutral-500 hover:text-neutral-900'
-            }`}
+            className={`py-3 text-sm font-bold font-clash tracking-wide border-b-2 cursor-pointer transition duration-200 flex items-center gap-2 whitespace-nowrap ${activeTab === 'existingClients' ? 'border-neutral-900 text-neutral-900' : 'border-transparent text-neutral-500 hover:text-neutral-900'
+              }`}
           >
             Existing Clients
             {stats.totalExistingClients > 0 && (
@@ -917,11 +966,18 @@ export default function AdminDashboard() {
             )}
           </button>
 
+          <button
+            onClick={() => setActiveTab('aum')}
+            className={`py-3 text-sm font-bold font-clash tracking-wide border-b-2 cursor-pointer transition duration-200 flex items-center gap-2 whitespace-nowrap ${activeTab === 'aum' ? 'border-neutral-900 text-neutral-900' : 'border-transparent text-neutral-500 hover:text-neutral-900'
+              }`}
+          >
+            AUM Breakdown
+          </button>
         </div>
 
         {/* Tab Viewport */}
         <div className="flex-1 w-full min-h-[400px]">
-          
+
           {activeTab === 'users' && (
             <div className="space-y-4">
               {/* Search & Role Filter Header */}
@@ -977,8 +1033,8 @@ export default function AdminDashboard() {
                         </tr>
                       ) : (
                         filteredUsers.map((user) => (
-                          <tr 
-                            key={user.id} 
+                          <tr
+                            key={user.id}
                             className="hover:bg-neutral-50 transition duration-150 group"
                           >
                             <td className="px-6 py-5 whitespace-nowrap font-mono text-neutral-500">
@@ -1003,21 +1059,19 @@ export default function AdminDashboard() {
                               )}
                             </td>
                             <td className="px-6 py-5 whitespace-nowrap">
-                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${
-                                user.role === 'ADMIN' ? 'bg-neutral-900 text-white' :
-                                user.role === 'CLIENT' ? 'bg-amber-500/10 text-amber-700 border border-amber-500/25' :
-                                'bg-neutral-100 text-neutral-600'
-                              }`}>
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${user.role === 'ADMIN' ? 'bg-neutral-900 text-white' :
+                                  user.role === 'CLIENT' ? 'bg-amber-500/10 text-amber-700 border border-amber-500/25' :
+                                    'bg-neutral-100 text-neutral-600'
+                                }`}>
                                 {user.role}
                               </span>
                             </td>
                             <td className="px-6 py-5 whitespace-nowrap">
                               {user.payments && user.payments.length > 0 ? (
-                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${
-                                  user.payments[0].status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/25' :
-                                  user.payments[0].status === 'REJECTED' ? 'bg-rose-500/10 text-rose-700 border border-rose-500/25' :
-                                  'bg-amber-500/10 text-amber-700 border border-amber-500/25'
-                                }`}>
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${user.payments[0].status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/25' :
+                                    user.payments[0].status === 'REJECTED' ? 'bg-rose-500/10 text-rose-700 border border-rose-500/25' :
+                                      'bg-amber-500/10 text-amber-700 border border-amber-500/25'
+                                  }`}>
                                   {user.payments[0].status}
                                 </span>
                               ) : (
@@ -1072,8 +1126,8 @@ export default function AdminDashboard() {
                   </div>
                 ) : (
                   pendingPaymentsList.map((payment) => (
-                    <div 
-                      key={payment.id} 
+                    <div
+                      key={payment.id}
                       className="border border-neutral-200 bg-white rounded-2xl p-6 flex flex-col gap-4 shadow-sm hover:shadow-md transition duration-300 text-neutral-900"
                     >
                       <div className="flex justify-between items-start">
@@ -1106,9 +1160,9 @@ export default function AdminDashboard() {
 
                       {payment.screenshotUrl ? (
                         <div className="relative group border border-neutral-200 rounded-xl overflow-hidden aspect-video bg-black max-h-[140px]">
-                          <img 
-                            src={`${backendUrl}${payment.screenshotUrl}`} 
-                            alt="Receipt Screenshot" 
+                          <img
+                            src={`${backendUrl}${payment.screenshotUrl}`}
+                            alt="Receipt Screenshot"
                             className="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-90 cursor-zoom-in"
                             onClick={() => setScreenshotModalUrl(`${backendUrl}${payment.screenshotUrl}`)}
                           />
@@ -1163,8 +1217,8 @@ export default function AdminDashboard() {
                   </div>
                 ) : (
                   allLeadsList.map((lead) => (
-                    <div 
-                      key={lead.id} 
+                    <div
+                      key={lead.id}
                       className="border border-neutral-200 bg-white rounded-2xl p-6 flex flex-col gap-4 shadow-sm hover:shadow-md transition duration-300 text-neutral-900"
                     >
                       <div className="flex justify-between items-start">
@@ -1182,11 +1236,10 @@ export default function AdminDashboard() {
                           </span>
                         </div>
                         <div className="text-right flex flex-col items-end gap-1.5">
-                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider ${
-                            lead.status === 'NEW' ? 'bg-blue-500/10 text-blue-700 border border-blue-500/20' :
-                            lead.status === 'CONTACTED' ? 'bg-amber-500/10 text-amber-700 border border-amber-500/20' :
-                            'bg-emerald-500/10 text-emerald-700 border border-emerald-500/20'
-                          }`}>
+                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider ${lead.status === 'NEW' ? 'bg-blue-500/10 text-blue-700 border border-blue-500/20' :
+                              lead.status === 'CONTACTED' ? 'bg-amber-500/10 text-amber-700 border border-amber-500/20' :
+                                'bg-emerald-500/10 text-emerald-700 border border-emerald-500/20'
+                            }`}>
                             {lead.status}
                           </span>
                         </div>
@@ -1209,7 +1262,7 @@ export default function AdminDashboard() {
                             </span>
                           </div>
                         </div>
-                        
+
                         {lead.notes && (
                           <div className="border-t border-neutral-200/60 pt-2 flex items-start gap-2">
                             <FileText className="w-4 h-4 text-neutral-400 shrink-0 mt-0.5" />
@@ -1265,12 +1318,12 @@ export default function AdminDashboard() {
                         <span className="text-sm font-bold font-clash text-neutral-900 block">Click to Upload Existing Clients CSV / Excel</span>
                         <span className="text-[11px] text-neutral-500 font-mono mt-1 block">Supports target existing client database schemas</span>
                       </div>
-                      <input 
-                        type="file" 
-                        id="existing-client-csv-upload" 
-                        accept=".csv,.xlsx" 
-                        className="hidden" 
-                        onChange={handleExistingClientsFileUpload} 
+                      <input
+                        type="file"
+                        id="existing-client-csv-upload"
+                        accept=".csv,.xlsx"
+                        className="hidden"
+                        onChange={handleExistingClientsFileUpload}
                       />
                     </label>
                   )}
@@ -1293,12 +1346,12 @@ export default function AdminDashboard() {
                         <span className="text-sm font-bold font-clash text-neutral-900 block">Click to Upload Portfolio Valuations CSV / Excel</span>
                         <span className="text-[11px] text-neutral-500 font-mono mt-1 block">Matches by PAN & Name to update valuation columns</span>
                       </div>
-                      <input 
-                        type="file" 
-                        id="portfolio-valuation-csv-upload" 
-                        accept=".csv,.xlsx" 
-                        className="hidden" 
-                        onChange={handlePortfolioValuationsFileUpload} 
+                      <input
+                        type="file"
+                        id="portfolio-valuation-csv-upload"
+                        accept=".csv,.xlsx"
+                        className="hidden"
+                        onChange={handlePortfolioValuationsFileUpload}
                       />
                     </label>
                   )}
@@ -1321,12 +1374,12 @@ export default function AdminDashboard() {
                         <span className="text-sm font-bold font-clash text-neutral-900 block">Click to Upload Folio Holdings CSV / Excel</span>
                         <span className="text-[11px] text-neutral-500 font-mono mt-1 block">Matches by PAN & Name to update mutual fund folios</span>
                       </div>
-                      <input 
-                        type="file" 
-                        id="existing-client-folio-upload" 
-                        accept=".csv,.xlsx" 
-                        className="hidden" 
-                        onChange={handleFolioFileUpload} 
+                      <input
+                        type="file"
+                        id="existing-client-folio-upload"
+                        accept=".csv,.xlsx"
+                        className="hidden"
+                        onChange={handleFolioFileUpload}
                       />
                     </label>
                   )}
@@ -1386,6 +1439,7 @@ export default function AdminDashboard() {
                                 </div>
                                 <div className="flex flex-wrap gap-2 items-center mt-0.5">
                                   {client.pan && <span className="text-[10px] text-neutral-500 font-mono uppercase bg-neutral-100 px-1.5 py-0.5 rounded border border-neutral-200">PAN: {client.pan}</span>}
+                                  {client.mobile && <span className="text-[10px] text-neutral-500 font-mono bg-neutral-100 px-1.5 py-0.5 rounded border border-neutral-200">Phone: {client.mobile}</span>}
                                   {client.username && <span className="text-neutral-400 font-mono text-[9px]">@{client.username}</span>}
                                 </div>
                               </td>
@@ -1411,8 +1465,8 @@ export default function AdminDashboard() {
                                 ) : 'N/A'}
                               </td>
                               <td className="px-6 py-4 font-mono text-neutral-900 font-bold text-right">
-                                {client.currentValue !== null && client.currentValue !== undefined 
-                                  ? `₹${client.currentValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}` 
+                                {client.currentValue !== null && client.currentValue !== undefined
+                                  ? `₹${client.currentValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
                                   : (client.aum !== null && client.aum !== undefined ? `₹${client.aum.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'N/A')}
                               </td>
                               <td className="px-6 py-4 font-mono text-neutral-700 text-right">
@@ -1462,6 +1516,78 @@ export default function AdminDashboard() {
                           Next
                         </button>
                       </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'aum' && (
+            <div className="space-y-6">
+              {/* Total AUM Card */}
+              <div className="bg-white border border-neutral-200 rounded-3xl p-6 md:p-8 shadow-sm flex flex-col justify-between relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-neutral-100 rounded-full blur-3xl opacity-50 -mr-20 -mt-20"></div>
+                <div className="relative z-10">
+                  <span className="text-[10px] md:text-xs font-mono uppercase tracking-widest text-neutral-400 block mb-2">Total Assets Under Management (AUM)</span>
+                  <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight font-clash text-neutral-900">
+                    ₹{aumData.totalAUM ? aumData.totalAUM.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '0.00'}
+                  </h2>
+                  <p className="text-xs md:text-sm text-neutral-500 font-sans mt-2">
+                    Aggregated sum of all investments across imported mutual fund portfolios.
+                  </p>
+                </div>
+              </div>
+
+              {/* Search and List */}
+              <div className="space-y-4">
+                <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
+                  <div className="flex-1 relative w-full">
+                    <Search className="w-4 h-4 text-neutral-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="Search schemes by asset name..."
+                      value={aumSearchQuery}
+                      onChange={(e) => setAumSearchQuery(e.target.value)}
+                      className="w-full pl-11 pr-4 py-3 text-sm border border-neutral-200 rounded-xl bg-white focus:outline-none focus:ring-1 focus:ring-neutral-900 transition duration-200 text-neutral-900 placeholder-neutral-400"
+                    />
+                  </div>
+                </div>
+
+                <div className="bg-white border border-neutral-200 rounded-2xl shadow-sm overflow-hidden">
+                  {fetchingAumData ? (
+                    <div className="px-6 py-16 text-center text-sm text-neutral-500 font-mono flex flex-col items-center justify-center gap-3">
+                      <Loader2 className="w-6 h-6 text-neutral-900 animate-spin" />
+                      <span>Fetching AUM distribution breakdown...</span>
+                    </div>
+                  ) : filteredSchemes.length === 0 ? (
+                    <div className="px-6 py-16 text-center text-sm text-neutral-500 font-mono">
+                      {aumSearchQuery ? 'No schemes matching search criteria' : 'No scheme data available. Upload Folio CSV to populate.'}
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-neutral-100">
+                      {filteredSchemes.map((scheme: any, idx: number) => (
+                        <div key={idx} className="p-5 flex items-center justify-between hover:bg-neutral-50/50 transition duration-150">
+                          <div className="flex-1 min-w-0 pr-4">
+                            <h4 className="text-sm font-bold text-neutral-900 truncate leading-snug font-sans">
+                              {scheme.schemeName}
+                            </h4>
+                            <p className="text-xs text-neutral-500 font-mono mt-1">
+                              Amount Invested: <span className="font-semibold text-neutral-800">₹{scheme.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-4 shrink-0">
+                            <div className="text-right hidden sm:block">
+                              <div className="w-24 bg-neutral-100 h-1.5 rounded-full overflow-hidden">
+                                <div className="bg-neutral-900 h-full rounded-full" style={{ width: `${Math.min(100, scheme.percentage)}%` }}></div>
+                              </div>
+                            </div>
+                            <span className="inline-flex items-center justify-center px-3 py-1 text-xs font-bold font-mono text-neutral-900 bg-neutral-100 rounded-lg min-w-[70px]">
+                              {scheme.percentage.toFixed(2)}%
+                            </span>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
@@ -1541,14 +1667,14 @@ export default function AdminDashboard() {
       {selectedUser && (
         <div className="fixed inset-0 z-50 flex justify-end">
           {/* Overlay dim background */}
-          <div 
+          <div
             className="absolute inset-0 bg-black/30 backdrop-blur-sm cursor-pointer"
             onClick={() => setSelectedUser(null)}
           />
 
           {/* Drawer container */}
           <div className="relative z-10 w-full max-w-2xl bg-white border-l border-neutral-200 h-full shadow-2xl overflow-y-auto flex flex-col p-6 md:p-8 animate-in slide-in-from-right duration-350 ease-out text-neutral-900">
-            
+
             {/* Header */}
             <div className="flex items-center justify-between border-b border-neutral-200 pb-4 mb-6">
               <div>
@@ -1557,7 +1683,7 @@ export default function AdminDashboard() {
                   {selectedUser.name || 'Anonymous User'}
                 </h2>
               </div>
-              <button 
+              <button
                 onClick={() => setSelectedUser(null)}
                 className="p-2 border border-neutral-200 hover:bg-neutral-100 rounded-xl transition cursor-pointer"
               >
@@ -1567,7 +1693,7 @@ export default function AdminDashboard() {
 
             {/* Profile Overview */}
             <div className="space-y-6 flex-1">
-              
+
               {/* Account Meta Section */}
               <div className="border border-neutral-200 bg-neutral-50 rounded-2xl p-5 space-y-3 font-sans">
                 <h3 className="text-xs font-bold font-clash uppercase tracking-wider text-neutral-900 border-b border-neutral-200 pb-2">
@@ -1619,11 +1745,10 @@ export default function AdminDashboard() {
                   <div>
                     <span className="text-neutral-500 block text-[10px] uppercase">Payment Status</span>
                     {selectedUser.payments && selectedUser.payments.length > 0 ? (
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${
-                        selectedUser.payments[0].status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/25' :
-                        selectedUser.payments[0].status === 'REJECTED' ? 'bg-rose-500/10 text-rose-700 border border-rose-500/25' :
-                        'bg-amber-500/10 text-amber-700 border border-amber-500/25'
-                      }`}>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${selectedUser.payments[0].status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/25' :
+                          selectedUser.payments[0].status === 'REJECTED' ? 'bg-rose-500/10 text-rose-700 border border-rose-500/25' :
+                            'bg-amber-500/10 text-amber-700 border border-amber-500/25'
+                        }`}>
                         {selectedUser.payments[0].status}
                       </span>
                     ) : (
@@ -1733,7 +1858,7 @@ export default function AdminDashboard() {
                 <h3 className="text-xs font-bold font-clash uppercase tracking-wider text-neutral-900 border-b border-neutral-200 pb-2">
                   Onboarding Assessment
                 </h3>
-                
+
                 {(!selectedUser.assessments || selectedUser.assessments.length === 0) ? (
                   <p className="text-xs text-neutral-500 font-mono text-center py-4">
                     User has not completed the onboarding assessment questionnaire yet.
@@ -1838,11 +1963,10 @@ export default function AdminDashboard() {
                           <div className="flex items-center justify-between">
                             <div>
                               <span className="text-[10px] text-neutral-500 block uppercase font-mono">Compounding Score</span>
-                              <span className={`px-2 py-0.5 rounded text-[9px] font-bold tracking-wider ${
-                                p.score.tag === 'ALIGNED' ? 'bg-emerald-500/10 text-emerald-700' :
-                                p.score.tag === 'MODERATE' ? 'bg-amber-500/10 text-amber-700' :
-                                'bg-destructive/10 text-destructive'
-                              }`}>
+                              <span className={`px-2 py-0.5 rounded text-[9px] font-bold tracking-wider ${p.score.tag === 'ALIGNED' ? 'bg-emerald-500/10 text-emerald-700' :
+                                  p.score.tag === 'MODERATE' ? 'bg-amber-500/10 text-amber-700' :
+                                    'bg-destructive/10 text-destructive'
+                                }`}>
                                 {p.score.tag}
                               </span>
                             </div>
@@ -1864,7 +1988,7 @@ export default function AdminDashboard() {
                                 <div className="bg-neutral-900 h-full rounded-full" style={{ width: `${p.score.goalAlignment}%` }} />
                               </div>
                             </div>
-                            
+
                             <div>
                               <div className="flex justify-between text-neutral-500 mb-1">
                                 <span>Asset Allocation</span>
@@ -1964,11 +2088,10 @@ export default function AdminDashboard() {
                   </p>
                 ) : (
                   selectedUser.leads.map((l: any) => (
-                    <div 
-                      key={l.id} 
-                      className={`border rounded-xl p-4 space-y-3 shadow-sm ${
-                        selectedLeadId === l.id ? 'bg-white border-neutral-300 ring-1 ring-neutral-900' : 'bg-white border-neutral-200'
-                      }`}
+                    <div
+                      key={l.id}
+                      className={`border rounded-xl p-4 space-y-3 shadow-sm ${selectedLeadId === l.id ? 'bg-white border-neutral-300 ring-1 ring-neutral-900' : 'bg-white border-neutral-200'
+                        }`}
                     >
                       <div className="flex justify-between items-start">
                         <div>
@@ -1979,11 +2102,10 @@ export default function AdminDashboard() {
                           </span>
                         </div>
                         <div className="text-right">
-                          <span className={`px-2 py-0.5 rounded text-[9px] font-bold font-mono tracking-wider ${
-                            l.status === 'CONVERTED' ? 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/20' :
-                            l.status === 'CONTACTED' ? 'bg-amber-500/10 text-amber-700 border border-amber-500/20' :
-                            'bg-neutral-100 text-neutral-600 border border-neutral-200'
-                          }`}>
+                          <span className={`px-2 py-0.5 rounded text-[9px] font-bold font-mono tracking-wider ${l.status === 'CONVERTED' ? 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/20' :
+                              l.status === 'CONTACTED' ? 'bg-amber-500/10 text-amber-700 border border-amber-500/20' :
+                                'bg-neutral-100 text-neutral-600 border border-neutral-200'
+                            }`}>
                             {l.status}
                           </span>
                         </div>
@@ -2087,11 +2209,10 @@ export default function AdminDashboard() {
                           <span className="text-[10px] text-neutral-500 uppercase font-mono">Amount: </span>
                           <span className="font-bold text-neutral-900 font-mono text-sm">₹{p.amount.toLocaleString()}</span>
                         </div>
-                        <span className={`px-2 py-0.5 rounded text-[9px] font-bold font-mono tracking-wider ${
-                          p.status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/20' :
-                          p.status === 'REJECTED' ? 'bg-destructive/10 text-destructive border border-destructive/20' :
-                          'bg-amber-500/10 text-amber-700 border border-amber-500/20 animate-pulse'
-                        }`}>
+                        <span className={`px-2 py-0.5 rounded text-[9px] font-bold font-mono tracking-wider ${p.status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/20' :
+                            p.status === 'REJECTED' ? 'bg-destructive/10 text-destructive border border-destructive/20' :
+                              'bg-amber-500/10 text-amber-700 border border-amber-500/20 animate-pulse'
+                          }`}>
                           {p.status}
                         </span>
                       </div>
@@ -2148,20 +2269,18 @@ export default function AdminDashboard() {
         </div>
       )}
 
-
-
       {/* Existing Client Details Slide Drawer */}
       {selectedExistingClient && (
         <div className="fixed inset-0 z-50 flex justify-end">
           {/* Overlay dim background */}
-          <div 
+          <div
             className="absolute inset-0 bg-black/30 backdrop-blur-sm cursor-pointer"
             onClick={() => setSelectedExistingClient(null)}
           />
 
           {/* Drawer container */}
           <div className="relative z-10 w-full max-w-4xl bg-white border-l border-neutral-200 h-full shadow-2xl overflow-y-auto flex flex-col p-6 md:p-8 animate-in slide-in-from-right duration-350 ease-out text-neutral-900">
-            
+
             {/* Header */}
             <div className="flex items-center justify-between border-b border-neutral-200 pb-4 mb-6">
               <div>
@@ -2171,7 +2290,7 @@ export default function AdminDashboard() {
                 </h2>
                 <p className="text-xs text-neutral-500 font-mono mt-0.5">PAN: {selectedExistingClient.pan || 'N/A'}</p>
               </div>
-              <button 
+              <button
                 onClick={() => setSelectedExistingClient(null)}
                 className="p-2 border border-neutral-200 hover:bg-neutral-100 rounded-xl transition cursor-pointer"
               >
@@ -2181,7 +2300,7 @@ export default function AdminDashboard() {
 
             {/* Scrollable details view */}
             <div className="space-y-8 flex-1 pb-10">
-              
+
               {/* Section 1: Personal & Profile Details */}
               <div className="border border-neutral-200 bg-neutral-50 rounded-2xl p-5 space-y-4">
                 <h3 className="text-xs font-bold font-clash uppercase tracking-wider text-neutral-900 border-b border-neutral-200 pb-2">
@@ -2447,7 +2566,7 @@ export default function AdminDashboard() {
       {/* Screenshot Zoom Modal Overlay */}
       {screenshotModalUrl && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-          <div 
+          <div
             className="absolute inset-0 bg-black/50 backdrop-blur-sm cursor-zoom-out"
             onClick={() => setScreenshotModalUrl(null)}
           />
@@ -2459,9 +2578,9 @@ export default function AdminDashboard() {
               <X className="w-4 h-4" />
             </button>
             <div className="w-full max-h-[80vh] overflow-auto flex items-center justify-center p-2 mt-6">
-              <img 
-                src={screenshotModalUrl} 
-                alt="Enlarged transaction proof" 
+              <img
+                src={screenshotModalUrl}
+                alt="Enlarged transaction proof"
                 className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-md border border-neutral-200 bg-neutral-50"
               />
             </div>
@@ -2475,7 +2594,7 @@ export default function AdminDashboard() {
       {/* Custom Confirm Modal */}
       {confirmModal.isOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div 
+          <div
             className="absolute inset-0 bg-neutral-900/60 backdrop-blur-sm"
             onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
           />
@@ -2483,10 +2602,10 @@ export default function AdminDashboard() {
             <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-5 ${confirmModal.danger ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-amber-50 text-amber-600 border border-amber-200'}`}>
               <ShieldAlert className="w-8 h-8" />
             </div>
-            
+
             <h3 className="text-lg font-bold text-neutral-900 mb-2 font-clash">{confirmModal.title}</h3>
             <p className="text-xs text-neutral-500 leading-relaxed font-sans mb-6">{confirmModal.message}</p>
-            
+
             <div className="flex gap-4 w-full">
               <button
                 type="button"

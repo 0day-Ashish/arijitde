@@ -62,7 +62,7 @@ const faqData = [
     answer: "Our basic manual portfolio scorecard and anomaly check is completely free. We charge a premium tier fee only for automated recurring alerts, continuous monitoring, and structured portfolio optimization strategies."
   },
   {
-    question: "How do I get started with a consultation?",
+    question: "How do I Book a Call with a consultation?",
     answer: "You can book a live video demo using the button in the hero section or drop us an email at contact@finanalysis.in. We will schedule a personalized session to analyze your current assets."
   }
 ];
@@ -484,77 +484,24 @@ export default function Home() {
               pointerEvents: heroProgress < 0.4 ? "auto" : "none",
               transition: "opacity 0.15s ease-out, transform 0.15s ease-out",
             }}
-            className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 -pt-20 sm:-pt-15 z-10"
+            className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 -pt-10 sm:pt-10 z-10"
           >
-            <h1 className="text-4xl sm:text-5xl md:text-8xl font-bold text-primary font-chillax leading-none tracking-tighter uppercase select-none">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-primary font-chillax leading-none tracking-tighter uppercase select-none">
               Preserving Legacy<br />
-              <span className="text-primary">Finance Growth</span>
+              <span className="text-primary">& Trust of Mr. Arindam De</span>
             </h1>
             <p className="text-muted-foreground text-xs sm:text-sm md:text-lg max-w-2xl mt-4 sm:mt-8 font-sans leading-relaxed">
-              Combining 35+ years of generation-spanning trust with modern portfolio analytics and machine learning anomaly detection to secure your wealth.
+              Combining 35+ years of generation-spanning trust with systematic portfolio optimization and machine learning diagnostics to accelerate your growth.
             </p>
 
-            {/* Finance widgets container - placed inline below the paragraph */}
-            <div className="flex flex-col sm:flex-row gap-4 mt-6 sm:mt-10 justify-center items-stretch w-full max-w-2xl px-6 select-none z-20">
-
-              {/* ML Anomaly Engine Widget */}
-              <div className="flex-1 flex flex-col gap-2.5 sm:gap-3.5 p-4 sm:p-5 rounded-3xl bg-white/30 backdrop-blur-2xl border border-white/40 shadow-sm text-left hover:-translate-y-1.5 hover:shadow-md transition-all duration-350">
-                <div className="flex items-center gap-2 justify-between">
-                  <span className="text-[9px] font-mono text-emerald-600 font-bold uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping" />
-                    Active Scan
-                  </span>
-                  <span className="text-[9px] font-mono text-slate-400">ENGINE V2.4</span>
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-primary font-clash">ML Anomaly Engine</h4>
-                  <p className="text-[10px] text-muted-foreground leading-relaxed mt-1 font-sans">
-                    Analyzing portfolio drift, asset correlation, and hidden cost leakages.
-                  </p>
-                </div>
-                <div className="border-t border-slate-200/50 pt-2.5 mt-auto flex items-center justify-between">
-                  <div className="flex flex-col">
-                    <span className="text-[9px] font-mono text-slate-400 uppercase">Risk Level</span>
-                    <span className="text-[11px] font-bold text-emerald-600 uppercase font-mono">Secure (0.01%)</span>
-                  </div>
-                  {/* SVG Live Scan Line */}
-                  <svg className="w-16 h-8 text-emerald-500" viewBox="0 0 100 40" fill="none">
-                    <path d="M0,20 L20,20 L30,5 L40,35 L50,20 L80,20 L90,10 L100,20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    <circle cx="100" cy="20" r="3" fill="currentColor" className="animate-ping" />
-                  </svg>
-                </div>
-              </div>
-
-              {/* Assets Under Advisory Widget */}
-              <div className="flex-1 flex flex-col gap-2.5 sm:gap-3.5 p-4 sm:p-5 rounded-3xl bg-white/30 backdrop-blur-2xl border border-white/40 shadow-sm text-left hover:-translate-y-1.5 hover:shadow-md transition-all duration-350">
-                <div className="flex items-center gap-2 justify-between">
-                  <span className="text-[9px] font-mono text-foreground font-bold uppercase tracking-wider bg-foreground/5 border border-foreground/15 px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 bg-foreground/70 rounded-full animate-pulse" />
-                    Yield Tracker
-                  </span>
-                  <span className="text-[9px] font-mono text-slate-400">CAGR AVG</span>
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-primary font-clash">Assets Under Advisory</h4>
-                  <div className="flex items-baseline gap-1.5 mt-1">
-                    <span className="text-2xl font-bold font-clash text-primary leading-none">₹3Cr+</span>
-                    <span className="text-[9px] font-mono text-emerald-600 font-bold">+18.4%</span>
-                  </div>
-                </div>
-                <div className="border-t border-slate-200/50 pt-2.5 mt-auto">
-                  {/* SVG Sparkline */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex flex-col">
-                      <span className="text-[9px] font-mono text-slate-400 uppercase">Founded</span>
-                      <span className="text-[10px] font-bold text-primary font-mono">1989 (35+ Yrs)</span>
-                    </div>
-                    <svg className="w-16 h-8 text-emerald-500" viewBox="0 0 100 40" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <path d="M0,35 Q15,30 30,18 T60,22 T90,5 T100,2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-
+            {/* Lottie Animation Container */}
+            <div className="w-full max-w-[320px] sm:max-w-[400px] aspect-square mt-4 sm:mt-6 flex items-center justify-center select-none z-20">
+              <DotLottieReact
+                src="https://lottie.host/b6e0c553-c51a-41e0-b3a0-c6a29bc45571/XROqLcCGw7.lottie"
+                loop
+                autoplay
+                className="w-full h-full"
+              />
             </div>
 
             {/* Scroll Indicator */}
@@ -716,20 +663,6 @@ export default function Home() {
           })()}
         </div>
       </div>
-
-      {/* Human Advisory Visual Section */}
-      <div className="w-full relative z-10 pt-16 pb-4 px-6">
-        <div className="w-full max-w-5xl mx-auto overflow-hidden hover:-translate-y-1 transition-all duration-300">
-          <div className="relative w-full overflow-hidden" style={{ aspectRatio: '2808 / 1920' }}>
-            <img
-              src="/assets/visual.png"
-              alt="Human Advisory vs Robo-Advisors"
-              className="absolute inset-0 w-full h-full object-cover object-top mix-blend-multiply"
-            />
-          </div>
-        </div>
-      </div>
-
       {/* Interactive Chatbot Promo Section */}
       <div className="w-full relative z-10 pt-4 pb-16 px-6 overflow-hidden">
         {/* Ambient backing glow */}
@@ -741,15 +674,15 @@ export default function Home() {
               Instant Advisory
             </span>
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-primary font-clash">
-              Meet Cleo AI: Real-Time Insights, Zero Waiting.
+              Meet Your AI: Real-Time Insights, Zero Waiting.
             </h2>
             <p className="text-[#64748B] text-sm leading-relaxed font-sans">
-              Have questions about how we check anomalies, calculate fee efficiency, or structure systematic portfolios? Cleo AI is trained directly on our 35-year advisory playbook to answer your investment questions instantly.
+              Have questions about how we check anomalies, calculate fee efficiency, or structure systematic portfolios? Your AI is trained directly on our 35-year advisory playbook to answer your investment questions instantly.
             </p>
           </div>
 
           <div className="w-full md:w-auto shrink-0 flex flex-col items-center justify-center p-6 bg-white/45 backdrop-blur-2xl border border-border rounded-2xl md:min-w-[280px] shadow-sm text-center relative group">
-            <span className="text-lg font-semibold text-primary font-clash">Try Cleo AI Now</span>
+            <span className="text-lg font-semibold text-primary font-clash">Try Your AI Now</span>
 
             <button
               onClick={() => setIsChatOpen(true)}

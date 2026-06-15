@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: "Get Started & Login",
+  title: "Book a Call & Login",
   description: "Register a user account, verify access via OTP, or sign in to the premium client advisory cockpit.",
 };
 

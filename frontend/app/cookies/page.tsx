@@ -64,7 +64,7 @@ export default function CookiesPolicy() {
           <ul className="list-disc pl-5 space-y-1">
             <li><strong>Essential & Authentication:</strong> To maintain secure customer login sessions, coordinate multi-factor OTP tokens, and verify that transactions are executed under authentic contexts.</li>
             <li><strong>Functional Preferences:</strong> To remember your configuration settings (such as calculations run on our calculator models, inputs selected, or custom diagnostic filters).</li>
-            <li><strong>Analytics & Diagnostics:</strong> To track anonymized usage metrics, loading latency, and API performance. This helps us optimize calculations, debug error logs, and train Cleo AI based on general query success metrics.</li>
+            <li><strong>Analytics & Diagnostics:</strong> To track anonymized usage metrics, loading latency, and API performance. This helps us optimize calculations, debug error logs, and train Your AI based on general query success metrics.</li>
           </ul>
         </div>
       )
@@ -160,16 +160,14 @@ export default function CookiesPolicy() {
       {/* Header Title Section */}
       <div className="relative z-10 flex flex-col justify-center items-center px-6 pt-44 pb-6 text-center max-w-5xl mx-auto">
         <h1
-          className={`text-4xl md:text-7xl font-normal tracking-tight mt-12 mb-4 leading-none text-primary font-clash transition-all duration-[1200ms] ease-out ${
-            isLoaded ? "opacity-100 blur-none scale-100" : "opacity-0 blur-lg scale-95"
-          } delay-[200ms]`}
+          className={`text-4xl md:text-7xl font-normal tracking-tight mt-12 mb-4 leading-none text-primary font-clash transition-all duration-[1200ms] ease-out ${isLoaded ? "opacity-100 blur-none scale-100" : "opacity-0 blur-lg scale-95"
+            } delay-[200ms]`}
         >
           Cookies Policy
         </h1>
         <p
-          className={`text-sm md:text-base text-muted-foreground max-w-xl mx-auto mb-10 leading-relaxed font-sans transition-all duration-[1200ms] ease-out ${
-            isLoaded ? "opacity-100 blur-none scale-100" : "opacity-0 blur-md scale-95"
-          } delay-[400ms]`}
+          className={`text-sm md:text-base text-muted-foreground max-w-xl mx-auto mb-10 leading-relaxed font-sans transition-all duration-[1200ms] ease-out ${isLoaded ? "opacity-100 blur-none scale-100" : "opacity-0 blur-md scale-95"
+            } delay-[400ms]`}
         >
           Last updated: June 6, 2026. We explain how we use cookies and local storage to keep your session secure and optimize your calculators.
         </p>
@@ -177,9 +175,8 @@ export default function CookiesPolicy() {
 
       {/* Main Content Layout */}
       <div
-        className={`relative z-10 w-full max-w-5xl mx-auto px-6 pb-36 grid grid-cols-1 lg:grid-cols-12 gap-10 transition-all duration-[1200ms] ease-out ${
-          isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"
-        } delay-[500ms]`}
+        className={`relative z-10 w-full max-w-5xl mx-auto px-6 pb-36 grid grid-cols-1 lg:grid-cols-12 gap-10 transition-all duration-[1200ms] ease-out ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"
+          } delay-[500ms]`}
       >
         {/* Left Column: Quick Navigation Menu (Hidden on mobile) */}
         <div className="hidden lg:block lg:col-span-4 self-start sticky top-32 bg-white/20 border border-border rounded-3xl p-6 shadow-sm backdrop-blur-2xl">

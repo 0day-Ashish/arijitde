@@ -11,7 +11,7 @@ type FlowState = "SELECT" | "NEW_USER" | "OTP_VERIFY" | "EXISTING_CLIENT";
 
 export default function Onboarding() {
   const [isLoaded, setIsLoaded] = useState(false);
-  
+
   // Navigation Flow State
   const [flow, setFlow] = useState<FlowState>("SELECT");
   const [error, setError] = useState<string | null>(null);
@@ -75,7 +75,7 @@ export default function Onboarding() {
 
   // Mount animation
   useEffect(() => {
-    document.title = "Get Started | FinAnalysis - Arijit De";
+    document.title = "Book a Call | FinAnalysis - Arijit De";
     const timer = setTimeout(() => {
       setIsLoaded(true);
     }, 100);
@@ -104,7 +104,7 @@ export default function Onboarding() {
   useEffect(() => {
     if (flow === "NEW_USER" || flow === "EXISTING_CLIENT") {
       const existingScript = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
-      
+
       const renderBtn = () => {
         if (typeof window !== "undefined" && (window as any).google) {
           initializeGoogleSignIn();
@@ -203,7 +203,7 @@ export default function Onboarding() {
       if (data.success) {
         // Save token and user details to cookies/localStorage
         setAuthSession(data.data.token, data.data.user, true);
-        
+
         // Redirect dynamically based on user role
         if (data.data.user?.role === "ADMIN") {
           window.location.href = "/dashboard/admin";
@@ -225,7 +225,7 @@ export default function Onboarding() {
   // Submit Send OTP (New User Flow)
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Admin login only requires email, normal signup requires name/email/password
     if (isAdminLogin) {
       if (!email) {
@@ -247,7 +247,7 @@ export default function Onboarding() {
       const res = await fetch(`${backendUrl}/api/auth/otp/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           email,
           isRegistration: !isUserLogin && !isAdminLogin
         }),
@@ -283,8 +283,8 @@ export default function Onboarding() {
       const res = await fetch(`${backendUrl}/api/auth/otp/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          email, 
+        body: JSON.stringify({
+          email,
           otp,
           name: (!isUserLogin && !isAdminLogin) ? name : undefined,
           password: (!isUserLogin && !isAdminLogin) ? password : undefined,
@@ -318,7 +318,7 @@ export default function Onboarding() {
   // Existing Client Login (Real PAN + Password Auth)
   const handleClientLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // PAN validation regex: 5 letters, 4 digits, 1 letter
     const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
     const formattedPan = panNumber.trim().toUpperCase();
@@ -540,7 +540,7 @@ export default function Onboarding() {
 
       {/* Main Form/Content Section */}
       <div className="relative z-10 flex-1 flex flex-col justify-center items-center px-6 pt-36 pb-24 max-w-5xl mx-auto w-full">
-        
+
         {/* Back Button */}
         {flow !== "SELECT" && (
           <button
@@ -559,20 +559,19 @@ export default function Onboarding() {
 
         {/* 1. SELECT FLOW */}
         {flow === "SELECT" && (
-          <div 
-            className={`w-full text-center flex flex-col items-center justify-center transition-all duration-[1200ms] ease-out ${
-              isLoaded ? "opacity-100 scale-100" : "opacity-0 scale-95"
-            }`}
+          <div
+            className={`w-full text-center flex flex-col items-center justify-center transition-all duration-[1200ms] ease-out ${isLoaded ? "opacity-100 scale-100" : "opacity-0 scale-95"
+              }`}
           >
             <h1 className="text-4xl md:text-6xl font-normal leading-tight text-foreground mb-4 font-clash">
-              Get Started
+              Book a Call
             </h1>
             <p className="text-muted-foreground text-sm md:text-base max-w-lg mb-12">
               Choose your profile below to enter your customized financial advisory dashboard.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-3xl mt-4">
-              
+
               {/* Existing Client Card */}
               <button
                 onClick={() => setFlow("EXISTING_CLIENT")}
@@ -641,8 +640,8 @@ export default function Onboarding() {
               {isAdminLogin ? "Admin Sign In" : (isUserLogin ? "User Sign In" : "Create Account")}
             </h2>
             <p className="text-muted-foreground text-xs font-sans mb-6">
-              {isAdminLogin 
-                ? "Enter your administrator email to receive a 6-digit OTP code." 
+              {isAdminLogin
+                ? "Enter your administrator email to receive a 6-digit OTP code."
                 : (isUserLogin ? "Enter your email to receive a 6-digit OTP code." : "Complete details to receive an OTP and register your workspace.")}
             </p>
 

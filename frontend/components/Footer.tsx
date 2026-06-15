@@ -52,7 +52,7 @@ export default function Footer({ footerRef }: FooterProps) {
           </span>
           <a href="/sip-calculator" className="text-muted-foreground hover:text-primary transition duration-200 text-sm">SIP Calculator</a>
           <a href="/onboarding" className="text-muted-foreground hover:text-primary transition duration-200 text-sm">Onboarding</a>
-          <a href="/onboarding" className="text-muted-foreground hover:text-primary transition duration-200 text-sm">Get Started</a>
+          <a href="/onboarding" className="text-muted-foreground hover:text-primary transition duration-200 text-sm">Book a Call</a>
         </div>
         {/* Contact / Subscribe */}
         <div className="flex flex-col gap-3">
@@ -93,9 +93,15 @@ export default function Footer({ footerRef }: FooterProps) {
       </div>
 
       {/* Big Brand Logo Text */}
-      <div className="w-full overflow-hidden flex justify-center items-end relative h-[14vw] min-h-[100px] mt-10">
+      <div className="w-full overflow-hidden flex justify-center items-end relative h-[15vw] min-h-[110px] mt-10">
         <div className="absolute bottom-[-10vw] left-1/2 -translate-x-1/2 w-[60vw] h-[20vw] rounded-full bg-[radial-gradient(circle,rgba(0,0,0,0.03)_0%,transparent_70%)] pointer-events-none select-none" />
-        <h1 className="font-chillax text-[18vw] font-bold text-black tracking-tighter leading-none select-none translate-y-[20%] text-center uppercase">
+
+        {/* Thank You Note */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 text-[12px] sm:text-[14px] font-mono uppercase tracking-widest text-black select-none z-10 text-center animate-pulse">
+          Thank you for choosing us!
+        </div>
+
+        <h1 className="font-chillax text-[18vw] font-bold text-black tracking-tighter leading-none select-none translate-y-[20%] text-center uppercase transition-all duration-700 ease-out hover:text-primary hover:tracking-normal hover:translate-y-[10%] cursor-pointer">
           FinAnalysis
         </h1>
       </div>

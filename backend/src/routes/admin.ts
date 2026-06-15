@@ -40,7 +40,7 @@ router.use(adminMiddleware);
 // 1. GET /api/admin/stats
 router.get('/stats', async (req: AuthenticatedRequest, res: Response, next) => {
   try {
-    const [totalUsers, totalClients, pendingPayments, totalLeads, attendedLeads, totalFolios, totalExistingClients, totalPortfolioValuations] = await Promise.all([
+    const [totalUsers, totalClients, pendingPayments, totalLeads, attendedLeads, totalFolios, totalExistingClients, totalPortfolioValuations, existingClients] = await Promise.all([
       prisma.user.count(),
       prisma.user.count({ where: { role: Role.CLIENT } }),
       prisma.payment.count({ where: { status: PaymentStatus.PENDING } }),
@@ -57,7 +57,20 @@ router.get('/stats', async (req: AuthenticatedRequest, res: Response, next) => {
           ]
         }
       }),
+      prisma.existingClient.findMany({
+        select: {
+          aum: true,
+          currentValue: true,
+        }
+      }),
     ]);
+
+    const totalAUM = existingClients.reduce((sum, client) => {
+      const val = client.currentValue !== null && client.currentValue !== undefined 
+        ? client.currentValue 
+        : (client.aum !== null && client.aum !== undefined ? client.aum : 0);
+      return sum + val;
+    }, 0);
 
     res.json({
       success: true,
@@ -70,6 +83,7 @@ router.get('/stats', async (req: AuthenticatedRequest, res: Response, next) => {
         totalFolios,
         totalExistingClients,
         totalPortfolioValuations,
+        totalAUM,
       },
     });
   } catch (error) {
@@ -451,7 +465,7 @@ router.post('/folios/upload', upload.single('file'), async (req: AuthenticatedRe
           data: {
             ...row,
             existingClientId,
-          }
+          } as any
         });
         insertedCount++;
       }
@@ -711,7 +725,7 @@ router.get('/existing-clients', async (req: AuthenticatedRequest, res: Response,
     const [clients, total] = await Promise.all([
       prisma.existingClient.findMany({
         where,
-        include: { folios: true },
+        include: { folios: true } as any,
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
@@ -1055,6 +1069,50 @@ router.post('/availability', async (req: AuthenticatedRequest, res: Response, ne
   }
 });
 
+// 17. GET /api/admin/aum-distribution
+router.get('/aum-distribution', async (req: AuthenticatedRequest, res: Response, next) => {
+  try {
+    const groups = await prisma.folio.groupBy({
+      by: ['schemeName'],
+      _sum: {
+        aum: true,
+      },
+    });
+
+    const schemes = groups
+      .map(g => {
+        const schemeName = (g.schemeName || '').trim();
+        const amount = g._sum.aum || 0;
+        return {
+          schemeName,
+          amount,
+        };
+      })
+      .filter(s => s.schemeName !== '' && s.amount > 0);
+
+    // Sort descending by amount
+    schemes.sort((a, b) => b.amount - a.amount);
+
+    const totalAUM = schemes.reduce((sum, s) => sum + s.amount, 0);
+
+    const schemesWithPercentage = schemes.map(s => ({
+      ...s,
+      percentage: totalAUM > 0 ? (s.amount / totalAUM) * 100 : 0,
+    }));
+
+    res.json({
+      success: true,
+      data: {
+        totalAUM,
+        schemes: schemesWithPercentage,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;
+
 
 

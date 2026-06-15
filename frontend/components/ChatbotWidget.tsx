@@ -33,7 +33,7 @@ export default function ChatbotWidget({
     }
   };
   const [messages, setMessages] = useState<Message[]>([
-    { id: 1, sender: "bot", text: "Yo! I'm Cleo AI, your personal financial advisor. What's cooking? Let's check if your portfolio is looking sus or if you're actually cooking, fr fr. 😤📈" }
+    { id: 1, sender: "bot", text: "Yo! I'm Your AI, your personal financial advisor. What's cooking? Let's check if your portfolio is looking sus or if you're actually cooking, fr fr. 😤📈" }
   ]);
   const [inputVal, setInputVal] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -120,7 +120,7 @@ export default function ChatbotWidget({
             <div className="flex items-center gap-3">
               <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
               <div className="flex flex-col text-left">
-                <span className="text-sm font-bold text-primary tracking-wide font-clash">Cleo AI</span>
+                <span className="text-sm font-bold text-primary tracking-wide font-clash">Your AI</span>
                 <span className="text-[10px] text-neutral-400 font-mono">AI AGENT • ONLINE</span>
               </div>
             </div>

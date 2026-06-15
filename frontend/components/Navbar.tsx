@@ -63,18 +63,18 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
           'Authorization': `Bearer ${token}`
         }
       })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && data.data) {
-          const fetchedPoints = data.data.finPoints ?? 0;
-          setFinPoints(fetchedPoints);
-          localStorage.setItem('finPointsBalance', fetchedPoints.toString());
-          localStorage.setItem('user', JSON.stringify(data.data));
-        }
-      })
-      .catch(err => {
-        console.error("Failed to sync finPoints from DB", err);
-      });
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.data) {
+            const fetchedPoints = data.data.finPoints ?? 0;
+            setFinPoints(fetchedPoints);
+            localStorage.setItem('finPointsBalance', fetchedPoints.toString());
+            localStorage.setItem('user', JSON.stringify(data.data));
+          }
+        })
+        .catch(err => {
+          console.error("Failed to sync finPoints from DB", err);
+        });
     }
   }, []);
 
@@ -109,47 +109,57 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
 
   return (
     <div
-      className={`fixed top-0 left-0 right-0 z-40 w-full flex flex-col items-center transition-all duration-[1000ms] cubic-bezier(0.25,1,0.5,1) ${
-        isLoaded ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-24"
-      }`}
+      className={`fixed top-0 left-0 right-0 z-40 w-full flex flex-col items-center transition-all duration-[1000ms] cubic-bezier(0.25,1,0.5,1) ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-24"
+        }`}
     >
       {/* Centered Floating Navbar */}
-      <div className="w-full max-w-5xl px-6 mt-4">
+      <div className="w-full max-w-7xl px-4 sm:px-6 mt-4">
         <header className="w-full border border-border rounded-2xl backdrop-blur-2xl bg-white/35 shadow-md transition-all duration-350 ease-in-out">
           {/* Top Navbar Row */}
           <div className="w-full px-6 py-3.5 flex items-center justify-between">
-            {/* Left: Brand Name */}
+            {/* Left: Brand Name & Logo */}
             <div className="flex items-center gap-3">
-              <a href="/" className="text-xl font-bold tracking-wider text-primary font-chillax select-none hover:opacity-90">
-                FinAnalysis
+              <a href="/" className="flex items-center gap-2.5 text-xl font-bold tracking-wider text-primary font-chillax select-none hover:opacity-90">
+                <img
+                  src="/image.png"
+                  alt="FinAnalysis Logo"
+                  className="w-6 h-6 rounded-full object-cover shrink-0 border border-primary/15 shadow-sm"
+                />
+                <span>FinAnalysis</span>
               </a>
             </div>
 
             {/* Center: Desktop Nav Links */}
             <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-muted-foreground">
-              <a 
-                href="/#about" 
+              <a
+                href="/#about"
                 className={`hover:text-primary transition duration-200 ${activePath === '#about' ? 'text-primary font-bold' : ''}`}
               >
                 About
               </a>
-              <a 
-                href="/onboarding" 
-                className={`hover:text-primary transition duration-200 ${activePath === '/onboarding' ? 'text-primary font-bold' : ''}`}
+              <a
+                href="/#contact"
+                className={`hover:text-primary transition duration-200 ${activePath === '#contact' ? 'text-primary font-bold' : ''}`}
               >
-                Portfolio
+                Contact
               </a>
-              <a 
-                href="#calculators" 
+              <a
+                href="#calculators"
                 className={`hover:text-primary transition duration-200 ${activePath === '#calculators' ? 'text-primary font-bold' : ''}`}
               >
-                Calculator
+                Calculators
               </a>
-              <a 
-                href="/quiz" 
+              <a
+                href="/quiz"
                 className={`hover:text-primary transition duration-200 ${activePath === '/quiz' ? 'text-primary font-bold' : ''}`}
               >
                 Investor Quiz
+              </a>
+              <a
+                href="/#faq"
+                className={`hover:text-primary transition duration-200 ${activePath === '#faq' ? 'text-primary font-bold' : ''}`}
+              >
+                FAQ
               </a>
             </nav>
 
@@ -166,7 +176,7 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
                       <path strokeLinecap="round" strokeLinejoin="round" d="M21 12V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 00-2-2h-3a2 2 0 00-2 2v1a2 2 0 002 2h3" />
                     </svg>
                   </button>
-                  
+
                   {isWalletOpen && (
                     <div className="absolute right-0 mt-2.5 w-64 p-5 rounded-2xl bg-white/75 backdrop-blur-2xl border border-border shadow-xl text-left flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-300 z-50">
                       <div className="flex flex-col gap-1">
@@ -177,11 +187,11 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
                           <span className="text-xs font-sans font-medium text-emerald-600 ml-1.5">(≈ ₹{(finPoints * 0.5).toFixed(2)})</span>
                         </div>
                       </div>
-                      
+
                       <p className="text-[10px] leading-relaxed text-muted-foreground font-sans">
                         Earn more FinPoints by submitting portfolios, answering quizzes, or booking advisory reviews.
                       </p>
-                      
+
                       <a
                         href={dashboardUrl}
                         onClick={() => setIsWalletOpen(false)}
@@ -210,7 +220,7 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
                 </a>
               ) : (
                 <a href="/onboarding" className="px-5 py-2.5 bg-primary text-primary-foreground font-bold text-xs rounded-xl hover:bg-primary/90 transition duration-200 shadow-sm text-center whitespace-nowrap">
-                  Get Started
+                  Book a Call
                 </a>
               )}
             </div>
@@ -228,7 +238,7 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
                       <path strokeLinecap="round" strokeLinejoin="round" d="M21 12V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 00-2-2h-3a2 2 0 00-2 2v1a2 2 0 002 2h3" />
                     </svg>
                   </button>
-                  
+
                   {isWalletOpen && (
                     <div className="absolute right-0 mt-2 w-56 p-4 rounded-2xl bg-white/80 backdrop-blur-2xl border border-border shadow-xl text-left flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-300 z-50">
                       <div className="flex flex-col gap-0.5">
@@ -239,7 +249,7 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
                           <span className="text-[10px] font-sans font-medium text-emerald-600 ml-1.5">(≈ ₹{(finPoints * 0.5).toFixed(2)})</span>
                         </div>
                       </div>
-                      
+
                       <a
                         href={dashboardUrl}
                         onClick={() => setIsWalletOpen(false)}
@@ -283,7 +293,7 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
 
           {/* Bottom Row: Mobile Nav Links */}
           <div
-            className={`md:hidden transition-all duration-500 ease-in-out border-t border-border bg-card/40 ${isMobileMenuOpen ? "max-h-[350px] py-6 px-6" : "max-h-0 py-0 px-6 pointer-events-none opacity-0"
+            className={`md:hidden transition-all duration-500 ease-in-out border-t border-border bg-card/40 ${isMobileMenuOpen ? "max-h-[400px] py-6 px-6" : "max-h-0 py-0 px-6 pointer-events-none opacity-0"
               } overflow-hidden`}
           >
             <nav className="flex flex-col gap-4 text-base font-semibold text-muted-foreground">
@@ -295,11 +305,11 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
                 About
               </a>
               <a
-                href="/onboarding"
+                href="/#contact"
                 className={`hover:text-primary transition-all duration-300 transform ${isMobileMenuOpen ? "opacity-100 translate-x-0 font-clash" : "opacity-0 -translate-x-4"
                   } delay-[200ms]`}
               >
-                Portfolio
+                Contact
               </a>
               <a
                 href="#calculators"
@@ -315,6 +325,13 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
               >
                 Investor Quiz
               </a>
+              <a
+                href="/#faq"
+                className={`hover:text-primary transition-all duration-300 transform ${isMobileMenuOpen ? "opacity-100 translate-x-0 font-clash" : "opacity-0 -translate-x-4"
+                  } delay-[500ms]`}
+              >
+                FAQ
+              </a>
               <hr className="border-border my-2" />
               <div
                 className={`flex gap-4 items-center transition-all duration-300 transform ${isMobileMenuOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
@@ -326,7 +343,7 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
                   </a>
                 ) : (
                   <a href="/onboarding" className="flex-1 text-center py-2.5 text-sm font-bold text-white bg-primary rounded-xl hover:bg-primary/90 transition duration-200">
-                    Get Started
+                    Book a Call
                   </a>
                 )}
               </div>
