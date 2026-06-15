@@ -11,6 +11,7 @@ import { GoArrowDownRight } from "react-icons/go";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ChatbotWidget from "@/components/ChatbotWidget";
+import { MacbookScroll } from "@/components/ui/macbook-scroll";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 const servicesData = [
@@ -66,6 +67,7 @@ const faqData = [
     answer: "You can book a live video demo using the button in the hero section or drop us an email at contact@finanalysis.in. We will schedule a personalized session to analyze your current assets."
   }
 ];
+
 
 export default function Home() {
   const [count, setCount] = useState(0);
@@ -237,45 +239,8 @@ export default function Home() {
 
   const animationRef = useRef<number | null>(null);
 
-  // Hero Scroll-driven Animation States
-  const heroRef = useRef<HTMLDivElement>(null);
-  const [heroProgress, setHeroProgress] = useState(0);
-  const [windowSize, setWindowSize] = useState({ width: 1200, height: 800 });
-  const [expandedOption, setExpandedOption] = useState<string | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const handleResize = () => {
-      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
-    };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const handleScroll = () => {
-      const hero = heroRef.current;
-      if (!hero) return;
-
-      const rect = hero.getBoundingClientRect();
-      const scrolled = -rect.top;
-      const maxScroll = rect.height - window.innerHeight;
-
-      if (maxScroll <= 0) return;
-
-      let progress = scrolled / maxScroll;
-      progress = Math.min(1, Math.max(0, progress));
-      setHeroProgress(progress);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll();
-
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  const [expandedOption, setExpandedOption] = useState<string | null>(null);
 
   // Lenis smooth scrolling initialization
   useEffect(() => {
@@ -472,195 +437,110 @@ export default function Home() {
 
       <Navbar isLoaded={isLoaded} />
 
-      {/* Scroll-Driven Morphing Hero Section */}
-      <div ref={heroRef} className="h-[180vh] w-full relative z-10 bg-transparent">
-        {/* Sticky viewport frame */}
-        <div className="sticky top-0 h-screen w-full overflow-hidden select-none bg-transparent">
-          {/* Centered Hero Text (Fades out on scroll) */}
-          <div
-            style={{
-              opacity: Math.max(0, 1 - heroProgress * 2.5),
-              transform: `translateY(${-heroProgress * 40}px)`,
-              pointerEvents: heroProgress < 0.4 ? "auto" : "none",
-              transition: "opacity 0.15s ease-out, transform 0.15s ease-out",
-            }}
-            className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 -pt-10 sm:pt-10 z-10"
-          >
-            <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-primary font-chillax leading-none tracking-tighter uppercase select-none">
-              Preserving Legacy<br />
-              <span className="text-primary">& Trust of Mr. Arindam De</span>
-            </h1>
-            <p className="text-muted-foreground text-xs sm:text-sm md:text-lg max-w-2xl mt-4 sm:mt-8 font-sans leading-relaxed">
-              Combining 35+ years of generation-spanning trust with systematic portfolio optimization and machine learning diagnostics to accelerate your growth.
-            </p>
-
-            {/* Lottie Animation Container */}
-            <div className="w-full max-w-[320px] sm:max-w-[400px] aspect-square mt-4 sm:mt-6 flex items-center justify-center select-none z-20">
-              <DotLottieReact
-                src="https://lottie.host/b6e0c553-c51a-41e0-b3a0-c6a29bc45571/XROqLcCGw7.lottie"
-                loop
-                autoplay
-                className="w-full h-full"
-              />
+      {/* Macbook Scroll Hero Section */}
+      <div className="w-full overflow-hidden bg-transparent z-10 relative">
+        <MacbookScroll
+          title={
+            <div className="flex flex-col items-center justify-center text-center px-6">
+              <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-primary font-chillax leading-none tracking-tighter uppercase select-none">
+                Preserving Legacy<br />
+                <span className="text-primary">& Trust of Mr. Arindam De</span>
+              </h1>
+              <p className="text-muted-foreground text-xs sm:text-sm md:text-lg max-w-2xl mt-4 sm:mt-8 font-sans leading-relaxed font-normal">
+                Combining 35+ years of generation-spanning trust with systematic portfolio optimization and machine learning diagnostics to accelerate your growth.
+              </p>
             </div>
+          }
+          badge={
+            <img src="/image.png" alt="Badge" className="h-10 w-10 object-contain" />
+          }
+          src={`/assets/about.jpeg`}
+          showGradient={false}
+        />
+      </div>
 
-            {/* Scroll Indicator */}
-            <div className="absolute bottom-6 sm:bottom-12 flex flex-col items-center gap-2 font-mono text-[9px] text-muted-foreground uppercase tracking-widest animate-pulse">
-              <span>Scroll to explore</span>
-              <svg className="w-4.5 h-4.5 animate-bounce" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 13l-7 7-7-7m14-6l-7 7-7-7" />
-              </svg>
+      {/* Legacy & Profile Section */}
+      <div className="w-full relative z-10 py-24 px-6 bg-transparent">
+        <div className="w-full max-w-6xl mx-auto flex flex-col md:flex-row items-center md:items-start justify-center gap-12 md:gap-24">
+          {/* Profile Image */}
+          <div className="shrink-0">
+            <div className="w-64 h-64 md:w-80 md:h-80 rounded-[24px] border border-border shadow-lg overflow-hidden bg-card flex items-center justify-center">
+              <img
+                src="/assets/me.jpeg"
+                alt="Arijit De"
+                className="w-full h-full object-cover"
+              />
             </div>
           </div>
 
-          {/* Animated Profile Image (Fades in on scroll) */}
-          {(() => {
-            const isMobile = windowSize.width < 768;
-
-            const x = isMobile ? windowSize.width / 2 - 80 : windowSize.width * 0.12;
-            const y = isMobile ? windowSize.height * 0.16 : windowSize.height / 2 - 160;
-            const size = isMobile ? 160 : 320;
-            const borderRadius = isMobile ? 16 : 24;
-
-            // Fade in as hero text fades out
-            const fadeInOpacity = Math.max(0, Math.min(1, (heroProgress - 0.2) / 0.6));
-            const shadowOpacity = fadeInOpacity * 0.15;
-
-            return (
-              <div
-                style={{
-                  position: "absolute",
-                  left: `${x}px`,
-                  top: `${y}px`,
-                  width: `${size}px`,
-                  height: `${size}px`,
-                  borderRadius: `${borderRadius}px`,
-                  boxShadow: `0 20px 40px rgba(0, 0, 0, ${shadowOpacity})`,
-                  opacity: fadeInOpacity,
-                  pointerEvents: heroProgress >= 0.4 ? "auto" : "none",
-                  overflow: "hidden",
-                  transition: "opacity 0.2s ease-out, box-shadow 0.1s ease-out",
-                }}
-                className="border border-border z-20 flex items-center justify-center bg-card"
+          {/* Expanding Options */}
+          <div className="flex-1 flex flex-col gap-4 md:gap-6 text-left select-text relative z-10 max-w-4xl">
+            {/* 01: About Us */}
+            <div className="flex flex-col">
+              <button
+                onClick={() => setExpandedOption(expandedOption === "about" ? null : "about")}
+                className="group flex items-baseline gap-3 focus:outline-none cursor-pointer text-left"
               >
-                <img
-                  src="/assets/me.jpeg"
-                  alt="Arijit De"
-                  className="w-full h-full object-cover"
-                />
+                <span className={`text-xs md:text-sm font-mono transition duration-200 ${expandedOption === "about" ? "text-primary" : "text-muted-foreground group-hover:text-primary"}`}>01</span>
+                <span className={`font-heading text-2xl md:text-4xl font-bold tracking-tight transition duration-200 ${expandedOption === "about" ? "text-primary" : "text-foreground group-hover:text-primary"}`}>
+                  About Us
+                  <GoArrowDownRight className="inline-block ml-2 align-middle transition-transform duration-300 group-hover:translate-x-1 group-hover:translate-y-1" />
+                </span>
+              </button>
+              <div className={`grid transition-all duration-350 ease-in-out overflow-hidden text-lg md:text-xl text-foreground font-bold ${expandedOption === "about" ? "grid-rows-[1fr] mt-2.5 opacity-100" : "grid-rows-[0fr] opacity-0"
+                }`}>
+                <div className="overflow-hidden space-y-2.5 font-sans pr-4 leading-relaxed font-bold text-foreground text-lg md:text-xl">
+                  <p>
+                    FinAnalysis blends over 35 years of trusted financial advisory with modern technology and data science. Founded on a legacy started by <strong className="text-primary font-extrabold">Arindam De</strong> in 1989, we have transitioned across multiple market cycles to safeguard and grow client wealth. Today, <strong className="text-primary font-extrabold">Arijit De</strong> (SEBI-certified Mutual Fund Distributor ARN-273396 and SIF distributor) integrates computer science analytics, systematic portfolio optimization, and structured asset allocation, delivering a modern, data-backed approach to wealth management that prior generations never had access to.
+                  </p>
+                </div>
               </div>
-            );
-          })()}
+            </div>
 
-          {/* Fade-in Text Options */}
-          {(() => {
-            const isMobile = windowSize.width < 768;
-            const fadeInOpacity = Math.max(0, Math.min(1, (heroProgress - 0.2) / 0.6));
-            const textYOffset = (1 - fadeInOpacity) * 20; // slide up 20px on fade
-
-            const endX = isMobile ? windowSize.width / 2 - 80 : windowSize.width * 0.12;
-            const endY = isMobile ? windowSize.height * 0.16 : windowSize.height / 2 - 160;
-            const endSize = isMobile ? 160 : 320;
-
-            const textLeft = isMobile ? windowSize.width / 2 - 145 : endX + endSize + 80;
-            // Shift desktop top slightly up to give room for expansions
-            const textTop = isMobile ? endY + endSize + 20 : windowSize.height / 2 - 160;
-
-            const handleSmoothScroll = (e: React.MouseEvent, selector: string) => {
-              e.preventDefault();
-              const element = document.querySelector(selector);
-              if (element) {
-                element.scrollIntoView({ behavior: 'smooth' });
-              }
-            };
-
-            const toggleOption = (option: string) => {
-              setExpandedOption(expandedOption === option ? null : option);
-            };
-
-            return (
-              <div
-                style={{
-                  position: "absolute",
-                  left: `${textLeft}px`,
-                  top: `${textTop}px`,
-                  opacity: fadeInOpacity,
-                  transform: `translateY(${textYOffset}px)`,
-                  pointerEvents: heroProgress >= 0.4 ? "auto" : "none",
-                  transition: "opacity 0.2s ease-out, transform 0.2s ease-out",
-                  zIndex: 10,
-                }}
-                className="flex flex-col gap-4 md:gap-6 text-left select-text relative z-10"
+            {/* 02: What we provide */}
+            <div className="flex flex-col">
+              <button
+                onClick={() => setExpandedOption(expandedOption === "services" ? null : "services")}
+                className="group flex items-baseline gap-3 focus:outline-none cursor-pointer text-left"
               >
-                {/* 01: About Us */}
-                <div className="flex flex-col">
-                  <button
-                    onClick={() => toggleOption("about")}
-                    className="group flex items-baseline gap-3 focus:outline-none cursor-pointer text-left"
-                  >
-                    <span className={`text-xs md:text-sm font-mono transition duration-200 ${expandedOption === "about" ? "text-primary" : "text-muted-foreground group-hover:text-primary"}`}>01</span>
-                    <span className={`font-heading text-2xl md:text-4xl font-bold tracking-tight transition duration-200 ${expandedOption === "about" ? "text-primary" : "text-foreground group-hover:text-primary"}`}>
-                      About Us
-                      <GoArrowDownRight className="inline-block ml-2 align-middle transition-transform duration-300 group-hover:translate-x-1 group-hover:translate-y-1" />
-                    </span>
-                  </button>
-                  <div className={`grid transition-all duration-350 ease-in-out overflow-hidden text-lg md:text-xl text-foreground font-bold ${expandedOption === "about" ? "grid-rows-[1fr] mt-2.5 opacity-100" : "grid-rows-[0fr] opacity-0"
-                    }`}>
-                    <div className="overflow-hidden max-w-[320px] md:max-w-xl lg:max-w-2xl xl:max-w-3xl space-y-2.5 font-sans pr-4 leading-relaxed">
-                      <p>
-                        FinAnalysis blends over 35 years of trusted financial advisory with modern technology and data science. Founded on a legacy started by <strong className="text-primary font-extrabold">Arindam De</strong> in 1989, we have transitioned across multiple market cycles to safeguard and grow client wealth. Today, <strong className="text-primary font-extrabold">Arijit De</strong> (SEBI-certified Mutual Fund Distributor ARN-273396 and SIF distributor) integrates computer science analytics, systematic portfolio optimization, and structured asset allocation, delivering a modern, data-backed approach to wealth management that prior generations never had access to.
-                      </p>
-                    </div>
-                  </div>
+                <span className={`text-xs md:text-sm font-mono transition duration-200 ${expandedOption === "services" ? "text-primary" : "text-muted-foreground group-hover:text-primary"}`}>02</span>
+                <span className={`font-heading text-2xl md:text-4xl font-bold tracking-tight transition duration-200 ${expandedOption === "services" ? "text-primary" : "text-foreground group-hover:text-primary"}`}>
+                  What we provide
+                  <GoArrowDownRight className="inline-block ml-2 align-middle transition-transform duration-300 group-hover:translate-x-1 group-hover:translate-y-1" />
+                </span>
+              </button>
+              <div className={`grid transition-all duration-350 ease-in-out overflow-hidden text-lg md:text-xl text-foreground font-bold ${expandedOption === "services" ? "grid-rows-[1fr] mt-2.5 opacity-100" : "grid-rows-[0fr] opacity-0"
+                }`}>
+                <div className="overflow-hidden space-y-2.5 font-sans pr-4 leading-relaxed font-bold text-foreground text-lg md:text-xl">
+                  <p>
+                    We provide a comprehensive, fully regulated suite of financial and wealth creation solutions tailored to your unique lifecycle goals. This includes systematically managed <span className="font-extrabold text-primary">Mutual Funds & SIP planning</span> for long-term compound growth, high-yield <span className="font-extrabold text-primary">Fixed Deposits, Specialized Investment Funds (SIF)</span>, and <span className="font-extrabold text-primary">Portfolio Management Services (PMS)</span> for sophisticated asset allocation. Additionally, we protect your family's future with robust <span className="font-extrabold text-primary">Life Insurance (LIC), Mediclaim Health Insurance, Vehicle/Property Insurance</span>, and provide leverage options through <span className="font-extrabold text-primary">PNB Housing Finance</span> home loans.
+                  </p>
                 </div>
-
-                {/* 02: What we provide */}
-                <div className="flex flex-col">
-                  <button
-                    onClick={() => toggleOption("services")}
-                    className="group flex items-baseline gap-3 focus:outline-none cursor-pointer text-left"
-                  >
-                    <span className={`text-xs md:text-sm font-mono transition duration-200 ${expandedOption === "services" ? "text-primary" : "text-muted-foreground group-hover:text-primary"}`}>02</span>
-                    <span className={`font-heading text-2xl md:text-4xl font-bold tracking-tight transition duration-200 ${expandedOption === "services" ? "text-primary" : "text-foreground group-hover:text-primary"}`}>
-                      What we provide
-                      <GoArrowDownRight className="inline-block ml-2 align-middle transition-transform duration-300 group-hover:translate-x-1 group-hover:translate-y-1" />
-                    </span>
-                  </button>
-                  <div className={`grid transition-all duration-350 ease-in-out overflow-hidden text-lg md:text-xl text-foreground font-bold ${expandedOption === "services" ? "grid-rows-[1fr] mt-2.5 opacity-100" : "grid-rows-[0fr] opacity-0"
-                    }`}>
-                    <div className="overflow-hidden max-w-[320px] md:max-w-xl lg:max-w-2xl xl:max-w-3xl space-y-2.5 font-sans pr-4 leading-relaxed">
-                      <p>
-                        We provide a comprehensive, fully regulated suite of financial and wealth creation solutions tailored to your unique lifecycle goals. This includes systematically managed <span className="font-extrabold text-primary">Mutual Funds & SIP planning</span> for long-term compound growth, high-yield <span className="font-extrabold text-primary">Fixed Deposits, Specialized Investment Funds (SIF)</span>, and <span className="font-extrabold text-primary">Portfolio Management Services (PMS)</span> for sophisticated asset allocation. Additionally, we protect your family's future with robust <span className="font-extrabold text-primary">Life Insurance (LIC), Mediclaim Health Insurance, Vehicle/Property Insurance</span>, and provide leverage options through <span className="font-extrabold text-primary">PNB Housing Finance</span> home loans.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 03: Why we exist */}
-                <div className="flex flex-col">
-                  <button
-                    onClick={() => toggleOption("why-us")}
-                    className="group flex items-baseline gap-3 focus:outline-none cursor-pointer text-left"
-                  >
-                    <span className={`text-xs md:text-sm font-mono transition duration-200 ${expandedOption === "why-us" ? "text-primary" : "text-muted-foreground group-hover:text-primary"}`}>03</span>
-                    <span className={`font-heading text-2xl md:text-4xl font-bold tracking-tight transition duration-200 ${expandedOption === "why-us" ? "text-primary" : "text-foreground group-hover:text-primary"}`}>
-                      Why we exist
-                      <GoArrowDownRight className="inline-block ml-2 align-middle transition-transform duration-300 group-hover:translate-x-1 group-hover:translate-y-1" />
-                    </span>
-                  </button>
-                  <div className={`grid transition-all duration-350 ease-in-out overflow-hidden text-lg md:text-xl text-foreground font-bold ${expandedOption === "why-us" ? "grid-rows-[1fr] mt-2.5 opacity-100" : "grid-rows-[0fr] opacity-0"
-                    }`}>
-                    <div className="overflow-hidden max-w-[320px] md:max-w-xl lg:max-w-2xl xl:max-w-3xl space-y-2.5 font-sans pr-4 leading-relaxed">
-                      <p>
-                        In an era dominated by cold robo-advisors and static investment apps, your hard-earned wealth deserves personalized, <span className="font-extrabold text-primary">relationship-driven human advisory</span>. We exist to bridge the gap between human empathy and data precision. By standing by our clients through decades of market turbulence, recessions, and regulatory shifts, we prioritize multi-generational trust and structured planning. We don't just measure relationships in transactions; we measure them in decades of successful outcomes and financial security.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
               </div>
-            );
-          })()}
+            </div>
+
+            {/* 03: Why we exist */}
+            <div className="flex flex-col">
+              <button
+                onClick={() => setExpandedOption(expandedOption === "why-us" ? null : "why-us")}
+                className="group flex items-baseline gap-3 focus:outline-none cursor-pointer text-left"
+              >
+                <span className={`text-xs md:text-sm font-mono transition duration-200 ${expandedOption === "why-us" ? "text-primary" : "text-muted-foreground group-hover:text-primary"}`}>03</span>
+                <span className={`font-heading text-2xl md:text-4xl font-bold tracking-tight transition duration-200 ${expandedOption === "why-us" ? "text-primary" : "text-foreground group-hover:text-primary"}`}>
+                  Why we exist
+                  <GoArrowDownRight className="inline-block ml-2 align-middle transition-transform duration-300 group-hover:translate-x-1 group-hover:translate-y-1" />
+                </span>
+              </button>
+              <div className={`grid transition-all duration-350 ease-in-out overflow-hidden text-lg md:text-xl text-foreground font-bold ${expandedOption === "why-us" ? "grid-rows-[1fr] mt-2.5 opacity-100" : "grid-rows-[0fr] opacity-0"
+                }`}>
+                <div className="overflow-hidden space-y-2.5 font-sans pr-4 leading-relaxed font-bold text-foreground text-lg md:text-xl">
+                  <p>
+                    In an era dominated by cold robo-advisors and static investment apps, your hard-earned wealth deserves personalized, <span className="font-extrabold text-primary">relationship-driven human advisory</span>. We exist to bridge the gap between human empathy and data precision. By standing by our clients through decades of market turbulence, recessions, and regulatory shifts, we prioritize multi-generational trust and structured planning. We don't just measure relationships in transactions; we measure them in decades of successful outcomes and financial security.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       {/* Interactive Chatbot Promo Section */}
