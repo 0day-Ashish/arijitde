@@ -352,6 +352,47 @@ router.post('/manual', authMiddleware, async (req: AuthenticatedRequest, res: Re
   }
 });
 
+// GET /api/portfolio/client-data
+router.get('/client-data', authMiddleware, async (req: AuthenticatedRequest, res: Response, next) => {
+  try {
+    const user = req.user!;
+    let clientMatch = null;
+
+    if (user.pan) {
+      clientMatch = await prisma.existingClient.findFirst({
+        where: {
+          pan: { equals: user.pan.trim(), mode: 'insensitive' }
+        },
+        include: {
+          folios: {
+            orderBy: { createdAt: 'desc' }
+          }
+        }
+      });
+    }
+
+    if (!clientMatch && user.name) {
+      clientMatch = await prisma.existingClient.findFirst({
+        where: {
+          name: { equals: user.name.trim(), mode: 'insensitive' }
+        },
+        include: {
+          folios: {
+            orderBy: { createdAt: 'desc' }
+          }
+        }
+      });
+    }
+
+    res.json({
+      success: true,
+      data: clientMatch
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // 3. GET /api/portfolio/:id
 const getPortfolioParamsSchema = z.object({
   id: z.string().uuid('Invalid portfolio ID format'),

@@ -51,22 +51,66 @@ const servicesData = [
 
 const faqData = [
   {
-    question: "How is FinAnalysis different from a robo-advisor or standard investment app?",
-    answer: "While apps rely solely on static algorithms, we combine advanced data analytics (like our ML anomaly detection models) with over 35 years of human market experience. This means your portfolio gets both structural precision and real-world wisdom."
+    question: "Is the portfolio analysis really free?",
+    answer: "Yes. Your first portfolio analysis is completely free. If you'd like a fresh analysis after that, it is available at a nominal fee — with loyalty discounts available through our daily reward system."
   },
   {
-    question: "What dimensions are used to score my investment portfolio?",
-    answer: "We evaluate your portfolio on 5 core pillars: Goal Alignment, Asset Allocation, Diversification, Systematic Investment Plan (SIP) Discipline, and Fee Efficiency to give you a clear, comprehensive scorecard."
+    question: "How is my portfolio score calculated?",
+    answer: "Your score is calculated out of 100 across five dimensions: Goal Alignment, Asset Allocation, Diversification, Investment Discipline, and Portfolio Efficiency. Each dimension is evaluated against your age, financial goal, and investment behavior — not generic benchmarks."
   },
   {
-    question: "Is there any charge for the basic portfolio evaluation?",
-    answer: "Our basic manual portfolio scorecard and anomaly check is completely free. We charge a premium tier fee only for automated recurring alerts, continuous monitoring, and structured portfolio optimization strategies."
+    question: "Do I need to be a client to use the platform?",
+    answer: "No. Anyone can sign up, take the Investor Personality Assessment, and upload their portfolio for analysis — completely free on the first attempt."
   },
   {
-    question: "How do I Book a Call with a consultation?",
-    answer: "You can book a live video demo using the button in the hero section or drop us an email at contact@finanalysis.in. We will schedule a personalized session to analyze your current assets."
+    question: "Can I analyze a portfolio that wasn't built through your advisory?",
+    answer: "Absolutely. The platform analyzes any mutual fund portfolio regardless of where it was built — Groww, Zerodha, Paytm Money, or anywhere else."
+  },
+  {
+    question: "What format do I need to upload my portfolio in?",
+    answer: "We use a fixed Excel template with six fields: Fund Name, Investment Type, Start Date, Monthly SIP Amount, Total Invested, and Current Value. You can download the template directly from the platform. This ensures your analysis is accurate and fast."
+  },
+  {
+    question: "Is my data safe?",
+    answer: "Yes. Your portfolio data is stored on secure, encrypted servers with strict access controls. Your information is never sold, shared, or visible to other users. Only you and your advisor can access your data."
+  },
+  {
+    question: "What is the Investor Personality Assessment?",
+    answer: "It's a 15-question behavioral assessment that identifies your natural investing style — not your financial knowledge. Based on your responses, you are classified into one of five investor archetypes: Tiger, Elephant, Deer, Fox, or Lion. It takes under 3 minutes and is completely free."
+  },
+  {
+    question: "Does this platform give stock tips or guaranteed returns?",
+    answer: "No. We do not provide stock recommendations, trading tips, or return guarantees of any kind. Our platform provides portfolio analysis, goal-based planning, and structured advisory — all regulated under SEBI and AMFI guidelines."
+  },
+  {
+    question: "What do I get after my portfolio analysis?",
+    answer: "You receive a Portfolio Score out of 100, three key insights specific to your portfolio, and the option to discuss your results with Arijit De directly through a one-on-one advisory call."
+  },
+  {
+    question: "How do I schedule a consultation?",
+    answer: "After your analysis, you can book a call directly through the platform by selecting your preferred time slot. Calls are available daily between 8:00 PM and 1:00 AM. You can also request a callback and we'll reach out to confirm."
+  },
+  {
+    question: "What is the daily reward system?",
+    answer: "Every time you log in, you earn ₹1 in platform credits. Sunday visits earn a ₹10 bonus. Credits accumulate and can be redeemed against the fee for your next portfolio analysis. Credits expire after 180 days."
+  },
+  {
+    question: "Who is behind this platform?",
+    answer: "FinAnalysis is built and operated by Arijit De — SEBI-certified Mutual Fund Distributor (ARN-273396) and SIF Distributor — backed by 35 years of financial advisory experience from his father, Arindam De. This is not a faceless app. There is a real, certified advisor behind every analysis."
+  },
+  {
+    question: "I already have a financial advisor. Can I still use this?",
+    answer: "Yes. A second opinion never hurts. Our platform gives you an independent, data-backed view of your portfolio health regardless of who manages it."
+  },
+  {
+    question: "What if I disagree with my portfolio score?",
+    answer: "Your score is based on rule-based financial parameters and is reviewed by a certified advisor before being released to you. If you feel something is inaccurate, book a call and we'll walk through it together."
+  },
+  {
+    question: "Is this platform only for mutual fund investors?",
+    answer: "Currently, the portfolio analysis engine is built for mutual fund portfolios. However, Arindam De's advisory services cover the full spectrum — Insurance, PMS, Fixed Deposits, PNB Housing Finance, and more. Reach out directly for anything beyond mutual funds."
   }
-];
+]
 
 
 export default function Home() {
@@ -438,7 +482,7 @@ export default function Home() {
       <Navbar isLoaded={isLoaded} />
 
       {/* Macbook Scroll Hero Section */}
-      <div className="w-full overflow-hidden bg-transparent z-10 relative">
+      <div className="w-full overflow-hidden pointer-events-none bg-transparent z-10 relative">
         <MacbookScroll
           title={
             <div className="flex flex-col items-center justify-center text-center px-6">
@@ -452,9 +496,9 @@ export default function Home() {
             </div>
           }
           badge={
-            <img src="/image.png" alt="Badge" className="h-10 w-10 object-contain" />
+            <img src="/image.png" alt="Badge" className="h-10 w-10 object-contain select-none pointer-events-none" />
           }
-          src={`/assets/about.jpeg`}
+          src={`/assets/image.png`}
           showGradient={false}
         />
       </div>
@@ -468,7 +512,7 @@ export default function Home() {
               <img
                 src="/assets/me.jpeg"
                 alt="Arijit De"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover pointer-events-none select-none"
               />
             </div>
           </div>
@@ -1193,7 +1237,7 @@ export default function Home() {
         <div className="w-full max-w-5xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-16 items-start relative">
 
           {/* Left Column: Title & Subtitle */}
-          <div className="lg:col-span-4 flex flex-col gap-4 text-left lg:sticky lg:top-[25%]">
+          <div className="lg:col-span-4 flex flex-col gap-4 text-left lg:sticky lg:top-32">
             <ScrollBlurReveal className="flex flex-col gap-4">
               <span className="text-[10px] md:text-sm uppercase text-muted-foreground font-clash font-bold">
                 Common Inquiries
@@ -1237,7 +1281,7 @@ export default function Home() {
                   {/* Accordion description container */}
                   <div className={`grid transition-all duration-[500ms] ease-in-out ${isOpen ? "grid-rows-[1fr] opacity-100 mt-4" : "grid-rows-[0fr] opacity-0"
                     }`}>
-                    <div className="overflow-hidden bg-card p-4 rounded-xl border border-border shadow-sm">
+                    <div className="overflow-hidden bg-white/30 backdrop-blur-2xl p-5 rounded-2xl border border-border/50 shadow-sm">
                       <p className="text-xs md:text-sm text-muted-foreground leading-relaxed font-sans pr-4">
                         {faq.answer}
                       </p>

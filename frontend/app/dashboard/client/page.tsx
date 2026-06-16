@@ -204,6 +204,8 @@ export default function ClientDashboard() {
   const [activePortfolioId, setActivePortfolioId] = useState<string | null>(null);
   const [activePortfolio, setActivePortfolio] = useState<any | null>(null);
   const [scoreReport, setScoreReport] = useState<ScoreData | null>(null);
+  const [existingClientData, setExistingClientData] = useState<any | null>(null);
+  const [showLogoutWarning, setShowLogoutWarning] = useState(false);
 
   // Client specifics
   const [finPoints, setFinPoints] = useState<number>(0);
@@ -385,6 +387,17 @@ export default function ClientDashboard() {
           // Score it inline
           await calculatePortfolioScore(latestPortfolio.id);
         }
+      }
+
+      // 4. Fetch official matching ExistingClient and Folios data
+      try {
+        const ecRes = await fetch(`${backendUrl}/api/portfolio/client-data`, { headers });
+        const ecData = await ecRes.json();
+        if (ecData.success && ecData.data) {
+          setExistingClientData(ecData.data);
+        }
+      } catch (ecErr) {
+        console.error("Failed to load certified valuation telemetry:", ecErr);
       }
     } catch (err) {
       console.error(err);
@@ -928,7 +941,7 @@ export default function ClientDashboard() {
                 <span>{userData.name || userData.email}</span>
               </div>
               <button
-                onClick={handleSignOut}
+                onClick={() => setShowLogoutWarning(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border hover:border-red-500/30 bg-white/40 hover:bg-red-500/10 text-neutral-600 hover:text-red-600 text-xs font-semibold transition duration-200 cursor-pointer"
               >
                 <LogOut className="w-3.5 h-3.5" />
@@ -1468,7 +1481,7 @@ export default function ClientDashboard() {
 
                 <div className="space-y-1">
                   <label htmlFor="booking-time-slot" className="text-[10px] uppercase font-bold text-neutral-500 block font-mono">
-                    Select Time Slot
+                    Select Date & Time
                   </label>
                   <input
                     type="datetime-local"
@@ -1612,6 +1625,140 @@ export default function ClientDashboard() {
                   </div>
                 </div>
               </div>
+
+              {/* Official Portfolio Valuation (Admin Certified) */}
+              {existingClientData && (
+                <div className="bg-white/50 backdrop-blur-xl border border-white/40 shadow-xl rounded-3xl p-6 space-y-6 animate-in fade-in duration-300">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-border/20 pb-4 gap-3">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 font-mono text-[9px] font-bold tracking-wider uppercase flex items-center gap-1">
+                          <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                          Certified Portfolio
+                        </span>
+                        {existingClientData.pan && (
+                          <span className="text-[10px] font-mono text-neutral-400">
+                            PAN Match: {existingClientData.pan}
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="text-lg font-bold text-neutral-900 font-clash mt-1">
+                        Official Assets Under Management (AUM)
+                      </h3>
+                      <p className="text-neutral-500 text-xs font-sans">
+                        Certified valuation metrics synchronized from official distributor records.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Summary Cards */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="p-4 bg-white/60 border border-white/30 rounded-2xl shadow-sm space-y-1">
+                      <span className="text-[10px] text-neutral-500 block uppercase font-mono tracking-wider">AUM (Current Value)</span>
+                      <div className="text-xl font-bold font-mono text-neutral-900">
+                        ₹{(existingClientData.aum || existingClientData.currentValue || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </div>
+                    </div>
+
+                    <div className="p-4 bg-white/60 border border-white/30 rounded-2xl shadow-sm space-y-1">
+                      <span className="text-[10px] text-neutral-500 block uppercase font-mono tracking-wider">Total Invested</span>
+                      <div className="text-xl font-bold font-mono text-neutral-900">
+                        ₹{(existingClientData.purchaseValue || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </div>
+                    </div>
+
+                    <div className="p-4 bg-white/60 border border-white/30 rounded-2xl shadow-sm space-y-1">
+                      <span className="text-[10px] text-neutral-500 block uppercase font-mono tracking-wider">Total Return</span>
+                      {(() => {
+                        const currentVal = existingClientData.aum || existingClientData.currentValue || 0;
+                        const investedVal = existingClientData.purchaseValue || 0;
+                        const totalGain = currentVal - investedVal;
+                        const totalGainPercent = investedVal > 0 ? (totalGain / investedVal) * 100 : 0;
+                        const isProfit = totalGain >= 0;
+
+                        return (
+                          <div className={`text-xl font-bold font-mono ${isProfit ? 'text-emerald-600' : 'text-rose-600'}`}>
+                            {isProfit ? '+' : ''}₹{totalGain.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            <span className="text-[10px] font-sans font-semibold block mt-0.5">
+                              ({isProfit ? '+' : ''}{totalGainPercent.toFixed(2)}%)
+                            </span>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </div>
+
+                  {/* Scheme Holdings */}
+                  {existingClientData.folios && existingClientData.folios.length > 0 && (
+                    <div className="space-y-3 pt-2">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-800 flex items-center gap-1.5 font-mono">
+                        <Wallet className="w-4 h-4 text-primary" />
+                        Mutual Fund Scheme Holdings ({existingClientData.folios.length})
+                      </h4>
+
+                      <div className="border border-border/30 bg-white/40 rounded-2xl overflow-hidden font-sans text-xs">
+                        <div className="overflow-x-auto w-full">
+                          <table className="w-full text-left text-neutral-900">
+                            <thead>
+                              <tr className="bg-white/60 border-b border-border/20 text-neutral-500 font-bold font-mono text-[9px] uppercase tracking-wider">
+                                <th className="px-4 py-3">Scheme / Fund Name</th>
+                                <th className="px-4 py-3 text-right">Invested</th>
+                                <th className="px-4 py-3 text-right font-sans">Current Value</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border/10">
+                              {(() => {
+                                // Group by scheme name to combine multiple folios under same fund
+                                const groupedMap: Record<string, { schemeName: string, invested: number, current: number, units: number }> = {};
+                                existingClientData.folios.forEach((f: any) => {
+                                  const name = f.schemeName || 'Unknown Scheme';
+                                  if (!groupedMap[name]) {
+                                    groupedMap[name] = { schemeName: name, invested: 0, current: 0, units: 0 };
+                                  }
+                                  groupedMap[name].invested += f.purchaseValue || 0;
+                                  groupedMap[name].current += f.aum || 0;
+                                  groupedMap[name].units += f.units || 0;
+                                });
+
+                                return Object.values(groupedMap).map((scheme: any) => {
+                                  const profitLossPercent = scheme.invested > 0 ? ((scheme.current - scheme.invested) / scheme.invested) * 100 : 0;
+                                  const isProfit = (scheme.current - scheme.invested) >= 0;
+
+                                  return (
+                                    <tr key={scheme.schemeName} className="hover:bg-white/20 transition duration-150">
+                                      <td className="px-4 py-3.5">
+                                        <div className="font-semibold text-neutral-900 leading-snug">
+                                          {scheme.schemeName}
+                                        </div>
+                                        {scheme.units > 0 && (
+                                          <div className="text-[10px] text-neutral-500 font-mono mt-0.5">
+                                            Units: {scheme.units.toLocaleString()}
+                                          </div>
+                                        )}
+                                      </td>
+                                      <td className="px-4 py-3.5 text-right font-mono text-neutral-600">
+                                        ₹{scheme.invested.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                      </td>
+                                      <td className="px-4 py-3.5 text-right font-mono">
+                                        <span className="font-semibold text-neutral-900 mr-2">
+                                          ₹{scheme.current.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        </span>
+                                        <span className={`text-[10px] font-sans font-bold ${isProfit ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                          ({isProfit ? '+' : ''}{profitLossPercent.toFixed(2)}%)
+                                        </span>
+                                      </td>
+                                    </tr>
+                                  );
+                                });
+                              })()}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Portfolio Diagnostics Board */}
               <div className="bg-white/50 backdrop-blur-xl border border-white/40 shadow-xl rounded-3xl p-6 space-y-6">
@@ -2018,6 +2165,43 @@ export default function ClientDashboard() {
             >
               Back to Client Portal
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Logout Warning Modal Overlay */}
+      {showLogoutWarning && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/40 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="absolute inset-0 bg-neutral-900/10" onClick={() => setShowLogoutWarning(false)} />
+          <div className="relative z-[70] bg-white/95 border border-white/40 rounded-[2.5rem] p-8 max-w-md w-full shadow-2xl backdrop-blur-xl flex flex-col items-center text-center overflow-hidden animate-in fade-in zoom-in-95 duration-200 space-y-6">
+            <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-500/20 text-amber-600 flex items-center justify-center mx-auto">
+              <LogOut className="w-6 h-6 stroke-[1.5]" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-xl font-bold text-neutral-900 tracking-wide font-clash">Sign Out Warning</h2>
+              <p className="text-neutral-500 text-xs font-sans leading-relaxed">
+                Are you sure you want to sign out? You will need to log in again to access your premium advisory workspace, live AUM details, and portfolio telemetry reports.
+              </p>
+            </div>
+            <div className="flex gap-4 w-full">
+              <button
+                type="button"
+                onClick={() => setShowLogoutWarning(false)}
+                className="flex-1 py-3 text-xs font-semibold border border-neutral-200 bg-white hover:bg-neutral-50 rounded-xl transition duration-200 text-neutral-700 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowLogoutWarning(false);
+                  handleSignOut();
+                }}
+                className="flex-1 py-3 text-xs font-bold text-white bg-neutral-900 hover:bg-neutral-800 rounded-xl transition duration-200 cursor-pointer"
+              >
+                Sign Out
+              </button>
+            </div>
           </div>
         </div>
       )}

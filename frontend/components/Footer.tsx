@@ -41,7 +41,7 @@ export default function Footer({ footerRef }: FooterProps) {
         <div className="flex flex-col gap-2.5">
           <span className="text-primary font-semibold text-xs tracking-wider uppercase font-mono">About</span>
           <a href="/#about" className="text-muted-foreground hover:text-primary transition duration-200 text-sm">About Us</a>
-          <a href="/#services" className="text-muted-foreground hover:text-primary transition duration-200 text-sm">Services</a>
+          <a href="/#contact" className="text-muted-foreground hover:text-primary transition duration-200 text-sm">Contact</a>
           <a href="/#faq" className="text-muted-foreground hover:text-primary transition duration-200 text-sm">FAQ</a>
         </div>
 

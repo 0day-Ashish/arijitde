@@ -843,7 +843,15 @@ export default function AdminDashboard() {
             <span className="text-xs font-semibold text-neutral-900">{adminUser?.email}</span>
           </div>
           <button
-            onClick={handleLogout}
+            onClick={() => {
+              setConfirmModal({
+                isOpen: true,
+                title: 'Admin Logout Warning',
+                message: 'Are you sure you want to log out of the administrator panel? You will lose access to user lists, payment approvals, and database imports until you sign in again.',
+                danger: true,
+                onConfirm: handleLogout
+              });
+            }}
             className="flex items-center gap-2 px-4 py-2 border border-neutral-200 bg-white rounded-xl hover:bg-neutral-100 transition-all duration-200 text-xs font-semibold cursor-pointer text-neutral-900"
           >
             <LogOut className="w-3.5 h-3.5" />

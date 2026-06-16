@@ -323,6 +323,7 @@ router.post('/folios/upload', upload.single('file'), async (req: AuthenticatedRe
       schemeName: String(row["Scheme Name"] || '').trim() || null,
       units: parseExcelNumber(row["Units"]),
       aum: parseExcelNumber(row["AUM"]),
+      purchaseValue: parseExcelNumber(row["Purchase Value"] || row["Invested Amount"] || row["Purchase Amount"] || row["Invested Value"] || row["Invested"]),
       email: String(row["Email"] || '').trim() || null,
       mobile: String(row["Mobile"] || '').trim() || null,
       dob: String(row["Date of Birth"] || '').trim() || null,

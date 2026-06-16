@@ -203,6 +203,7 @@ model Folio {
   schemeName           String?
   units                Float?
   aum                  Float?
+  purchaseValue        Float?
   email                String?
   mobile               String?
   dob                  String?
