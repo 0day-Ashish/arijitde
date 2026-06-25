@@ -17,6 +17,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/sif-calculator',
     '/sip-calculator',
     '/step-up-sip-calculator',
+    '/swp-calculator',
+    '/inflation-calculator',
     '/privacy',
     '/terms',
     '/cookies'

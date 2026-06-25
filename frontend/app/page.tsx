@@ -963,6 +963,16 @@ export default function Home() {
                 href: "/lumpsum-calculator"
               },
               {
+                title: "SWP Calculator",
+                desc: "Calculate how long your retirement corpus will last or find out what corpus is required for your desired monthly income.",
+                href: "/swp-calculator"
+              },
+              {
+                title: "Inflation Calculator",
+                desc: "Visualize the future cost of your goals adjusted for inflation and determine the monthly SIP needed to reach them.",
+                href: "/inflation-calculator"
+              },
+              {
                 title: "SIF Calculator",
                 desc: "Model Specialized Investment Fund compounding returns using target hurdle rates and top-ups.",
                 href: "/sif-calculator"
@@ -1000,7 +1010,7 @@ export default function Home() {
               >
                 <div>
                   <div className="w-10 h-10 rounded-xl bg-primary/5 border border-primary/10 flex items-center justify-center mb-4 text-primary font-mono text-sm font-bold group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
-                    0{i + 1}
+                    {(i + 1) < 10 ? '0' : ''}{i + 1}
                   </div>
                   <h3 className="text-lg font-bold text-primary font-clash mb-2 group-hover:text-[#3A8293] transition-colors duration-300">
                     {calc.title}
