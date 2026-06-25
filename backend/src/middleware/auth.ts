@@ -14,6 +14,10 @@ export interface AuthenticatedRequest extends Request {
     dob: Date | null;
     anniversary: Date | null;
     finPoints: number;
+    createdAt: Date;
+    referralCode: string | null;
+    referrerId: string | null;
+    walletBalance: number;
     client?: {
       activePlan: string | null;
       advisorNotes: string | null;
@@ -61,6 +65,10 @@ export async function authMiddleware(
         dob: true,
         anniversary: true,
         finPoints: true,
+        createdAt: true,
+        referralCode: true,
+        referrerId: true,
+        walletBalance: true,
         client: {
           select: {
             activePlan: true,

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import type { Response } from 'express';
+import type { Response, Request } from 'express';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import rateLimit from 'express-rate-limit';
@@ -9,6 +9,22 @@ import { signToken } from '../lib/jwt';
 import { authMiddleware } from '../middleware/auth';
 import type { AuthenticatedRequest } from '../middleware/auth';
 import { OAuth2Client } from 'google-auth-library';
+import { checkAndAwardDailyLoginReward, processExpiredTokens } from '../services/wallet';
+
+async function generateUniqueReferralCode() {
+  let referralCode = '';
+  let isUnique = false;
+  while (!isUnique) {
+    referralCode = 'FIN-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+    const existing = await prisma.user.findUnique({
+      where: { referralCode }
+    });
+    if (!existing) {
+      isUnique = true;
+    }
+  }
+  return referralCode;
+}
 
 const router = Router();
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -73,11 +89,12 @@ const verifyOtpSchema = z.object({
     .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
     .regex(/[0-9]/, 'Password must contain at least one number')
     .optional(),
+  referredBy: z.string().optional(),
 });
 
 router.post('/otp/verify', authLimiter, async (req, res, next) => {
   try {
-    const { email, otp, name, password } = verifyOtpSchema.parse(req.body);
+    const { email, otp, name, password, referredBy } = verifyOtpSchema.parse(req.body);
     const formattedEmail = email.toLowerCase();
 
     const isValid = verifyOTP(formattedEmail, otp);
@@ -91,6 +108,19 @@ router.post('/otp/verify', authLimiter, async (req, res, next) => {
 
     const hashedPassword = password ? await bcrypt.hash(password, 10) : undefined;
 
+    // Find referrer if referredBy is passed
+    let referrerId: string | null = null;
+    if (referredBy) {
+      const referrerUser = await prisma.user.findUnique({
+        where: { referralCode: referredBy.trim().toUpperCase() }
+      });
+      if (referrerUser) {
+        referrerId = referrerUser.id;
+      }
+    }
+
+    const refCode = await generateUniqueReferralCode();
+
     // Upsert user in database
     const user = await prisma.user.upsert({
       where: { email: formattedEmail },
@@ -103,6 +133,8 @@ router.post('/otp/verify', authLimiter, async (req, res, next) => {
         name: name || null,
         password: hashedPassword || null,
         role: 'GUEST',
+        referralCode: refCode,
+        referrerId: referrerId || null,
       },
     });
 
@@ -133,11 +165,12 @@ router.post('/otp/verify', authLimiter, async (req, res, next) => {
 // 3. POST /api/auth/google
 const googleAuthSchema = z.object({
   token: z.string().min(1, 'Google token is required'),
+  referredBy: z.string().optional(),
 });
 
 router.post('/google', authLimiter, async (req, res, next) => {
   try {
-    const { token } = googleAuthSchema.parse(req.body);
+    const { token, referredBy } = googleAuthSchema.parse(req.body);
 
     const ticket = await googleClient.verifyIdToken({
       idToken: token,
@@ -177,6 +210,19 @@ router.post('/google', authLimiter, async (req, res, next) => {
           },
         });
       } else {
+        // Find referrer if referredBy is passed
+        let referrerId: string | null = null;
+        if (referredBy) {
+          const referrerUser = await prisma.user.findUnique({
+            where: { referralCode: referredBy.trim().toUpperCase() }
+          });
+          if (referrerUser) {
+            referrerId = referrerUser.id;
+          }
+        }
+
+        const refCode = await generateUniqueReferralCode();
+
         // Create new user
         user = await prisma.user.create({
           data: {
@@ -184,6 +230,8 @@ router.post('/google', authLimiter, async (req, res, next) => {
             googleId,
             name: name || null,
             role: 'GUEST',
+            referralCode: refCode,
+            referrerId: referrerId || null,
           },
         });
       }
@@ -219,11 +267,76 @@ router.post('/google', authLimiter, async (req, res, next) => {
 });
 
 // 4. GET /api/auth/me
-router.get('/me', authMiddleware, (req: AuthenticatedRequest, res: Response) => {
-  res.json({
-    success: true,
-    data: req.user,
-  });
+router.get('/me', authMiddleware, async (req: AuthenticatedRequest, res: Response, next) => {
+  try {
+    const userId = req.user!.id;
+    const clientDate = req.query.clientDate as string;
+
+    let user = req.user!;
+
+    // 1. Backfill referral code if missing (legacy users)
+    if (!user.referralCode) {
+      const refCode = await generateUniqueReferralCode();
+      user = await prisma.user.update({
+        where: { id: userId },
+        data: { referralCode: refCode },
+        include: {
+          client: {
+            select: {
+              activePlan: true,
+              advisorNotes: true,
+              activatedAt: true,
+            }
+          }
+        }
+      }) as any;
+    }
+
+    // 2. Claim daily login / Sunday reward if clientDate is passed
+    if (clientDate) {
+      await checkAndAwardDailyLoginReward(userId, clientDate);
+      const freshUser = await prisma.user.findUnique({
+        where: { id: userId },
+        include: {
+          client: {
+            select: {
+              activePlan: true,
+              advisorNotes: true,
+              activatedAt: true,
+            }
+          }
+        }
+      });
+      if (freshUser) {
+        user = freshUser as any;
+      }
+    } else {
+      // Clean/expire tokens and sync walletBalance
+      await processExpiredTokens(userId);
+      const freshUser = await prisma.user.findUnique({
+        where: { id: userId },
+        include: {
+          client: {
+            select: {
+              activePlan: true,
+              advisorNotes: true,
+              activatedAt: true,
+            }
+          }
+        }
+      });
+      if (freshUser) {
+        user = freshUser as any;
+      }
+    }
+
+    res.json({
+      success: true,
+      data: user,
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 // 5. POST /api/auth/logout

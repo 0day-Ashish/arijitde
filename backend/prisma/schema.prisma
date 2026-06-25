@@ -12,24 +12,31 @@ datasource db {
 }
 
 model User {
-  id          String       @id @default(uuid())
-  phone       String?      @unique
-  email       String?      @unique
-  pan         String?      @unique
-  name        String?
-  password    String?
-  role        Role         @default(GUEST)
-  googleId    String?      @unique
-  dob         DateTime?
-  anniversary DateTime?
-  createdAt         DateTime     @default(now())
-  finPoints         Int          @default(10)
+  id                String              @id @default(uuid())
+  phone             String?             @unique
+  email             String?             @unique
+  pan               String?             @unique
+  name              String?
+  password          String?
+  role              Role                @default(GUEST)
+  googleId          String?             @unique
+  dob               DateTime?
+  anniversary       DateTime?
+  createdAt         DateTime            @default(now())
+  finPoints         Int                 @default(10)
   lastQuoteFlipDate String?
+  referralCode      String?             @unique
+  referrerId        String?
+  referrer          User?               @relation("UserReferrals", fields: [referrerId], references: [id])
+  referrals         User[]              @relation("UserReferrals")
+  walletBalance     Float               @default(0.0)
   assessments       Assessment[]
   portfolios        Portfolio[]
   leads             Lead[]
   payments          Payment[]
   client            Client?
+  walletTransactions WalletTransaction[]
+  advisorySessions  AdvisorySession[]
 }
 
 enum Role {
@@ -162,15 +169,21 @@ enum LeadStatus {
 }
 
 model Payment {
-  id            String        @id @default(uuid())
-  userId        String
-  amount        Float
-  utrId         String?
-  screenshotUrl String?
-  status        PaymentStatus @default(PENDING)
-  approvedBy    String?
-  createdAt     DateTime      @default(now())
-  user          User          @relation(fields: [userId], references: [id])
+  id                String           @id @default(uuid())
+  userId            String
+  amount            Float
+  utrId             String?
+  screenshotUrl     String?
+  status            PaymentStatus    @default(PENDING)
+  approvedBy        String?
+  createdAt         DateTime         @default(now())
+  productType       ProductType      @default(AI_ANALYSIS)
+  razorpayOrderId   String?          @unique
+  razorpayPaymentId String?          @unique
+  razorpaySignature String?
+  walletDeduction   Float            @default(0.0)
+  user              User             @relation(fields: [userId], references: [id])
+  advisorySession   AdvisorySession?
 
   @@index([userId])
 }
@@ -179,6 +192,8 @@ enum PaymentStatus {
   PENDING
   APPROVED
   REJECTED
+  REFUNDED
+  FAILED
 }
 
 model Client {
@@ -389,5 +404,60 @@ model ContactMessage {
   createdAt DateTime @default(now())
 
   @@index([createdAt])
+}
+
+enum ProductType {
+  AI_ANALYSIS
+  LIVE_SESSION
+}
+
+enum WalletTransactionType {
+  DAILY_LOGIN
+  SUNDAY_BONUS
+  REFERRAL
+  CASHBACK
+  REDEMPTION
+  EXPIRY
+}
+
+enum SessionStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  REFUNDED
+}
+
+model WalletTransaction {
+  id          String                @id @default(uuid())
+  userId      String
+  user        User                  @relation(fields: [userId], references: [id])
+  amount      Float
+  type        WalletTransactionType
+  createdAt   DateTime              @default(now())
+  expiresAt   DateTime?
+  isExpired   Boolean               @default(false)
+  spent       Float                 @default(0.0)
+  description String?
+
+  @@index([userId])
+}
+
+model AdvisorySession {
+  id             String        @id @default(uuid())
+  userId         String
+  user           User          @relation(fields: [userId], references: [id])
+  paymentId      String        @unique
+  payment        Payment       @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  preferredSlot1 DateTime
+  preferredSlot2 DateTime
+  preferredSlot3 DateTime
+  confirmedSlot  DateTime?
+  googleMeetLink String?
+  status         SessionStatus @default(PENDING)
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([userId])
 }
 
