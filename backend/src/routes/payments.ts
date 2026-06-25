@@ -78,21 +78,16 @@ export async function processApprovedPayment(
       );
     }
   } else if (productType === ProductType.LIVE_SESSION) {
-    // Create Advisory Session request entry with placeholders (user will update slots on next screen)
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const dayAfter = new Date();
-    dayAfter.setDate(dayAfter.getDate() + 2);
-    const threeDaysLater = new Date();
-    threeDaysLater.setDate(threeDaysLater.getDate() + 3);
+    // Create Advisory Session request entry with epoch placeholders (user will update slots on next screen)
+    const epoch = new Date(0);
 
     await prisma.advisorySession.create({
       data: {
         userId,
         paymentId,
-        preferredSlot1: tomorrow,
-        preferredSlot2: dayAfter,
-        preferredSlot3: threeDaysLater,
+        preferredSlot1: epoch,
+        preferredSlot2: epoch,
+        preferredSlot3: epoch,
         status: SessionStatus.PENDING
       }
     });
