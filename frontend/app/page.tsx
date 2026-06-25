@@ -6,12 +6,13 @@ import Lenis from "lenis";
 import GradualBlur from "@/components/GradualBlur";
 import ScrollRevealSection from "@/components/ScrollRevealSection";
 import ScrollBlurReveal from "@/components/ScrollBlurReveal";
+import SvgScrollWipe from "@/components/SvgScrollWipe";
+import ScrollTextReveal from "@/components/ScrollTextReveal";
 import ServicesConstellation from "@/components/ServicesConstellation";
 import { GoArrowDownRight } from "react-icons/go";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ChatbotWidget from "@/components/ChatbotWidget";
-import { MacbookScroll } from "@/components/ui/macbook-scroll";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 const servicesData = [
@@ -481,112 +482,109 @@ export default function Home() {
 
       <Navbar isLoaded={isLoaded} />
 
-      {/* Macbook Scroll Hero Section */}
-      <div className="w-full overflow-hidden pointer-events-none bg-transparent z-10 relative">
-        <MacbookScroll
-          title={
-            <div className="flex flex-col items-center justify-center text-center px-6">
-              <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-primary font-chillax leading-none tracking-tighter uppercase select-none">
-                Preserving Legacy<br />
-                <span className="text-primary">& Trust of Mr. Arindam De</span>
-              </h1>
-              <p className="text-muted-foreground text-xs sm:text-sm md:text-lg max-w-2xl mt-4 sm:mt-8 font-sans leading-relaxed font-normal">
-                Combining 35+ years of generation-spanning trust with systematic portfolio optimization and machine learning diagnostics to accelerate your growth.
-              </p>
+      <SvgScrollWipe
+        screen1={
+          <div className="flex flex-col items-center justify-center text-center px-6 max-w-5xl mx-auto space-y-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-white/20 backdrop-blur-md text-xs font-medium text-primary select-none">
+              <img src="/image.png" alt="Badge" className="h-4 w-4 object-contain" />
+              <span>35+ Years of Certified Financial Advisory</span>
             </div>
-          }
-          badge={
-            <img src="/image.png" alt="Badge" className="h-10 w-10 object-contain select-none pointer-events-none" />
-          }
-          src={`/assets/image.png`}
-          showGradient={false}
-        />
-      </div>
-
-      {/* Legacy & Profile Section */}
-      <div className="w-full relative z-10 py-24 px-6 bg-transparent">
-        <div className="w-full max-w-6xl mx-auto flex flex-col md:flex-row items-center md:items-start justify-center gap-12 md:gap-24">
-          {/* Profile Image */}
-          <div className="shrink-0">
-            <div className="w-64 h-64 md:w-80 md:h-80 rounded-[24px] border border-border shadow-lg overflow-hidden bg-card flex items-center justify-center">
-              <img
-                src="/assets/me.jpeg"
-                alt="Arijit De"
-                className="w-full h-full object-cover pointer-events-none select-none"
-              />
-            </div>
+            <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold text-primary font-chillax leading-tight tracking-tight uppercase">
+              Preserving Legacy<br />
+              <span className="text-primary">& Trust of Mr. Arindam De</span>
+            </h1>
+            <p className="text-muted-foreground text-sm sm:text-base md:text-lg max-w-2xl mx-auto font-sans leading-relaxed font-normal">
+              Combining 35+ years of generation-spanning trust with systematic portfolio optimization and machine learning diagnostics to accelerate your growth.
+            </p>
           </div>
-
-          {/* Expanding Options */}
-          <div className="flex-1 flex flex-col gap-4 md:gap-6 text-left select-text relative z-10 max-w-4xl">
-            {/* 01: About Us */}
-            <div className="flex flex-col">
-              <button
-                onClick={() => setExpandedOption(expandedOption === "about" ? null : "about")}
-                className="group flex items-baseline gap-3 focus:outline-none cursor-pointer text-left"
-              >
-                <span className={`text-xs md:text-sm font-mono transition duration-200 ${expandedOption === "about" ? "text-primary" : "text-muted-foreground group-hover:text-primary"}`}>01</span>
-                <span className={`font-heading text-2xl md:text-4xl font-bold tracking-tight transition duration-200 ${expandedOption === "about" ? "text-primary" : "text-foreground group-hover:text-primary"}`}>
-                  About Us
-                  <GoArrowDownRight className="inline-block ml-2 align-middle transition-transform duration-300 group-hover:translate-x-1 group-hover:translate-y-1" />
-                </span>
-              </button>
-              <div className={`grid transition-all duration-350 ease-in-out overflow-hidden text-lg md:text-xl text-foreground font-bold ${expandedOption === "about" ? "grid-rows-[1fr] mt-2.5 opacity-100" : "grid-rows-[0fr] opacity-0"
-                }`}>
-                <div className="overflow-hidden space-y-2.5 font-sans pr-4 leading-relaxed font-bold text-foreground text-lg md:text-xl">
-                  <p>
-                    FinAnalysis blends over 35 years of trusted financial advisory with modern technology and data science. Founded on a legacy started by <strong className="text-primary font-extrabold">Arindam De</strong> in 1989, we have transitioned across multiple market cycles to safeguard and grow client wealth. Today, <strong className="text-primary font-extrabold">Arijit De</strong> (SEBI-certified Mutual Fund Distributor ARN-273396 and SIF distributor) integrates computer science analytics, systematic portfolio optimization, and structured asset allocation, delivering a modern, data-backed approach to wealth management that prior generations never had access to.
-                  </p>
-                </div>
+        }
+        screen2={
+          <div className="w-full max-w-6xl mx-auto flex flex-col md:flex-row items-center md:items-start justify-center gap-12 md:gap-24 px-6 text-left">
+            {/* Profile Image */}
+            <div className="shrink-0">
+              <div className="w-64 h-64 md:w-80 md:h-80 rounded-[24px] border border-border shadow-lg overflow-hidden bg-card flex items-center justify-center">
+                <img
+                  src="/assets/me.jpeg"
+                  alt="Arijit De"
+                  className="w-full h-full object-cover pointer-events-none select-none"
+                />
               </div>
             </div>
 
-            {/* 02: What we provide */}
-            <div className="flex flex-col">
-              <button
-                onClick={() => setExpandedOption(expandedOption === "services" ? null : "services")}
-                className="group flex items-baseline gap-3 focus:outline-none cursor-pointer text-left"
-              >
-                <span className={`text-xs md:text-sm font-mono transition duration-200 ${expandedOption === "services" ? "text-primary" : "text-muted-foreground group-hover:text-primary"}`}>02</span>
-                <span className={`font-heading text-2xl md:text-4xl font-bold tracking-tight transition duration-200 ${expandedOption === "services" ? "text-primary" : "text-foreground group-hover:text-primary"}`}>
-                  What we provide
-                  <GoArrowDownRight className="inline-block ml-2 align-middle transition-transform duration-300 group-hover:translate-x-1 group-hover:translate-y-1" />
-                </span>
-              </button>
-              <div className={`grid transition-all duration-350 ease-in-out overflow-hidden text-lg md:text-xl text-foreground font-bold ${expandedOption === "services" ? "grid-rows-[1fr] mt-2.5 opacity-100" : "grid-rows-[0fr] opacity-0"
-                }`}>
-                <div className="overflow-hidden space-y-2.5 font-sans pr-4 leading-relaxed font-bold text-foreground text-lg md:text-xl">
-                  <p>
-                    We provide a comprehensive, fully regulated suite of financial and wealth creation solutions tailored to your unique lifecycle goals. This includes systematically managed <span className="font-extrabold text-primary">Mutual Funds & SIP planning</span> for long-term compound growth, high-yield <span className="font-extrabold text-primary">Fixed Deposits, Specialized Investment Funds (SIF)</span>, and <span className="font-extrabold text-primary">Portfolio Management Services (PMS)</span> for sophisticated asset allocation. Additionally, we protect your family's future with robust <span className="font-extrabold text-primary">Life Insurance (LIC), Mediclaim Health Insurance, Vehicle/Property Insurance</span>, and provide leverage options through <span className="font-extrabold text-primary">PNB Housing Finance</span> home loans.
-                  </p>
+            {/* Expanding Options */}
+            <div className="flex-1 flex flex-col gap-4 md:gap-6 text-left select-text relative z-10 max-w-4xl">
+              {/* 01: About Us */}
+              <div className="flex flex-col">
+                <button
+                  onClick={() => setExpandedOption(expandedOption === "about" ? null : "about")}
+                  className="group flex items-baseline gap-3 focus:outline-none cursor-pointer text-left"
+                >
+                  <span className={`text-xs md:text-sm font-mono transition duration-200 ${expandedOption === "about" ? "text-primary" : "text-muted-foreground group-hover:text-primary"}`}>01</span>
+                  <span className={`font-heading text-2xl md:text-4xl font-bold tracking-tight transition duration-200 ${expandedOption === "about" ? "text-primary" : "text-foreground group-hover:text-primary"}`}>
+                    About Us
+                    <GoArrowDownRight className="inline-block ml-2 align-middle transition-transform duration-300 group-hover:translate-x-1 group-hover:translate-y-1" />
+                  </span>
+                </button>
+                <div className={`grid transition-all duration-350 ease-in-out overflow-hidden text-lg md:text-xl text-foreground font-bold ${expandedOption === "about" ? "grid-rows-[1fr] mt-2.5 opacity-100" : "grid-rows-[0fr] opacity-0"
+                  }`}>
+                  <div className="overflow-hidden space-y-2.5 font-sans pr-4 leading-relaxed font-bold text-foreground text-lg md:text-xl">
+                    <p>
+                      FinAnalysis blends over 35 years of trusted financial advisory with modern technology and data science. Founded on a legacy started by <strong className="text-primary font-extrabold">Arindam De</strong> in 1989, we have transitioned across multiple market cycles to safeguard and grow client wealth. Today, <strong className="text-primary font-extrabold">Arijit De</strong> (SEBI-certified Mutual Fund Distributor ARN-273396 and SIF distributor) integrates computer science analytics, systematic portfolio optimization, and structured asset allocation, delivering a modern, data-backed approach to wealth management that prior generations never had access to.
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* 03: Why we exist */}
-            <div className="flex flex-col">
-              <button
-                onClick={() => setExpandedOption(expandedOption === "why-us" ? null : "why-us")}
-                className="group flex items-baseline gap-3 focus:outline-none cursor-pointer text-left"
-              >
-                <span className={`text-xs md:text-sm font-mono transition duration-200 ${expandedOption === "why-us" ? "text-primary" : "text-muted-foreground group-hover:text-primary"}`}>03</span>
-                <span className={`font-heading text-2xl md:text-4xl font-bold tracking-tight transition duration-200 ${expandedOption === "why-us" ? "text-primary" : "text-foreground group-hover:text-primary"}`}>
-                  Why we exist
-                  <GoArrowDownRight className="inline-block ml-2 align-middle transition-transform duration-300 group-hover:translate-x-1 group-hover:translate-y-1" />
-                </span>
-              </button>
-              <div className={`grid transition-all duration-350 ease-in-out overflow-hidden text-lg md:text-xl text-foreground font-bold ${expandedOption === "why-us" ? "grid-rows-[1fr] mt-2.5 opacity-100" : "grid-rows-[0fr] opacity-0"
-                }`}>
-                <div className="overflow-hidden space-y-2.5 font-sans pr-4 leading-relaxed font-bold text-foreground text-lg md:text-xl">
-                  <p>
-                    In an era dominated by cold robo-advisors and static investment apps, your hard-earned wealth deserves personalized, <span className="font-extrabold text-primary">relationship-driven human advisory</span>. We exist to bridge the gap between human empathy and data precision. By standing by our clients through decades of market turbulence, recessions, and regulatory shifts, we prioritize multi-generational trust and structured planning. We don't just measure relationships in transactions; we measure them in decades of successful outcomes and financial security.
-                  </p>
+              {/* 02: What we provide */}
+              <div className="flex flex-col">
+                <button
+                  onClick={() => setExpandedOption(expandedOption === "services" ? null : "services")}
+                  className="group flex items-baseline gap-3 focus:outline-none cursor-pointer text-left"
+                >
+                  <span className={`text-xs md:text-sm font-mono transition duration-200 ${expandedOption === "services" ? "text-primary" : "text-muted-foreground group-hover:text-primary"}`}>02</span>
+                  <span className={`font-heading text-2xl md:text-4xl font-bold tracking-tight transition duration-200 ${expandedOption === "services" ? "text-primary" : "text-foreground group-hover:text-primary"}`}>
+                    What we provide
+                    <GoArrowDownRight className="inline-block ml-2 align-middle transition-transform duration-300 group-hover:translate-x-1 group-hover:translate-y-1" />
+                  </span>
+                </button>
+                <div className={`grid transition-all duration-350 ease-in-out overflow-hidden text-lg md:text-xl text-foreground font-bold ${expandedOption === "services" ? "grid-rows-[1fr] mt-2.5 opacity-100" : "grid-rows-[0fr] opacity-0"
+                  }`}>
+                  <div className="overflow-hidden space-y-2.5 font-sans pr-4 leading-relaxed font-bold text-foreground text-lg md:text-xl">
+                    <p>
+                      We provide a comprehensive, fully regulated suite of financial and wealth creation solutions tailored to your unique lifecycle goals. This includes systematically managed <span className="font-extrabold text-primary">Mutual Funds & SIP planning</span> for long-term compound growth, high-yield <span className="font-extrabold text-primary">Fixed Deposits, Specialized Investment Funds (SIF)</span>, and <span className="font-extrabold text-primary">Portfolio Management Services (PMS)</span> for sophisticated asset allocation. Additionally, we protect your family's future with robust <span className="font-extrabold text-primary">Life Insurance (LIC), Mediclaim Health Insurance, Vehicle/Property Insurance</span>, and provide leverage options through <span className="font-extrabold text-primary">PNB Housing Finance</span> home loans.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* 03: Why we exist */}
+              <div className="flex flex-col">
+                <button
+                  onClick={() => setExpandedOption(expandedOption === "why-us" ? null : "why-us")}
+                  className="group flex items-baseline gap-3 focus:outline-none cursor-pointer text-left"
+                >
+                  <span className={`text-xs md:text-sm font-mono transition duration-200 ${expandedOption === "why-us" ? "text-primary" : "text-muted-foreground group-hover:text-primary"}`}>03</span>
+                  <span className={`font-heading text-2xl md:text-4xl font-bold tracking-tight transition duration-200 ${expandedOption === "why-us" ? "text-primary" : "text-foreground group-hover:text-primary"}`}>
+                    Why we exist
+                    <GoArrowDownRight className="inline-block ml-2 align-middle transition-transform duration-300 group-hover:translate-x-1 group-hover:translate-y-1" />
+                  </span>
+                </button>
+                <div className={`grid transition-all duration-350 ease-in-out overflow-hidden text-lg md:text-xl text-foreground font-bold ${expandedOption === "why-us" ? "grid-rows-[1fr] mt-2.5 opacity-100" : "grid-rows-[0fr] opacity-0"
+                  }`}>
+                  <div className="overflow-hidden space-y-2.5 font-sans pr-4 leading-relaxed font-bold text-foreground text-lg md:text-xl">
+                    <p>
+                      In an era dominated by cold robo-advisors and static investment apps, your hard-earned wealth deserves personalized, <span className="font-extrabold text-primary">relationship-driven human advisory</span>. We exist to bridge the gap between human empathy and data precision. By standing by our clients through decades of market turbulence, recessions, and regulatory shifts, we prioritize multi-generational trust and structured planning. We don't just measure relationships in transactions; we measure them in decades of successful outcomes and financial security.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        }
+      />
+
+      <ScrollTextReveal />
+
       {/* Interactive Chatbot Promo Section */}
       <div className="w-full relative z-10 pt-4 pb-16 px-6 overflow-hidden">
         {/* Ambient backing glow */}
@@ -633,35 +631,6 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Spotlight & Features Section */}
-      <div className="w-full bg-transparent relative z-10">
-        <div
-          className={`w-full max-w-5xl mx-auto px-6 py-24 flex flex-col items-center transition-all duration-[1200ms] ease-out ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"
-            } delay-[1200ms]`}
-        >
-          {/* Main Statements */}
-          <ScrollBlurReveal className="max-w-6xl text-center mb-20 flex flex-col gap-6 font-chillax">
-            <p className="text-2xl md:text-5xl text-primary leading-relaxed font-semibold tracking-tight">
-              For over 35 years, the name De has stood for one thing in personal finance — trust.
-            </p>
-            <p className="text-xl md:text-2xl text-muted-foreground font-normal leading-relaxed max-w-4xl mx-auto">
-              Today, as the needs of investors evolve, we’re embracing the future with data-driven planning, technology-enabled insights, and a renewed commitment to what matters most: your financial future.
-            </p>
-            <p className="text-2xl md:text-5xl font-semibold leading-relaxed mt-4 font-chillax animate-text-shimmer">
-              We've got everything covered!
-            </p>
-          </ScrollBlurReveal>
-        </div>
-      </div>
-
-      {/* About Section */}
-      <div id="about" className="w-full  relative z-10">
-        <ScrollRevealSection
-          text="we offer something no app can replicate — 35 years of relationship-driven expertise combined with modern portfolio intelligence, goal-based planning, and technology-backed analysis."
-          isLoaded={isLoaded}
-        />
       </div>
       {/* Investor Quiz Section */}
       <div className="w-full relative z-10 py-16 px-6">

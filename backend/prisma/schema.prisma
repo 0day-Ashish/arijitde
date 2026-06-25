@@ -57,6 +57,8 @@ model Assessment {
   investmentStyle     String?
   expectedReturn      String?
   riskBehavior        String?
+  monthlyInvestment   String?
+  emergencyFund       String?
   createdAt           DateTime    @default(now())
   user                User        @relation(fields: [userId], references: [id])
   portfolios          Portfolio[]

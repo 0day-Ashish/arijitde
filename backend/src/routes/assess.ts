@@ -19,6 +19,8 @@ const createAssessmentSchema = z.object({
   investmentStyle: z.string().optional().nullable(),
   expectedReturn: z.string().optional().nullable(),
   riskBehavior: z.string().optional().nullable(),
+  monthlyInvestment: z.string().optional().nullable(),
+  emergencyFund: z.string().optional().nullable(),
 });
 
 router.post('/', authMiddleware, async (req: AuthenticatedRequest, res: Response, next) => {
@@ -33,6 +35,8 @@ router.post('/', authMiddleware, async (req: AuthenticatedRequest, res: Response
       investmentStyle,
       expectedReturn,
       riskBehavior,
+      monthlyInvestment,
+      emergencyFund,
     } = createAssessmentSchema.parse(req.body);
     const userId = req.user!.id; // Guaranteed by authMiddleware
 
@@ -48,6 +52,8 @@ router.post('/', authMiddleware, async (req: AuthenticatedRequest, res: Response
         investmentStyle: investmentStyle ?? null,
         expectedReturn: expectedReturn ?? null,
         riskBehavior: riskBehavior ?? null,
+        monthlyInvestment: monthlyInvestment ?? null,
+        emergencyFund: emergencyFund ?? null,
       },
     });
 
@@ -64,6 +70,8 @@ router.post('/', authMiddleware, async (req: AuthenticatedRequest, res: Response
         investmentStyle: assessment.investmentStyle,
         expectedReturn: assessment.expectedReturn,
         riskBehavior: assessment.riskBehavior,
+        monthlyInvestment: assessment.monthlyInvestment,
+        emergencyFund: assessment.emergencyFund,
       },
     });
   } catch (error) {

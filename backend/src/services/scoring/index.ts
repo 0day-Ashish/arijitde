@@ -15,6 +15,8 @@ export interface AssessmentContext {
   investmentStyle?: string | null;
   expectedReturn?: string | null;
   riskBehavior?: string | null;
+  monthlyInvestment?: string | null;
+  emergencyFund?: string | null;
 }
 
 export interface ScoreResult {

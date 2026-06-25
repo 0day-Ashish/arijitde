@@ -56,7 +56,7 @@ const LIFE_STAGE_OPTIONS = [
   { value: "EARLY_CAREER", label: "Early Career Professional" },
   { value: "MID_CAREER", label: "Mid-Career Professional" },
   { value: "BUSINESS_OWNER", label: "Business Owner" },
-  { value: "HIGH_LEVEL_PROFESSIONAL", label: "High-Level Professional (10+ Yrs)" },
+  { value: "HIGH_LEVEL_PROFESSIONAL", label: "High-Level Professional (10+ Years Experience)" },
   { value: "RETIRED", label: "Retired" },
 ];
 
@@ -68,28 +68,20 @@ const INVESTMENT_TENURE_OPTIONS = [
   { value: "MORE_THAN_20_YEARS", label: "More than 20 Years" },
 ];
 
-const INVESTMENT_STYLE_OPTIONS = [
-  { value: "REGULAR_MONTHLY_SIP", label: "Regular Monthly SIP" },
-  { value: "OCCASIONAL_SIP", label: "Occasional SIP" },
-  { value: "MOSTLY_LUMPSUM", label: "Mostly Lumpsum" },
-  { value: "RARELY_INVEST", label: "Rarely Invest" },
-  { value: "FIRST_TIME_INVESTOR", label: "First-Time Investor" },
+const MONTHLY_INVESTMENT_OPTIONS = [
+  { value: "NOT_INVESTING", label: "Currently Not Investing" },
+  { value: "BELOW_1000", label: "Below ₹1,000" },
+  { value: "1500_2500", label: "₹1,500 – ₹2,500" },
+  { value: "3000_5000", label: "₹3,000 – ₹5,000" },
+  { value: "6000_10000", label: "₹6,000 – ₹10,000" },
+  { value: "15000_PLUS", label: "₹15,000+" }
 ];
 
-const EXPECTED_RETURN_OPTIONS = [
-  { value: "6_TO_8", label: "6–8%" },
-  { value: "8_TO_12", label: "8–12%" },
-  { value: "12_TO_15", label: "12–15%" },
-  { value: "15_PLUS", label: "15%+" },
-  { value: "NOT_SURE", label: "Not Sure" },
-];
-
-const RISK_BEHAVIOR_OPTIONS = [
-  { value: "SELL_EVERYTHING", label: "Sell everything" },
-  { value: "STOP_INVESTING", label: "Stop investing temporarily" },
-  { value: "WAIT_PATIENTLY", label: "Wait patiently" },
-  { value: "INVEST_MORE", label: "Invest more" },
-  { value: "REVIEW_FUNDAMENTALS", label: "Review and decide based on fundamentals" },
+const EMERGENCY_FUND_OPTIONS = [
+  { value: "YES_MORE_THAN_6_MONTHS", label: "Yes, more than 6 months expenses" },
+  { value: "YES_3_TO_6_MONTHS", label: "Yes, 3–6 months expenses" },
+  { value: "YES_LESS_THAN_3_MONTHS", label: "Less than 3 months expenses" },
+  { value: "NO_EMERGENCY_FUND", label: "No emergency fund" }
 ];
 
 function CompassIcon(props: any) {
@@ -197,6 +189,8 @@ export default function ClientDashboard() {
   const [quizInvestmentStyle, setQuizInvestmentStyle] = useState<string>("");
   const [quizExpectedReturn, setQuizExpectedReturn] = useState<string>("");
   const [quizRiskBehavior, setQuizRiskBehavior] = useState<string>("");
+  const [quizMonthlyInvestment, setQuizMonthlyInvestment] = useState<string>("");
+  const [quizEmergencyFund, setQuizEmergencyFund] = useState<string>("");
   const [showNotSureMessage, setShowNotSureMessage] = useState(false);
 
   // Database contexts
@@ -370,6 +364,15 @@ export default function ClientDashboard() {
         setActiveAssessmentId(latestAssessment.id);
         setQuizAge(latestAssessment.age);
         setQuizGoal(latestAssessment.goal);
+        if (latestAssessment.ageRange) setQuizAgeRange(latestAssessment.ageRange);
+        if (latestAssessment.lifeStage) setQuizLifeStage(latestAssessment.lifeStage);
+        if (latestAssessment.investmentTenure) setQuizInvestmentTenure(latestAssessment.investmentTenure);
+        if (latestAssessment.isCompletePortfolio !== null && latestAssessment.isCompletePortfolio !== undefined) setQuizIsCompletePortfolio(latestAssessment.isCompletePortfolio);
+        if (latestAssessment.investmentStyle) setQuizInvestmentStyle(latestAssessment.investmentStyle);
+        if (latestAssessment.expectedReturn) setQuizExpectedReturn(latestAssessment.expectedReturn);
+        if (latestAssessment.riskBehavior) setQuizRiskBehavior(latestAssessment.riskBehavior);
+        if (latestAssessment.monthlyInvestment) setQuizMonthlyInvestment(latestAssessment.monthlyInvestment);
+        if (latestAssessment.emergencyFund) setQuizEmergencyFund(latestAssessment.emergencyFund);
       }
 
       // 3. Fetch portfolios
@@ -672,7 +675,7 @@ export default function ClientDashboard() {
 
   // Re-assess profile logic
   const handleQuizSubmit = async () => {
-    if (!quizAgeRange || !quizGoal || !quizLifeStage || !quizInvestmentTenure || quizIsCompletePortfolio === null || !quizInvestmentStyle || !quizExpectedReturn || !quizRiskBehavior) {
+    if (!quizAgeRange || !quizGoal || !quizLifeStage || !quizInvestmentTenure || !quizMonthlyInvestment || !quizEmergencyFund) {
       setError("Please complete all assessment fields.");
       return;
     }
@@ -694,10 +697,8 @@ export default function ClientDashboard() {
           ageRange: quizAgeRange,
           lifeStage: quizLifeStage,
           investmentTenure: quizInvestmentTenure,
-          isCompletePortfolio: quizIsCompletePortfolio,
-          investmentStyle: quizInvestmentStyle,
-          expectedReturn: quizExpectedReturn,
-          riskBehavior: quizRiskBehavior,
+          monthlyInvestment: quizMonthlyInvestment,
+          emergencyFund: quizEmergencyFund,
         })
       });
       const resData = await res.json();
@@ -1223,7 +1224,7 @@ export default function ClientDashboard() {
           <div className="w-full max-w-md mx-auto bg-white/30 border border-white/30 rounded-3xl p-8 shadow-2xl backdrop-blur-xl animate-in zoom-in-95 duration-300">
             <div className="flex justify-between items-center text-[10px] font-mono text-neutral-500 mb-6 uppercase tracking-widest">
               <span>Client Targets Quiz</span>
-              <span>Step {quizStep} of 6</span>
+              <span>Step {quizStep} of 5</span>
             </div>
 
             {/* Step 1: Life Stage */}
@@ -1254,7 +1255,7 @@ export default function ClientDashboard() {
             {quizStep === 2 && (
               <div className="space-y-6">
                 <div className="space-y-2 text-left">
-                  <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">What is your primary reason for investing?</h2>
+                  <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">What is the primary reason you&apos;re investing?</h2>
                   <p className="text-neutral-500 text-xs font-sans leading-relaxed">Goal alignment score.</p>
                 </div>
                 <div className="grid grid-cols-1 gap-2 text-left max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
@@ -1312,18 +1313,18 @@ export default function ClientDashboard() {
               </div>
             )}
 
-            {/* Step 4: Investment Style */}
+            {/* Step 4: Monthly Investment */}
             {quizStep === 4 && (
               <div className="space-y-6">
                 <div className="space-y-2 text-left">
-                  <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">How do you usually invest?</h2>
-                  <p className="text-neutral-500 text-xs font-sans leading-relaxed">Discipline score.</p>
+                  <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">Approximately how much are you able to invest every month?</h2>
+                  <p className="text-neutral-500 text-xs font-sans leading-relaxed">Investment capacity profile.</p>
                 </div>
                 <div className="grid grid-cols-1 gap-2">
-                  {INVESTMENT_STYLE_OPTIONS.map((opt) => {
-                    const isSelected = quizInvestmentStyle === opt.value;
+                  {MONTHLY_INVESTMENT_OPTIONS.map((opt) => {
+                    const isSelected = quizMonthlyInvestment === opt.value;
                     return (
-                      <button key={opt.value} onClick={() => setQuizInvestmentStyle(opt.value)}
+                      <button key={opt.value} onClick={() => setQuizMonthlyInvestment(opt.value)}
                         className={`w-full py-3.5 px-4 rounded-xl border text-xs font-medium transition duration-150 cursor-pointer text-center ${isSelected ? "bg-primary/10 border-primary text-neutral-900" : "bg-white/40 border-white/20 text-neutral-600 hover:text-neutral-900"}`}
                       >{opt.label}</button>
                     );
@@ -1331,57 +1332,32 @@ export default function ClientDashboard() {
                 </div>
                 <div className="flex gap-2">
                   <button onClick={() => setQuizStep(3)} className="flex-1 py-3 bg-white/40 border border-border text-neutral-600 text-xs font-semibold rounded-xl hover:bg-white/60 transition cursor-pointer">Back</button>
-                  <button onClick={() => { if (!quizInvestmentStyle) { setError("Please select how you invest."); return; } setError(null); setQuizStep(5); }}
+                  <button onClick={() => { if (!quizMonthlyInvestment) { setError("Please select your monthly investment amount."); return; } setError(null); setQuizStep(5); }}
                     className="flex-1 py-3 bg-primary text-primary-foreground font-bold text-xs rounded-xl hover:bg-primary/95 transition cursor-pointer flex items-center justify-center gap-1.5">Continue <ArrowRight className="w-3.5 h-3.5" /></button>
                 </div>
               </div>
             )}
 
-            {/* Step 5: Expected Return */}
+            {/* Step 5: Emergency Fund */}
             {quizStep === 5 && (
               <div className="space-y-6">
                 <div className="space-y-2 text-left">
-                  <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">What annual return are you expecting?</h2>
-                  <p className="text-neutral-500 text-xs font-sans leading-relaxed">Expectation vs reality analysis.</p>
+                  <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">Do you have an emergency fund?</h2>
+                  <p className="text-neutral-500 text-xs font-sans leading-relaxed">Safety reserves check.</p>
                 </div>
                 <div className="grid grid-cols-1 gap-2">
-                  {EXPECTED_RETURN_OPTIONS.map((opt) => {
-                    const isSelected = quizExpectedReturn === opt.value;
+                  {EMERGENCY_FUND_OPTIONS.map((opt) => {
+                    const isSelected = quizEmergencyFund === opt.value;
                     return (
-                      <button key={opt.value} onClick={() => setQuizExpectedReturn(opt.value)}
+                      <button key={opt.value} onClick={() => setQuizEmergencyFund(opt.value)}
                         className={`w-full py-3.5 px-4 rounded-xl border text-xs font-medium transition duration-150 cursor-pointer text-center ${isSelected ? "bg-primary/10 border-primary text-neutral-900" : "bg-white/40 border-white/20 text-neutral-600 hover:text-neutral-900"}`}
                       >{opt.label}</button>
                     );
                   })}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 mt-8">
                   <button onClick={() => setQuizStep(4)} className="flex-1 py-3 bg-white/40 border border-border text-neutral-600 text-xs font-semibold rounded-xl hover:bg-white/60 transition cursor-pointer">Back</button>
-                  <button onClick={() => { if (!quizExpectedReturn) { setError("Please select your expected return."); return; } setError(null); setQuizStep(6); }}
-                    className="flex-1 py-3 bg-primary text-primary-foreground font-bold text-xs rounded-xl hover:bg-primary/95 transition cursor-pointer flex items-center justify-center gap-1.5">Continue <ArrowRight className="w-3.5 h-3.5" /></button>
-                </div>
-              </div>
-            )}
-
-            {/* Step 6: Risk Behavior */}
-            {quizStep === 6 && (
-              <div className="space-y-6">
-                <div className="space-y-2 text-left">
-                  <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">If your portfolio falls by 20%, what would you do?</h2>
-                  <p className="text-neutral-500 text-xs font-sans leading-relaxed">Cross-checks psychology profile.</p>
-                </div>
-                <div className="grid grid-cols-1 gap-2">
-                  {RISK_BEHAVIOR_OPTIONS.map((opt) => {
-                    const isSelected = quizRiskBehavior === opt.value;
-                    return (
-                      <button key={opt.value} onClick={() => setQuizRiskBehavior(opt.value)}
-                        className={`w-full py-3.5 px-4 rounded-xl border text-xs font-medium transition duration-150 cursor-pointer text-center ${isSelected ? "bg-primary/10 border-primary text-neutral-900" : "bg-white/40 border-white/20 text-neutral-600 hover:text-neutral-900"}`}
-                      >{opt.label}</button>
-                    );
-                  })}
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={() => setQuizStep(5)} className="flex-1 py-3 bg-white/40 border border-border text-neutral-600 text-xs font-semibold rounded-xl hover:bg-white/60 transition cursor-pointer">Back</button>
-                  <button onClick={handleQuizSubmit} disabled={apiLoading || !quizRiskBehavior}
+                  <button onClick={handleQuizSubmit} disabled={apiLoading || !quizEmergencyFund}
                     className="flex-1 py-3 bg-primary text-primary-foreground font-bold text-xs rounded-xl hover:bg-primary/95 transition cursor-pointer disabled:opacity-40">
                     {apiLoading ? "Submitting..." : "Finish & Update"}
                   </button>
@@ -1419,9 +1395,33 @@ export default function ClientDashboard() {
                     <span className="font-semibold text-neutral-800">{quizAge} years</span>
                   </div>
                   <div className="flex justify-between">
+                    <span>Life Stage:</span>
+                    <span className="font-semibold text-neutral-800">
+                      {LIFE_STAGE_OPTIONS.find(o => o.value === quizLifeStage)?.label || quizLifeStage || "Not set"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
                     <span>Active Goal:</span>
                     <span className="font-semibold text-neutral-800">
                       {GOAL_OPTIONS.find(o => o.value === quizGoal)?.label || quizGoal}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Horizon:</span>
+                    <span className="font-semibold text-neutral-800">
+                      {INVESTMENT_TENURE_OPTIONS.find(o => o.value === quizInvestmentTenure)?.label || quizInvestmentTenure || "Not set"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Monthly capacity:</span>
+                    <span className="font-semibold text-neutral-800">
+                      {MONTHLY_INVESTMENT_OPTIONS.find(o => o.value === quizMonthlyInvestment)?.label || quizMonthlyInvestment || "Not set"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Emergency Fund:</span>
+                    <span className="font-semibold text-neutral-800">
+                      {EMERGENCY_FUND_OPTIONS.find(o => o.value === quizEmergencyFund)?.label || quizEmergencyFund || "Not set"}
                     </span>
                   </div>
                   {userData?.pan && (

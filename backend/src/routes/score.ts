@@ -108,6 +108,8 @@ router.post('/:portfolioId', authMiddleware, async (req: AuthenticatedRequest, r
             investmentStyle: portfolio.assessment.investmentStyle,
             expectedReturn: portfolio.assessment.expectedReturn,
             riskBehavior: portfolio.assessment.riskBehavior,
+            monthlyInvestment: (portfolio.assessment as any).monthlyInvestment,
+            emergencyFund: (portfolio.assessment as any).emergencyFund,
           },
         }),
       })
