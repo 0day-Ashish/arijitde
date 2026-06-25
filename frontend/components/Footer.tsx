@@ -27,56 +27,72 @@ export default function Footer({ footerRef }: FooterProps) {
   }, []);
 
   return (
-    <footer ref={footerRef as any} className="w-full bg-transparent border-t border-border relative z-10 pt-24 pb-0 overflow-hidden text-foreground">
+    <footer ref={footerRef as any} className="w-full bg-transparent relative z-10 pt-24 pb-0 overflow-hidden text-foreground">
       {/* Top Columns Grid */}
-      <div className="w-full max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-5 gap-12 text-sm font-sans mb-20 text-muted-foreground text-left">
-        {/* Location & Time */}
-        <div className="flex flex-col gap-2.5">
-          <span className="text-primary font-semibold text-xs tracking-wider uppercase font-mono">India</span>
-          <span className="text-primary font-normal text-sm font-mono">{currentTime || "22:55:56"}</span>
-          <span className="text-slate-500 text-xs font-mono">(GMT+5:30)</span>
+      <div className="w-full max-w-5xl mx-auto px-6 mb-20 flex flex-col items-center gap-12 text-center">
+        {/* Big "Good buy." title */}
+        <h2 className="font-clash text-7xl sm:text-7xl md:text-[8rem] lg:text-[12rem] font-normal text-primary tracking-tight leading-none drop-shadow-sm select-none">
+          Good buy.
+        </h2>
+        
+        {/* Paragraph description */}
+        <p className="font-clash text-sm md:text-lg text-muted-foreground max-w-xl leading-relaxed text-center mx-auto whitespace-pre-line">
+          Contact us about your portfolio analysis
+          or wealth targets. Let's
+          collaborate, call us today!
+        </p>
+
+        {/* 3 Columns details */}
+        <div className="w-full grid grid-cols-1 sm:grid-cols-3 gap-12 text-sm font-clash mt-6 text-center">
+          {/* General Enquiries */}
+          <div className="flex flex-col items-center gap-2.5">
+            <span className="text-primary font-bold text-base md:text-lg">General Enquiries</span>
+            <a href="mailto:contact@finanalysis.in" className="text-muted-foreground hover:text-primary transition duration-200 underline decoration-primary/30 underline-offset-4 font-normal">
+              contact@finanalysis.in
+            </a>
+            <a href="/onboarding" className="text-muted-foreground hover:text-primary transition duration-200 underline decoration-primary/30 underline-offset-4 font-normal">
+              Book a call
+            </a>
+          </div>
+
+          {/* Visit us */}
+          <div className="flex flex-col items-center gap-2 text-muted-foreground">
+            <span className="text-primary font-bold text-base md:text-lg mb-0.5">Visit us</span>
+            <span className="font-normal">Salt Lake Sector V</span>
+            <span className="font-normal">Kolkata, West Bengal</span>
+            <span className="font-normal">India</span>
+          </div>
+
+          {/* Social */}
+          <div className="flex flex-col items-center gap-2.5">
+            <span className="text-primary font-bold text-base md:text-lg">Social</span>
+            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition duration-200 underline decoration-primary/30 underline-offset-4 font-normal">
+              LinkedIn
+            </a>
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition duration-200 underline decoration-primary/30 underline-offset-4 font-normal">
+              Instagram
+            </a>
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition duration-200 underline decoration-primary/30 underline-offset-4 font-normal">
+              X (Twitter)
+            </a>
+          </div>
         </div>
 
-        {/* About */}
-        <div className="flex flex-col gap-2.5">
-          <span className="text-primary font-semibold text-xs tracking-wider uppercase font-mono">About</span>
-          <a href="/#about" className="text-muted-foreground hover:text-primary transition duration-200 text-sm">About Us</a>
-          <a href="/#contact" className="text-muted-foreground hover:text-primary transition duration-200 text-sm">Contact</a>
-          <a href="/#faq" className="text-muted-foreground hover:text-primary transition duration-200 text-sm">FAQ</a>
-        </div>
-
-        {/* Quick Links */}
-        <div className="flex flex-col gap-2.5">
-          <span className="text-primary font-semibold text-xs tracking-wider uppercase font-mono flex items-center gap-1">
-            Quick Links<span className="text-[9px] text-primary font-mono leading-none align-super">(4)</span>
-          </span>
-          <a href="/sip-calculator" className="text-muted-foreground hover:text-primary transition duration-200 text-sm">SIP Calculator</a>
-          <a href="/onboarding" className="text-muted-foreground hover:text-primary transition duration-200 text-sm">Onboarding</a>
-          <a href="/onboarding" className="text-muted-foreground hover:text-primary transition duration-200 text-sm">Book a Call</a>
-        </div>
-        {/* Contact / Subscribe */}
-        <div className="flex flex-col gap-3">
-          <span className="text-primary font-semibold text-xs tracking-wider uppercase font-mono">Subscribe</span>
-          <form onSubmit={(e) => e.preventDefault()} className="flex flex-col gap-2">
-            <input
-              type="email"
-              placeholder="Email Address"
-              className="w-full bg-[#F2F0EF] border border-border rounded-lg p-2 text-xs text-foreground placeholder-slate-400 focus:outline-none focus:border-primary font-sans"
-            />
-            <button className="w-full py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-[10px] rounded-lg uppercase tracking-wider transition duration-200 cursor-pointer font-sans">
-              Subscribe Now
-            </button>
-          </form>
-        </div>
-
-        {/* Preloader Animation Showcase Column */}
-        <div className="col-span-2 md:col-span-1">
-          <div className="w-64 md:w-68 h-auto rounded-xl overflow-hidden border border-border bg-[#F2F0EF] lg:ml-20 shadow-sm animate-fade-in">
-            <img
-              src="/assets/video.gif"
-              alt="FinAnalysis Flow"
-              className="w-full h-auto opacity-90 hover:opacity-100 transition-opacity duration-300"
-            />
+        {/* New business profile card */}
+        <div className="w-full max-w-xl mx-auto mt-12 p-6 md:p-8 rounded-3xl border-2 border-dashed border-primary/25 bg-white/20 backdrop-blur-2xl flex flex-col md:flex-row items-center gap-6 md:gap-8 text-center md:text-left select-none">
+          <img
+            src="/assets/me.jpeg"
+            alt="Arijit De"
+            className="w-24 h-24 md:w-36 md:h-36 rounded-2xl object-cover shrink-0 border border-border shadow-md animate-fade-in"
+          />
+          <div className="flex-1 flex flex-col gap-2.5">
+            <h3 className="font-clash text-xl sm:text-3xl font-semibold text-primary">New investment?</h3>
+            <p className="font-chillax text-base sm:text-xl text-black leading-relaxed">
+              Reach out today to our CEO for new financial enquiries at{" "}
+              <a href="mailto:contact@finanalysis.in" className="text-primary hover:underline font-semibold font-chillax">
+                contact@finanalysis.in
+              </a>
+            </p>
           </div>
         </div>
       </div>
@@ -107,4 +123,5 @@ export default function Footer({ footerRef }: FooterProps) {
       </div>
     </footer>
   );
+  
 }

@@ -575,7 +575,7 @@ router.post('/activation/verify-otp', authLimiter, async (req, res, next) => {
     }
 
     // 4. Upsert User in database with role CLIENT in a transaction
-    const user = await prisma.$transaction(async (tx) => {
+    const user = await prisma.$transaction(async (tx: any) => {
       const hashedPassword = await bcrypt.hash(password, 10);
       const existingUser = await tx.user.findUnique({
         where: { email: formattedEmail }

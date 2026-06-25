@@ -598,15 +598,15 @@ export default function Home() {
               Instant Advisory
             </span>
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-primary font-clash">
-              Meet Your AI: Real-Time Insights, Zero Waiting.
+              Meet Virtual Arijit : Real-Time Insights, Zero Waiting.
             </h2>
             <p className="text-[#64748B] text-sm leading-relaxed font-sans">
-              Have questions about how we check anomalies, calculate fee efficiency, or structure systematic portfolios? Your AI is trained directly on our 35-year advisory playbook to answer your investment questions instantly.
+              Have questions about how we check anomalies, calculate fee efficiency, or structure systematic portfolios? It is trained directly on our 35-year advisory playbook to answer your investment questions instantly.
             </p>
           </div>
 
           <div className="w-full md:w-auto shrink-0 flex flex-col items-center justify-center p-6 bg-white/45 backdrop-blur-2xl border border-border rounded-2xl md:min-w-[280px] shadow-sm text-center relative group">
-            <span className="text-lg font-semibold text-primary font-clash">Try Your AI Now</span>
+            <span className="text-lg font-semibold text-primary font-clash">Try Virtual Arijit Now</span>
 
             <button
               onClick={() => setIsChatOpen(true)}
@@ -649,8 +649,8 @@ export default function Home() {
             <p className="text-xl md:text-2xl text-muted-foreground font-normal leading-relaxed max-w-4xl mx-auto">
               Today, as the needs of investors evolve, we’re embracing the future with data-driven planning, technology-enabled insights, and a renewed commitment to what matters most: your financial future.
             </p>
-            <p className="text-2xl md:text-5xl text-primary font-semibold leading-relaxed mt-4 font-chillax">
-              We've got everything covered.
+            <p className="text-2xl md:text-5xl font-semibold leading-relaxed mt-4 font-chillax animate-text-shimmer">
+              We've got everything covered!
             </p>
           </ScrollBlurReveal>
         </div>
@@ -1087,45 +1087,57 @@ export default function Home() {
             >
               {/* Front Side of Card */}
               <div
-                className="absolute inset-0 w-full h-full p-8 md:p-12 rounded-3xl bg-white/35 backdrop-blur-2xl border border-border shadow-sm flex flex-col justify-between items-center text-center"
+                className="absolute inset-0 w-full h-full p-8 md:p-12 rounded-3xl bg-gradient-to-br from-white/50 via-white/35 to-amber-500/5 backdrop-blur-2xl border border-amber-500/20 shadow-[0_20px_50px_rgba(245,158,11,0.08)] flex flex-col justify-between items-center text-center overflow-hidden hover:border-amber-500/35 transition-colors duration-300"
                 style={{ backfaceVisibility: 'hidden' }}
               >
-                <div className="w-full flex justify-between items-center border-b border-border/20 pb-3">
-                  <span className="text-[9px] font-mono text-primary tracking-widest uppercase font-bold">Daily Quote</span>
-                  <span className="text-[9px] font-mono text-slate-400">ACTIVE FOR 24H</span>
+                {/* Decorative glowing background gradients */}
+                <div className="absolute top-0 right-0 w-24 h-24 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-24 h-24 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
+
+                {/* Floating typographic quotes */}
+                <span className="absolute left-6 top-16 text-8xl font-serif text-amber-500/10 leading-none pointer-events-none select-none">“</span>
+                <span className="absolute right-6 bottom-16 text-8xl font-serif text-amber-500/10 leading-none pointer-events-none select-none">”</span>
+
+                <div className="w-full flex justify-between items-center pb-3.5 relative z-10">
+                  <span className="text-[10px] font-mono text-amber-700 tracking-widest uppercase font-bold">Daily Quote</span>
+                  <span className="text-[9px] font-mono text-amber-600/60 uppercase font-bold">ACTIVE FOR 24H</span>
                 </div>
 
-                <div className="my-auto py-4">
-                  <p className="text-lg md:text-xl font-medium font-clash italic leading-relaxed text-primary">
+                <div className="my-auto py-6 relative z-10">
+                  <p className="text-xl md:text-2xl font-medium font-clash italic leading-relaxed text-primary drop-shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
                     "{dailyQuote.text}"
                   </p>
-                  <span className="block text-right text-[10px] md:text-xs text-slate-500 font-mono mt-3">
+                  <span className="block text-right text-[11px] md:text-xs text-amber-700 font-mono mt-4 font-bold tracking-wider">
                     — {dailyQuote.author}
                   </span>
                 </div>
 
-                <div className="flex justify-center items-center gap-2 text-[10px] md:text-xs font-bold text-[#3A8293] uppercase tracking-wider">
+                <div className="px-6 py-3 bg-amber-500/10 border border-amber-500/35 hover:bg-amber-500/20 rounded-full flex justify-center items-center gap-2 text-[10px] md:text-xs font-bold text-amber-800 uppercase tracking-widest shadow-sm transition-all duration-300 relative z-10">
                   <span>Tap Card to Claim Reward</span>
-                  <span className="animate-bounce">🎁</span>
+                  <span className="animate-bounce text-sm">🎁</span>
                 </div>
               </div>
 
               {/* Back Side of Card */}
               <div
-                className="absolute inset-0 w-full h-full p-8 md:p-12 rounded-3xl bg-white/35 backdrop-blur-2xl border border-border shadow-sm flex flex-col justify-between items-center text-center"
+                className="absolute inset-0 w-full h-full p-8 md:p-12 rounded-3xl bg-gradient-to-br from-white/50 via-white/35 to-amber-500/5 backdrop-blur-2xl border border-amber-500/20 shadow-[0_20px_50px_rgba(245,158,11,0.08)] flex flex-col justify-between items-center text-center overflow-hidden"
                 style={{
                   backfaceVisibility: 'hidden',
                   transform: 'rotateY(180deg)'
                 }}
               >
-                <div className="w-full flex justify-between items-center border-b border-border/20 pb-3">
-                  <span className="text-[9px] font-mono text-primary tracking-widest uppercase font-bold">Reward Portal</span>
-                  <span className="text-[9px] font-mono text-slate-400">ACTIVE TODAY</span>
+                {/* Decorative glowing background gradients */}
+                <div className="absolute top-0 right-0 w-24 h-24 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-24 h-24 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
+
+                <div className="w-full flex justify-between items-center pb-3.5 relative z-10">
+                  <span className="text-[10px] font-mono text-amber-700 tracking-widest uppercase font-bold">Reward Portal</span>
+                  <span className="text-[9px] font-mono text-amber-600/60 uppercase font-bold">ACTIVE TODAY</span>
                 </div>
 
                 {isLoggedIn ? (
                   // Logged In State: Show claimed points reward
-                  <div className="w-full my-auto space-y-4 relative">
+                  <div className="w-full my-auto space-y-4 relative z-10">
                     {hasClaimedToday && (
                       <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center">
                         <style>{`
@@ -1175,18 +1187,18 @@ export default function Home() {
                       </div>
                     )}
 
-                    <div className="flex flex-col items-center justify-center space-y-1">
-                      <div className="w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 text-2xl shadow-inner animate-pulse">
-                        🎁
+                    <div className="flex flex-col items-center justify-center space-y-2">
+                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 border border-amber-300 shadow-[0_0_25px_rgba(245,158,11,0.35)] flex items-center justify-center text-white text-3xl shadow-inner animate-pulse">
+                        🪙
                       </div>
-                      <div className="flex items-baseline gap-1 mt-1">
-                        <span className="text-4xl md:text-5xl font-extrabold font-clash text-primary leading-none">+{rewardAmount || 3}</span>
-                        <span className="text-xs font-sans font-bold text-neutral-500">FP</span>
+                      <div className="flex items-baseline gap-1 mt-2">
+                        <span className="text-4xl md:text-5xl font-extrabold font-clash text-amber-600 leading-none">+{rewardAmount || 3}</span>
+                        <span className="text-xs font-sans font-bold text-amber-700">FP</span>
                       </div>
-                      <h3 className="text-sm font-bold font-clash text-neutral-800 mt-1">
+                      <h3 className="text-base font-bold font-clash text-amber-800 mt-1">
                         {rewardClaimed ? "Reward Claimed!" : "Already Claimed Today!"}
                       </h3>
-                      <p className="text-[11px] text-muted-foreground leading-relaxed font-sans max-w-xs mx-auto">
+                      <p className="text-xs text-[#64748B] leading-relaxed font-sans max-w-xs mx-auto">
                         {rewardClaimed
                           ? `Congratulations! ${rewardAmount} FinPoints have been successfully added to your wallet balance.`
                           : `You have already claimed today's reward. Come back tomorrow to collect more points!`}
@@ -1195,24 +1207,24 @@ export default function Home() {
                   </div>
                 ) : (
                   // Logged Out State: Prompt login
-                  <div className="w-full my-auto space-y-4">
-                    <div className="flex flex-col items-center justify-center space-y-2">
-                      <div className="w-14 h-14 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-xl relative">
-                        <svg className="w-5 h-5 text-primary animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-full my-auto space-y-4 relative z-10">
+                    <div className="flex flex-col items-center justify-center space-y-3">
+                      <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-600 text-2xl relative shadow-inner animate-pulse">
+                        <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                         </svg>
                       </div>
-                      <h3 className="text-sm font-bold font-clash text-neutral-800 mt-1">Daily Reward Locked</h3>
-                      <p className="text-[11px] text-muted-foreground leading-relaxed font-sans max-w-xs mx-auto">
+                      <h3 className="text-base font-bold font-clash text-amber-800 mt-1">Daily Reward Locked</h3>
+                      <p className="text-xs text-[#64748B] leading-relaxed font-sans max-w-xs mx-auto">
                         Sign in to unlock and claim today's random FinPoints (up to 5 FP). Your points can be used to unlock priority review sessions!
                       </p>
                     </div>
                   </div>
                 )}
 
-                <div className="w-full">
+                <div className="w-full relative z-10">
                   {isLoggedIn ? (
-                    <div className="flex justify-center items-center gap-1.5 text-[10px] md:text-xs font-bold text-emerald-600 uppercase tracking-wider">
+                    <div className="flex justify-center items-center gap-1.5 text-xs font-bold text-emerald-600 uppercase tracking-widest bg-emerald-500/10 border border-emerald-500/20 py-2.5 rounded-xl">
                       <span>Claimed successfully</span>
                       <span>✓</span>
                     </div>
@@ -1220,7 +1232,7 @@ export default function Home() {
                     <a
                       href="/onboarding"
                       onClick={(e) => e.stopPropagation()} // Stop click propagating to rotate card back
-                      className="w-full py-3 bg-primary hover:bg-primary/95 text-primary-foreground text-center block rounded-xl text-[10px] md:text-xs font-bold uppercase tracking-wider transition-all duration-200"
+                      className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-center block rounded-xl text-xs font-bold uppercase tracking-widest transition-all duration-200 shadow-md"
                     >
                       Sign In to Claim Reward
                     </a>
@@ -1233,7 +1245,7 @@ export default function Home() {
       </div>
 
       {/* FAQ Section */}
-      <div id="faq" className="w-full bg-transparent relative z-10 py-32  overflow-hidden">
+      <div id="faq" className="w-full bg-transparent relative z-10 py-32">
         <div className="w-full max-w-5xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-16 items-start relative">
 
           {/* Left Column: Title & Subtitle */}
@@ -1293,6 +1305,15 @@ export default function Home() {
           </div>
 
         </div>
+      </div>
+
+      {/* Hello Text Section */}
+      <div className="w-full relative z-10 py-16 px-6 bg-transparent select-none">
+        <ScrollBlurReveal className="w-full max-w-5xl mx-auto text-center">
+          <h2 className="font-chillax text-7xl sm:text-9xl md:text-[10rem] lg:text-[14rem] font-normal text-primary tracking-tight leading-none drop-shadow-sm">
+            “Hello”
+          </h2>
+        </ScrollBlurReveal>
       </div>
 
       {/* Contact Section */}
@@ -1397,8 +1418,6 @@ export default function Home() {
           </div>
         </ScrollBlurReveal>
       </div>
-
-      {/* Scroll-Driven Video Playback Showcase */}
 
       <Footer footerRef={footerRef} />
 

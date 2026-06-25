@@ -33,7 +33,7 @@ export default function ChatbotWidget({
     }
   };
   const [messages, setMessages] = useState<Message[]>([
-    { id: 1, sender: "bot", text: "Hello! I'm Your AI assistant, trained on FinAnalysis's 35-year investment playbook. How can I assist you with your portfolio, mutual funds, or financial planning goals today? 📈" }
+    { id: 1, sender: "bot", text: "Hello! I'm Virtual Arijit assistant, trained on FinAnalysis's 35-year investment playbook. How can I assist you with your portfolio, mutual funds, or financial planning goals today? 📈" }
   ]);
   const [inputVal, setInputVal] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -120,7 +120,7 @@ export default function ChatbotWidget({
             <div className="flex items-center gap-3">
               <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
               <div className="flex flex-col text-left">
-                <span className="text-sm font-bold text-primary tracking-wide font-clash">Your AI</span>
+                <span className="text-sm font-bold text-primary tracking-wide font-clash">Virtual Arijit</span>
                 <span className="text-[10px] text-neutral-400 font-mono">AI AGENT • ONLINE</span>
               </div>
             </div>
@@ -184,7 +184,7 @@ export default function ChatbotWidget({
       {/* Speech Bubble */}
       {!isChatOpen && (
         <div className="absolute bottom-16 right-2 mb-2.5 bg-white/80 border border-primary/10 rounded-xl px-3 py-1.5 text-xs text-black tracking-wide shadow-lg whitespace-nowrap select-none font-clash">
-          Have portfolio questions? <span className="font-semibold text-primary">Ask Your AI here</span>
+          Have portfolio questions? <span className="font-semibold text-primary">Ask Virtual Arijit here</span>
         </div>
       )}
 
