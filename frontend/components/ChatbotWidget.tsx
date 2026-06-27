@@ -33,7 +33,7 @@ export default function ChatbotWidget({
     }
   };
   const [messages, setMessages] = useState<Message[]>([
-    { id: 1, sender: "bot", text: "Hello! I'm Virtual Arijit assistant, trained on FinAnalysis's 35-year investment playbook. How can I assist you with your portfolio, mutual funds, or financial planning goals today? 📈" }
+    { id: 1, sender: "bot", text: "Hello! I'm Virtual Arijit assistant, trained on FinAnalysis's 35-year investment playbook. How can I assist you with your portfolio, mutual funds, or goal-based investment structuring goals today? 📈" }
   ]);
   const [inputVal, setInputVal] = useState("");
   const [isTyping, setIsTyping] = useState(false);

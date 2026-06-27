@@ -35,8 +35,6 @@ export default function ScrollTextReveal() {
           start: 'top top',
           end: 'bottom bottom',
           scrub: true,
-          pin: container,
-          anticipatePin: 1,
         },
       });
 
@@ -55,11 +53,11 @@ export default function ScrollTextReveal() {
   }, []);
 
   return (
-    <div ref={triggerRef} className="h-[500vh] w-full relative z-10">
+    <div ref={triggerRef} className="h-[300vh] w-full relative z-10">
       {/* Pinned View Container */}
       <div 
         ref={containerRef} 
-        className="relative h-screen w-full overflow-hidden flex items-center justify-center bg-transparent"
+        className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center bg-transparent"
       >
         <div className="max-w-5xl w-full px-6 text-left">
           <h2 

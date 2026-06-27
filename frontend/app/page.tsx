@@ -52,8 +52,8 @@ const servicesData = [
 
 const faqData = [
   {
-    question: "Is the portfolio analysis really free?",
-    answer: "Yes. Your first portfolio analysis is completely free. If you'd like a fresh analysis after that, it is available at a nominal fee — with loyalty discounts available through our daily reward system."
+    question: "Is the portfolio health report really free?",
+    answer: "Yes. Your first portfolio health report is completely free. If you'd like a fresh analysis after that, it is available at a nominal fee — with loyalty discounts available through our daily reward system."
   },
   {
     question: "How is my portfolio score calculated?",
@@ -81,10 +81,10 @@ const faqData = [
   },
   {
     question: "Does this platform give stock tips or guaranteed returns?",
-    answer: "No. We do not provide stock recommendations, trading tips, or return guarantees of any kind. Our platform provides portfolio analysis, goal-based planning, and structured advisory — all regulated under SEBI and AMFI guidelines."
+    answer: "No. We do not provide stock recommendations, trading tips, or return guarantees of any kind. Our platform provides portfolio health report, goal-based planning, and structured advisory — all regulated under SEBI and AMFI guidelines."
   },
   {
-    question: "What do I get after my portfolio analysis?",
+    question: "What do I get after my portfolio health report?",
     answer: "You receive a Portfolio Score out of 100, three key insights specific to your portfolio, and the option to discuss your results with Arijit De directly through a one-on-one advisory call."
   },
   {
@@ -93,14 +93,14 @@ const faqData = [
   },
   {
     question: "What is the daily reward system?",
-    answer: "Every time you log in, you earn ₹1 in platform credits. Sunday visits earn a ₹10 bonus. Credits accumulate and can be redeemed against the fee for your next portfolio analysis. Credits expire after 180 days."
+    answer: "Every time you log in, you earn ₹1 in platform credits. Sunday visits earn a ₹10 bonus. Credits accumulate and can be redeemed against the fee for your next portfolio health report. Credits expire after 180 days."
   },
   {
     question: "Who is behind this platform?",
     answer: "FinAnalysis is built and operated by Arijit De — SEBI-certified Mutual Fund Distributor (ARN-273396) and SIF Distributor — backed by 35 years of financial advisory experience from his father, Arindam De. This is not a faceless app. There is a real, certified advisor behind every analysis."
   },
   {
-    question: "I already have a financial advisor. Can I still use this?",
+    question: "I already have a AMFI-registered Mutual Fund Distributor. Can I still use this?",
     answer: "Yes. A second opinion never hurts. Our platform gives you an independent, data-backed view of your portfolio health regardless of who manages it."
   },
   {
@@ -109,7 +109,7 @@ const faqData = [
   },
   {
     question: "Is this platform only for mutual fund investors?",
-    answer: "Currently, the portfolio analysis engine is built for mutual fund portfolios. However, Arindam De's advisory services cover the full spectrum — Insurance, PMS, Fixed Deposits, PNB Housing Finance, and more. Reach out directly for anything beyond mutual funds."
+    answer: "Currently, the portfolio health report engine is built for mutual fund portfolios. However, Arindam De's advisory services cover the full spectrum — Insurance, PMS, Fixed Deposits, PNB Housing Finance, and more. Reach out directly for anything beyond mutual funds."
   }
 ]
 
@@ -805,7 +805,7 @@ export default function Home() {
         </ScrollBlurReveal>
       </div>
 
-      {/* Portfolio Analysis Section */}
+      {/* Portfolio Health Report Section */}
       <div className="w-full relative z-10 py-16 px-6">
         <ScrollBlurReveal className="w-full max-w-5xl mx-auto">
           <div className="relative overflow-hidden p-8 md:p-12 bg-white/20 backdrop-blur-2xl border border-border rounded-3xl shadow-sm flex flex-col lg:flex-row gap-12 text-left items-stretch">
@@ -1456,7 +1456,7 @@ export default function Home() {
             <div>
               <h4 className="text-sm font-bold text-primary font-clash">Cookie Preferences</h4>
               <p className="text-[11px] text-muted-foreground leading-relaxed mt-1 font-sans">
-                We use cookies to analyze traffic, remember preferences, and optimize your portfolio analysis. Read our <a href="/cookies" className="underline hover:text-primary transition duration-200">Cookies Policy</a>.
+                We use cookies to analyze traffic, remember preferences, and optimize your portfolio health report. Read our <a href="/cookies" className="underline hover:text-primary transition duration-200">Cookies Policy</a>.
               </p>
             </div>
           </div>

@@ -37,7 +37,7 @@ export default function Footer({ footerRef }: FooterProps) {
         
         {/* Paragraph description */}
         <p className="font-clash text-sm md:text-lg text-muted-foreground max-w-xl leading-relaxed text-center mx-auto whitespace-pre-line">
-          Contact us about your portfolio analysis
+          Contact us about your portfolio health report
           or wealth targets. Let's
           collaborate, call us today!
         </p>

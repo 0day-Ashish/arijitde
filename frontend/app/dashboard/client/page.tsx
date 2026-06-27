@@ -1277,7 +1277,7 @@ export default function ClientDashboard() {
                 {showNotSureMessage && (
                   <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-xs text-amber-800 font-sans leading-relaxed animate-in fade-in slide-in-from-top-2 duration-300">
                     <span className="font-bold block mb-1">💡 You&apos;re not alone!</span>
-                    More than 60% of investors start investing without a clearly defined goal. Let&apos;s help identify one through your portfolio analysis.
+                    More than 60% of investors start investing without a clearly defined goal. Let&apos;s help identify one through your portfolio health report.
                   </div>
                 )}
                 <div className="flex gap-2">
@@ -2156,7 +2156,7 @@ export default function ClientDashboard() {
             <div className="space-y-2">
               <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide font-clash">Call Booked Successfully!</h2>
               <p className="text-neutral-500 text-xs font-sans leading-relaxed">
-                Your 1-on-1 premium advisory session is scheduled. A SEBI-registered advisor will contact you within 24 hours at <strong className="text-neutral-800 font-mono font-medium">{userData?.phone || "your registered number"}</strong>.
+                Your 1-on-1 premium portfolio review discussion is scheduled. A SEBI-registered advisor will contact you within 24 hours at <strong className="text-neutral-800 font-mono font-medium">{userData?.phone || "your registered number"}</strong>.
               </p>
             </div>
             <button

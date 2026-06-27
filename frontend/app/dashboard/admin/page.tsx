@@ -78,7 +78,7 @@ export default function AdminDashboard() {
   const [usersList, setUsersList] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'users' | 'payments' | 'existingClients' | 'consultations' | 'aum' | 'liveSessions'>('users');
 
-  // Live Advisory Session Queue state variables
+  // Live Portfolio Review Discussion Queue state variables
   const [advisorySessions, setAdvisorySessions] = useState<any[]>([]);
   const [loadingAdvisory, setLoadingAdvisory] = useState(false);
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
@@ -579,7 +579,7 @@ export default function AdminDashboard() {
         setAdvisorySessions(data.data || []);
       }
     } catch (err) {
-      console.error("Failed to fetch advisory sessions:", err);
+      console.error("Failed to fetch portfolio review discussions:", err);
     } finally {
       setLoadingAdvisory(false);
     }
@@ -1440,7 +1440,7 @@ export default function AdminDashboard() {
           {activeTab === 'liveSessions' && (
             <div className="space-y-4 text-left">
               <h2 className="text-sm font-bold font-clash text-neutral-500 uppercase tracking-wider mb-2">
-                Live Advisory Sessions Queue ({advisorySessions.length})
+                Live Portfolio Review Discussions Queue ({advisorySessions.length})
               </h2>
 
               {loadingAdvisory ? (
@@ -1451,7 +1451,7 @@ export default function AdminDashboard() {
               ) : advisorySessions.length === 0 ? (
                 <div className="border border-dashed border-neutral-200 rounded-2xl p-12 text-center text-sm text-neutral-500 bg-neutral-50 font-mono">
                   <Calendar className="w-12 h-12 text-neutral-400 mx-auto mb-4" />
-                  No paid live advisory sessions in the database.
+                  No paid live portfolio review discussions in the database.
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-6">

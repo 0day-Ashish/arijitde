@@ -16,17 +16,17 @@ const clash = localFont({
 
 export const metadata: Metadata = {
   title: {
-    default: "FinAnalysis | Premium Portfolio Advisory & Financial Planning by Arijit De",
+    default: "FinAnalysis | Premium Portfolio Advisory & Goal-Based Investment Structuring by Arijit De",
     template: "%s | FinAnalysis - Arijit De",
   },
   description: "Advanced financial analysis, SEBI-compliant portfolio advisory, calculator widgets, and custom wealth creation strategies. Optimize your mutual funds, PMS, and direct investments with Arijit De.",
-  keywords: ["FinAnalysis", "Arijit De", "Portfolio Advisory", "Wealth Management", "SIP Calculator", "PMS Advisory", "Mutual Funds India", "Financial Planning"],
+  keywords: ["FinAnalysis", "Arijit De", "Portfolio Advisory", "Wealth Management", "SIP Calculator", "PMS Advisory", "Mutual Funds India", "Goal-Based Investment Structuring"],
   authors: [{ name: "Arijit De", url: "https://finanalysis.arijitde.com" }],
   creator: "Arijit De",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://finanalysis.arijitde.com"),
   openGraph: {
-    title: "FinAnalysis | Premium Portfolio Advisory & Financial Planning by Arijit De",
-    description: "Advanced portfolio analysis, SEBI-compliant advisory, interactive calculators, and customized wealth strategy tools. Secure your financial future with expert-led advice.",
+    title: "FinAnalysis | Premium Portfolio Advisory & Goal-Based Investment Structuring by Arijit De",
+    description: "Advanced portfolio health report, SEBI-compliant advisory, interactive calculators, and customized wealth strategy tools. Secure your financial future with expert-led advice.",
     url: "https://finanalysis.arijitde.com",
     siteName: "FinAnalysis",
     locale: "en_IN",

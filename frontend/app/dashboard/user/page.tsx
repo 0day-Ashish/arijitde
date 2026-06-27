@@ -263,7 +263,7 @@ export default function UserDashboard() {
     );
 
     if (!livePayment) {
-      setError("No approved Live Advisory Session payment found. Please purchase the Advisory Consult first.");
+      setError("No approved Live Portfolio Review Discussion payment found. Please purchase the Advisory Consult first.");
       return;
     }
 
@@ -360,7 +360,7 @@ export default function UserDashboard() {
       const userBookings = leadsData.success ? leadsData.data : [];
       setBookings(userBookings);
 
-      // Fetch advisory sessions
+      // Fetch portfolio review discussions
       const sessionsRes = await fetch(`${backendUrl}/api/leads/my-sessions`, { headers });
       const sessionsData = await sessionsRes.json();
       const userSessions = sessionsData.success ? sessionsData.data : [];
@@ -583,7 +583,7 @@ export default function UserDashboard() {
           amount: checkoutData.amount * 100, // paise
           currency: "INR",
           name: "FinAnalysis",
-          description: productType === "AI_ANALYSIS" ? "AI Portfolio Analysis" : "Live Advisory Session",
+          description: productType === "AI_ANALYSIS" ? "AI Portfolio Health Report" : "Live Portfolio Review Discussion",
           order_id: checkoutData.orderId,
           handler: async function (response: any) {
             setStatusMsg("Verifying your payment...");
@@ -970,8 +970,8 @@ export default function UserDashboard() {
                     <span className="font-semibold text-sm text-neutral-900 block mb-1">First-Week Special Offer Active!</span>
                     <span className="text-neutral-600 leading-relaxed font-medium">
                       As a new user (registered on {new Date(userData.createdAt).toLocaleDateString()}), you get exclusive discounted rates! 
-                      <strong className="text-emerald-700 ml-1">AI Portfolio Analysis is FREE</strong> (usually ₹299) and 
-                      <strong className="text-primary ml-1">Live 1-on-1 Advisory session is ₹300</strong> (usually ₹699).
+                      <strong className="text-emerald-700 ml-1">AI Portfolio Health Report is FREE</strong> (usually ₹299) and 
+                      <strong className="text-primary ml-1">Live 1-on-1 Portfolio Review Discussion is ₹300</strong> (usually ₹699).
                     </span>
                   </div>
                 </div>
@@ -1095,7 +1095,7 @@ export default function UserDashboard() {
                 {showNotSureMessage && (
                   <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-xs text-amber-800 font-sans leading-relaxed animate-in fade-in slide-in-from-top-2 duration-300">
                     <span className="font-bold block mb-1">💡 You&apos;re not alone!</span>
-                    More than 60% of investors start investing without a clearly defined goal. Let&apos;s help identify one through your portfolio analysis.
+                    More than 60% of investors start investing without a clearly defined goal. Let&apos;s help identify one through your portfolio health report.
                   </div>
                 )}
 
@@ -1466,7 +1466,7 @@ export default function UserDashboard() {
             <div className="space-y-2">
               <h2 className="text-3xl font-semibold text-neutral-900 tracking-wide font-clash">Schedule Consultation</h2>
               <p className="text-neutral-600 text-xs font-sans leading-relaxed">
-                You have selected the Live Advisory Session. Please select your 3 distinct preferred date and time slots for Arijit to review and confirm one.
+                You have selected the Live Portfolio Review Discussion. Please select your 3 distinct preferred date and time slots for Arijit to review and confirm one.
               </p>
             </div>
 
@@ -2180,7 +2180,7 @@ export default function UserDashboard() {
                 <div className="space-y-2">
                   <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">Workspace Activated</h2>
                   <p className="text-neutral-500 text-xs font-sans leading-relaxed">
-                    Welcome to the Premium Advisory Portal! Your 1-on-1 advisory session booking has been verified.
+                    Welcome to the Premium Advisory Portal! Your 1-on-1 portfolio review discussion booking has been verified.
                   </p>
                 </div>
 
