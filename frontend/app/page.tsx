@@ -64,7 +64,7 @@ const faqData = [
     answer: "No. Anyone can sign up, take the Investor Personality Assessment, and upload their portfolio for analysis — completely free on the first attempt."
   },
   {
-    question: "Can I analyze a portfolio that wasn't built through your advisory?",
+    question: "Can I analyze a portfolio that wasn't built through your distribution?",
     answer: "Absolutely. The platform analyzes any mutual fund portfolio regardless of where it was built — Groww, Zerodha, Paytm Money, or anywhere else."
   },
   {
@@ -73,7 +73,7 @@ const faqData = [
   },
   {
     question: "Is my data safe?",
-    answer: "Yes. Your portfolio data is stored on secure, encrypted servers with strict access controls. Your information is never sold, shared, or visible to other users. Only you and your advisor can access your data."
+    answer: "Yes. Your portfolio data is stored on secure, encrypted servers with strict access controls. Your information is never sold, shared, or visible to other users. Only you and our team can access your data."
   },
   {
     question: "What is the Investor Personality Assessment?",
@@ -81,11 +81,11 @@ const faqData = [
   },
   {
     question: "Does this platform give stock tips or guaranteed returns?",
-    answer: "No. We do not provide stock recommendations, trading tips, or return guarantees of any kind. Our platform provides portfolio health report, goal-based planning, and structured advisory — all regulated under SEBI and AMFI guidelines."
+    answer: "No. We do not provide stock recommendations, trading tips, or return guarantees of any kind. Our platform provides portfolio health report, goal-based planning, and structured distribution — all regulated under SEBI and AMFI guidelines."
   },
   {
     question: "What do I get after my portfolio health report?",
-    answer: "You receive a Portfolio Score out of 100, three key insights specific to your portfolio, and the option to discuss your results with Arijit De directly through a one-on-one advisory call."
+    answer: "You receive a Portfolio Score out of 100, three key insights specific to your portfolio, and the option to discuss your results with Arijit De directly through a one-on-one portfolio review discussion."
   },
   {
     question: "How do I schedule a consultation?",
@@ -97,7 +97,7 @@ const faqData = [
   },
   {
     question: "Who is behind this platform?",
-    answer: "FinAnalysis is built and operated by Arijit De — SEBI-certified Mutual Fund Distributor (ARN-273396) and SIF Distributor — backed by 35 years of financial advisory experience from his father, Arindam De. This is not a faceless app. There is a real, certified advisor behind every analysis."
+    answer: "FinAnalysis is built and operated by Arijit De — SEBI-certified Mutual Fund Distributor (ARN-273396) and SIF Distributor — backed by 35 years of AMFI-registered Mutual Fund distribution experience from his father, Arindam De. This is not a faceless app. There is a real, certified distributor behind every analysis."
   },
   {
     question: "I already have a AMFI-registered Mutual Fund Distributor. Can I still use this?",
@@ -105,11 +105,11 @@ const faqData = [
   },
   {
     question: "What if I disagree with my portfolio score?",
-    answer: "Your score is based on rule-based financial parameters and is reviewed by a certified advisor before being released to you. If you feel something is inaccurate, book a call and we'll walk through it together."
+    answer: "Your score is based on rule-based financial parameters and is reviewed by a certified distributor before being released to you. If you feel something is inaccurate, book a call and we'll walk through it together."
   },
   {
     question: "Is this platform only for mutual fund investors?",
-    answer: "Currently, the portfolio health report engine is built for mutual fund portfolios. However, Arindam De's advisory services cover the full spectrum — Insurance, PMS, Fixed Deposits, PNB Housing Finance, and more. Reach out directly for anything beyond mutual funds."
+    answer: "Currently, the portfolio health report engine is built for mutual fund portfolios. However, Arindam De's distribution services cover the full spectrum — Insurance, PMS, Fixed Deposits, PNB Housing Finance, and more. Reach out directly for anything beyond mutual funds."
   }
 ]
 
@@ -487,7 +487,7 @@ export default function Home() {
           <div className="flex flex-col items-center justify-center text-center px-6 max-w-5xl mx-auto space-y-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-white/20 backdrop-blur-md text-xs font-medium text-primary select-none">
               <img src="/image.png" alt="Badge" className="h-4 w-4 object-contain" />
-              <span>35+ Years of Certified Financial Advisory</span>
+              <span>35+ Years of Certified Amfi-Registered Mutual Fund Distribution</span>
             </div>
             <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold text-primary font-chillax leading-tight tracking-tight uppercase">
               Preserving Legacy<br />
@@ -529,7 +529,7 @@ export default function Home() {
                   }`}>
                   <div className="overflow-hidden space-y-2.5 font-sans pr-4 leading-relaxed font-bold text-foreground text-lg md:text-xl">
                     <p>
-                      FinAnalysis blends over 35 years of trusted financial advisory with modern technology and data science. Founded on a legacy started by <strong className="text-primary font-extrabold">Arindam De</strong> in 1989, we have transitioned across multiple market cycles to safeguard and grow client wealth. Today, <strong className="text-primary font-extrabold">Arijit De</strong> (SEBI-certified Mutual Fund Distributor ARN-273396 and SIF distributor) integrates computer science analytics, systematic portfolio optimization, and structured asset allocation, delivering a modern, data-backed approach to wealth management that prior generations never had access to.
+                      FinAnalysis blends over 35 years of trusted AMFI-registered Mutual Fund distribution with modern technology and data science. Founded on a legacy started by <strong className="text-primary font-extrabold">Arindam De</strong> in 1989, we have transitioned across multiple market cycles to safeguard and grow client wealth. Today, <strong className="text-primary font-extrabold">Arijit De</strong> (SEBI-certified Mutual Fund Distributor ARN-273396 and SIF distributor) integrates computer science analytics, systematic portfolio optimization, and structured asset allocation, delivering a modern, data-backed approach to wealth management that prior generations never had access to.
                     </p>
                   </div>
                 </div>
@@ -573,7 +573,7 @@ export default function Home() {
                   }`}>
                   <div className="overflow-hidden space-y-2.5 font-sans pr-4 leading-relaxed font-bold text-foreground text-lg md:text-xl">
                     <p>
-                      In an era dominated by cold robo-advisors and static investment apps, your hard-earned wealth deserves personalized, <span className="font-extrabold text-primary">relationship-driven human advisory</span>. We exist to bridge the gap between human empathy and data precision. By standing by our clients through decades of market turbulence, recessions, and regulatory shifts, we prioritize multi-generational trust and structured planning. We don't just measure relationships in transactions; we measure them in decades of successful outcomes and financial security.
+                      In an era dominated by cold robo-distribution representatives and static investment apps, your hard-earned wealth deserves personalized, <span className="font-extrabold text-primary">relationship-driven human distribution</span>. We exist to bridge the gap between human empathy and data precision. By standing by our clients through decades of market turbulence, recessions, and regulatory shifts, we prioritize multi-generational trust and structured planning. We don't just measure relationships in transactions; we measure them in decades of successful outcomes and financial security.
                     </p>
                   </div>
                 </div>
@@ -593,13 +593,13 @@ export default function Home() {
         <div className="w-full max-w-5xl mx-auto p-8 md:p-12 bg-white/20 backdrop-blur-2xl border border-border rounded-3xl shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-12 relative z-10">
           <div className="space-y-4 max-w-xl text-left">
             <span className="text-[10px] font-mono text-primary border border-primary/25 bg-primary/5 px-3 py-1 rounded-full uppercase tracking-wider font-semibold">
-              Instant Advisory
+              Instant Support
             </span>
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-primary font-clash">
               Meet Virtual Arijit : Real-Time Insights, Zero Waiting.
             </h2>
             <p className="text-[#64748B] text-sm leading-relaxed font-sans">
-              Have questions about how we check anomalies, calculate fee efficiency, or structure systematic portfolios? It is trained directly on our 35-year advisory playbook to answer your investment questions instantly.
+              Have questions about how we check anomalies, calculate fee efficiency, or structure systematic portfolios? It is trained directly on our 35-year distribution playbook to answer your investment questions instantly.
             </p>
           </div>
 
@@ -921,7 +921,7 @@ export default function Home() {
 
                 {/* Footer advice */}
                 <div className="bg-primary/5 border border-primary/10 p-3.5 rounded-xl text-left">
-                  <span className="text-[10px] font-bold text-[#2E7D32] font-mono uppercase block mb-1">Advisor Alert</span>
+                  <span className="text-[10px] font-bold text-[#2E7D32] font-mono uppercase block mb-1">System Alert</span>
                   <p className="text-[10px] text-muted-foreground leading-relaxed">
                     High exposure in thematic mutual funds detected. Consider rebalancing into broad-market index options to increase fee efficiency and lower tracking variance.
                   </p>
@@ -1237,7 +1237,7 @@ export default function Home() {
                 Frequently Asked Questions
               </h2>
               <p className="text-muted-foreground text-sm font-sans mt-2">
-                Can't find the answer you're looking for? Reach out to our advisory team at <a href="mailto:contact@finanalysis.in" className="text-primary hover:underline font-mono">contact@finanalysis.in</a>.
+                Can't find the answer you're looking for? Reach out to our support team at <a href="mailto:contact@finanalysis.in" className="text-primary hover:underline font-mono">contact@finanalysis.in</a>.
               </p>
             </ScrollBlurReveal>
           </div>
@@ -1301,10 +1301,10 @@ export default function Home() {
           <div className="relative text-left">
             <div className="text-center space-y-3 mb-8">
               <h2 className="text-3xl lg:text-5xl  tracking-tight text-primary font-clash">
-                Connect with our Advisors
+                Connect With Our Distribution Representatives
               </h2>
               <p className="text-muted-foreground text-xs leading-relaxed font-sans max-w-sm mx-auto">
-                Drop us a message and our wealth advisory team will get back to you shortly to analyze your portfolio.
+                Drop us a message and our wealth distribution team will get back to you shortly to analyze your portfolio.
               </p>
             </div>
 

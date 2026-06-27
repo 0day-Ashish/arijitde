@@ -567,7 +567,7 @@ export default function Onboarding() {
               Book a Call
             </h1>
             <p className="text-muted-foreground text-sm md:text-base max-w-lg mb-12">
-              Choose your profile below to enter your customized financial advisory dashboard.
+              Choose your profile below to enter your customized AMFI-registered Mutual Fund distribution dashboard.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-3xl mt-4">

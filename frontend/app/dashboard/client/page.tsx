@@ -332,7 +332,7 @@ export default function ClientDashboard() {
   const fetchClientData = async () => {
     try {
       setApiLoading(true);
-      setStatusMsg("Loading premium advisory workspace...");
+      setStatusMsg("Loading premium client workspace...");
       const headers = { "Authorization": `Bearer ${token}` };
 
       // 1. Me check
@@ -485,7 +485,7 @@ export default function ClientDashboard() {
   const handleClientBookCall = async () => {
     setError(null);
     setApiLoading(true);
-    setStatusMsg("Registering premium advisory call booking...");
+    setStatusMsg("Registering premium portfolio review discussion booking...");
 
     try {
       const res = await fetch(`${backendUrl}/api/leads`, {
@@ -1470,13 +1470,13 @@ export default function ClientDashboard() {
                 <div className="flex justify-between items-center border-b border-border/20 pb-2">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-800 flex items-center gap-1.5">
                     <Calendar className="w-4 h-4 text-primary" />
-                    Book advisor call
+                    Book Portfolio Review
                   </h3>
                   <span className="text-[9px] font-mono text-neutral-400">1-CLICK</span>
                 </div>
 
                 <p className="text-[11px] text-neutral-500 font-sans leading-relaxed">
-                  Book a priority 1-on-1 strategy session with our advisors. Free of charge for active clients.
+                  Book a priority 1-on-1 strategy session with our distribution representatives. Free of charge for active clients.
                 </p>
 
                 <div className="space-y-1">
@@ -2156,7 +2156,7 @@ export default function ClientDashboard() {
             <div className="space-y-2">
               <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide font-clash">Call Booked Successfully!</h2>
               <p className="text-neutral-500 text-xs font-sans leading-relaxed">
-                Your 1-on-1 premium portfolio review discussion is scheduled. A SEBI-registered advisor will contact you within 24 hours at <strong className="text-neutral-800 font-mono font-medium">{userData?.phone || "your registered number"}</strong>.
+                Your 1-on-1 premium portfolio review discussion is scheduled. A SEBI-registered distributor will contact you within 24 hours at <strong className="text-neutral-800 font-mono font-medium">{userData?.phone || "your registered number"}</strong>.
               </p>
             </div>
             <button
@@ -2180,7 +2180,7 @@ export default function ClientDashboard() {
             <div className="space-y-2">
               <h2 className="text-xl font-bold text-neutral-900 tracking-wide font-clash">Sign Out Warning</h2>
               <p className="text-neutral-500 text-xs font-sans leading-relaxed">
-                Are you sure you want to sign out? You will need to log in again to access your premium advisory workspace, live AUM details, and portfolio telemetry reports.
+                Are you sure you want to sign out? You will need to log in again to access your premium client workspace, live AUM details, and portfolio telemetry reports.
               </p>
             </div>
             <div className="flex gap-4 w-full">

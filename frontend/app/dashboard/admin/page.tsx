@@ -638,7 +638,7 @@ export default function AdminDashboard() {
       });
       const data = await res.json();
       if (data.success) {
-        alert("Advisor notes updated successfully!");
+        alert("Distributor notes updated successfully!");
         setEditingSessionId(null);
         setPortfolioNotesInput("");
         await fetchAdvisorySessions();
@@ -1348,14 +1348,14 @@ export default function AdminDashboard() {
           {activeTab === 'consultations' && (
             <div className="space-y-4">
               <h2 className="text-sm font-bold font-clash text-neutral-500 uppercase tracking-wider mb-2">
-                Advisory & Consultation Leads ({allLeadsList.length})
+                Distribution & Consultation Leads ({allLeadsList.length})
               </h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {allLeadsList.length === 0 ? (
                   <div className="col-span-2 border border-dashed border-neutral-200 rounded-2xl p-12 text-center text-sm text-neutral-500 bg-neutral-50 font-mono">
                     <PhoneCall className="w-12 h-12 text-neutral-400 mx-auto mb-4" />
-                    No booked advisory calls found.
+                    No booked distribution calls found.
                   </div>
                 ) : (
                   allLeadsList.map((lead) => (
@@ -1409,7 +1409,7 @@ export default function AdminDashboard() {
                           <div className="border-t border-neutral-200/60 pt-2 flex items-start gap-2">
                             <FileText className="w-4 h-4 text-neutral-400 shrink-0 mt-0.5" />
                             <div>
-                              <span className="text-[10px] text-neutral-500 block uppercase font-mono">Advisor Notes</span>
+                              <span className="text-[10px] text-neutral-500 block uppercase font-mono">Distributor Notes</span>
                               <p className="text-xs text-neutral-700 font-sans italic">"{lead.notes}"</p>
                             </div>
                           </div>
@@ -1621,7 +1621,7 @@ export default function AdminDashboard() {
 
                             {/* Portfolio Notes Editor Card */}
                             <div className="bg-neutral-50 border border-neutral-100 rounded-2xl p-5 space-y-3">
-                              <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest block font-bold">Portfolio Advisory Notes</span>
+                              <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest block font-bold">Portfolio Distribution Notes</span>
                               <textarea
                                 rows={3}
                                 placeholder="Write portfolio audits, rebalancing advice, or general consulting notes..."
@@ -1637,7 +1637,7 @@ export default function AdminDashboard() {
                                 disabled={updatingSession || editingSessionId !== session.id || !portfolioNotesInput.trim()}
                                 className="w-full py-2 bg-primary hover:bg-primary/95 text-white font-bold text-xs rounded-xl transition duration-200 disabled:opacity-40 cursor-pointer"
                               >
-                                Save Advisor Notes
+                                Save Distributor Notes
                               </button>
                             </div>
                           </div>
@@ -2186,7 +2186,7 @@ export default function AdminDashboard() {
                   </div>
 
                   <div>
-                    <label className="text-[10px] font-bold text-neutral-900 uppercase block mb-1">Advisor Verification Notes</label>
+                    <label className="text-[10px] font-bold text-neutral-900 uppercase block mb-1">Distributor Verification Notes</label>
                     <textarea
                       rows={3}
                       placeholder="Add assessment evaluation, portfolio adjustments notes, or payment screenshot validation comments..."
@@ -2227,7 +2227,7 @@ export default function AdminDashboard() {
                             <GoalIcon className="w-6 h-6" />
                           </div>
                           <div>
-                            <div className="text-xs text-neutral-500 font-mono">Selected Advisory Goal</div>
+                            <div className="text-xs text-neutral-500 font-mono">Selected Distribution Goal</div>
                             <h4 className="text-sm font-bold font-clash text-neutral-900 mt-0.5">
                               {goalMeta.label}
                             </h4>
@@ -2377,7 +2377,7 @@ export default function AdminDashboard() {
                           {p.score.insights && Array.isArray(p.score.insights) && p.score.insights.length > 0 && (
                             <div className="border-t border-neutral-200 pt-2 text-xs font-sans text-neutral-500 space-y-1">
                               <span className="text-[10px] text-neutral-900 uppercase font-bold tracking-wide font-clash block mb-1">
-                                Advisory Insights
+                                Distribution Insights
                               </span>
                               {p.score.insights.map((insight: string, idx: number) => (
                                 <div key={idx} className="flex items-start gap-1.5">
@@ -2432,7 +2432,7 @@ export default function AdminDashboard() {
               {/* Consultation Booking Leads */}
               <div className="border border-neutral-200 bg-neutral-50 rounded-2xl p-5 space-y-4 font-sans text-neutral-900">
                 <h3 className="text-xs font-bold font-clash uppercase tracking-wider text-neutral-900 border-b border-neutral-200 pb-2">
-                  Advisory Leads ({selectedUser.leads?.length || 0})
+                  Distribution Leads ({selectedUser.leads?.length || 0})
                 </h3>
 
                 {(!selectedUser.leads || selectedUser.leads.length === 0) ? (
@@ -2479,7 +2479,7 @@ export default function AdminDashboard() {
 
                       {l.notes && (
                         <div className="text-[11px] font-mono bg-neutral-50 p-2.5 rounded-lg border border-neutral-200 text-neutral-600">
-                          <span className="text-[9px] text-neutral-900 uppercase font-bold font-clash block mb-1">Advisor Notes</span>
+                          <span className="text-[9px] text-neutral-900 uppercase font-bold font-clash block mb-1">Distributor Notes</span>
                           {l.notes}
                         </div>
                       )}
@@ -2714,10 +2714,10 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* Section 4: Advisory & Target Allocation */}
+              {/* Section 4: Distribution & Target Allocation */}
               <div className="border border-neutral-200 bg-neutral-50 rounded-2xl p-5 space-y-4">
                 <h3 className="text-xs font-bold font-clash uppercase tracking-wider text-neutral-900 border-b border-neutral-200 pb-2">
-                  Advisory & Target Allocation
+                  Distribution & Target Allocation
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <DetailField label="Current AUM" value={selectedExistingClient.aum !== null && selectedExistingClient.aum !== undefined ? `₹${selectedExistingClient.aum.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'N/A'} />

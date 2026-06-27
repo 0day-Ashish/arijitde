@@ -66,13 +66,13 @@ export default function PrivacyPolicy() {
       content: (
         <div className="space-y-3 font-sans text-sm text-muted-foreground leading-relaxed">
           <p>
-            Your information is processed to deliver structured, data-driven personal advisory services and maintain system integrity:
+            Your information is processed to deliver structured, data-driven personal distribution services and maintain system integrity:
           </p>
           <ul className="list-disc pl-5 space-y-1">
             <li>To perform portfolio evaluations across our 5 core pillars (Goal Alignment, Asset Allocation, Diversification, SIP Discipline, Fee Efficiency).</li>
             <li>To run anomaly detection diagnostic models and verify regulatory compliance.</li>
             <li>To coordinate OTP authentication for secure logins and send customized alert updates.</li>
-            <li>To communicate updates on financial regulations, market trends, and related advisory newsletters.</li>
+            <li>To communicate updates on financial regulations, market trends, and related distribution updates.</li>
           </ul>
         </div>
       )

@@ -251,7 +251,7 @@ export default function SIFCalculator() {
           {/* Dotted divider */}
           <div className="border-t border-dashed border-border w-full" />
 
-          {/* SIF advisory note */}
+          {/* SIF distribution note */}
           <div className="bg-[#3A8293]/5 border border-[#3A8293]/10 p-4 rounded-2xl flex items-start gap-3">
             <ShieldCheck className="w-5 h-5 text-[#3A8293] shrink-0 mt-0.5" />
             <div className="text-xs">

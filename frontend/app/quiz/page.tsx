@@ -923,14 +923,14 @@ export default function Quiz() {
                   </div>
                 </div>
 
-                {/* Advisor Insights */}
+                {/* Portfolio Insights */}
                 <div className="p-6 bg-white/30 border border-white/20 rounded-3xl shadow-md backdrop-blur-xl flex-1 flex flex-col justify-between">
                   <div className="flex gap-3.5 items-start mb-6">
                     <div className="p-2.5 rounded-xl border border-blue-500/20 bg-blue-500/10 text-blue-600 flex items-center justify-center">
                       <Info className="w-4.5 h-4.5" />
                     </div>
                     <div className="space-y-1">
-                      <h4 className="text-xs font-bold text-neutral-800 uppercase tracking-widest font-clash">Personalized Advisor Insight</h4>
+                      <h4 className="text-xs font-bold text-neutral-800 uppercase tracking-widest font-clash">Personalized Portfolio Insight</h4>
                       <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-sans font-medium">
                         {currentDetails.insight}
                       </p>

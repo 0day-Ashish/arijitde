@@ -263,7 +263,7 @@ export default function UserDashboard() {
     );
 
     if (!livePayment) {
-      setError("No approved Live Portfolio Review Discussion payment found. Please purchase the Advisory Consult first.");
+      setError("No approved Live Portfolio Review Discussion payment found. Please purchase the Portfolio Review Session first.");
       return;
     }
 
@@ -1281,7 +1281,7 @@ export default function UserDashboard() {
             const aiWalletUse = Math.min(walletBalance, aiBase);
             const aiFinal = aiBase - aiWalletUse;
 
-            // Product 2: Live Advisor Consult
+            // Product 2: Live Portfolio Review Discussion
             const liveBase = isFirstWeek ? 300 : 699;
             const liveWalletUse = Math.min(walletBalance, liveBase);
             const liveFinal = liveBase - liveWalletUse;
@@ -1296,7 +1296,7 @@ export default function UserDashboard() {
                     Choose Your Scanning Method
                   </h1>
                   <p className="text-neutral-500 text-xs font-sans leading-relaxed">
-                    Take the next step to analyze your mutual fund portfolio. Select AI-driven automated analysis or 1-on-1 advisor review.
+                    Take the next step to analyze your mutual fund portfolio. Select AI-driven automated analysis or 1-on-1 distributor review.
                   </p>
                 </div>
 
@@ -1374,7 +1374,7 @@ export default function UserDashboard() {
                     </div>
                   </div>
 
-                  {/* Option B: Trusted Advisor Scan */}
+                  {/* Option B: Trusted Distributor Scan */}
                   <div className="border border-primary/20 bg-[radial-gradient(circle_at_top_right,rgba(138,92,255,0.06)_0%,transparent_60%)] bg-white/30 backdrop-blur-xl rounded-3xl p-8 flex flex-col justify-between hover:border-primary/50 hover:shadow-2xl transition-all duration-300 relative overflow-hidden group">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/25 transition-all duration-300"></div>
 
@@ -1384,14 +1384,14 @@ export default function UserDashboard() {
                           <Users className="w-6 h-6 text-primary" />
                         </span>
                         <span className="px-2.5 py-1 text-[9px] font-mono uppercase font-bold tracking-widest bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 rounded-full">
-                          Human Advisor
+                          Human Distributor
                         </span>
                       </div>
 
                       <div className="space-y-2">
-                        <h2 className="text-2xl font-bold font-clash text-neutral-900">Advisor Consult</h2>
+                        <h2 className="text-2xl font-bold font-clash text-neutral-900">Distributor Consult</h2>
                         <p className="text-neutral-600 text-xs font-sans leading-relaxed">
-                          1-on-1 session with SEBI registered advisor Arijit De. In-depth custom roadmap, tax restructuring advice, and active rebalancing strategy.
+                          1-on-1 session with SEBI registered distributor Arijit De. In-depth custom roadmap, tax restructuring advice, and active rebalancing strategy.
                         </p>
                       </div>
 
@@ -1440,7 +1440,7 @@ export default function UserDashboard() {
                           disabled={apiLoading}
                           className="px-6 py-3.5 bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-xs rounded-xl transition duration-200 cursor-pointer shadow-lg disabled:opacity-40"
                         >
-                          Select Advisor Scan
+                          Select Distributor Scan
                         </button>
                       </div>
                     </div>
@@ -1460,7 +1460,7 @@ export default function UserDashboard() {
           })()
         )}
 
-        {/* ----------------- STAGE 1.7: ADVISOR BOOKING CALENDAR ----------------- */}
+        {/* ----------------- STAGE 1.7: DISTRIBUTOR BOOKING CALENDAR ----------------- */}
         {dashboardStage === "BOOKING" && (
           <div className="w-full max-w-xl border border-primary/20 bg-[radial-gradient(circle_at_top_right,rgba(138,92,255,0.06)_0%,transparent_60%)] bg-white/30 backdrop-blur-xl rounded-3xl p-8 md:p-10 flex flex-col gap-6 shadow-2xl relative overflow-hidden animate-in fade-in duration-500 text-left">
             <div className="space-y-2">
@@ -1548,16 +1548,16 @@ export default function UserDashboard() {
         {/* ----------------- STAGE 2: ANALYZE PORTFOLIO ----------------- */}
         {dashboardStage === "ANALYZE" && (
           <div className="w-full max-w-3xl flex flex-col gap-8 animate-in fade-in duration-400">
-            {/* Advisor Booking Confirmation Alert */}
+            {/* Distributor Booking Confirmation Alert */}
             {bookings.some((b: any) => b.slot !== null) && (
               <div className="w-full border border-emerald-500/20 bg-emerald-500/5 backdrop-blur-xl rounded-3xl p-6 flex items-start gap-4 text-left animate-in fade-in duration-300">
                 <span className="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-600">
                   <Calendar className="w-5 h-5 text-emerald-600" />
                 </span>
                 <div className="space-y-1">
-                  <h4 className="text-sm font-bold text-neutral-900">Advisor Consultation Booked!</h4>
+                  <h4 className="text-sm font-bold text-neutral-900">Distributor Consultation Booked!</h4>
                   <p className="text-xs text-neutral-600 font-sans leading-relaxed">
-                    Your 1-on-1 strategy call with advisor Arijit De is scheduled for{" "}
+                    Your 1-on-1 strategy call with distributor Arijit De is scheduled for{" "}
                     <strong className="text-neutral-900 font-semibold font-mono">
                       {new Date(bookings.find((b: any) => b.slot !== null).slot).toLocaleString(undefined, {
                         weekday: 'short',
@@ -1623,11 +1623,11 @@ export default function UserDashboard() {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-neutral-200/50 pb-6">
                   <div className="space-y-1">
                     <span className="text-[10px] font-mono text-primary uppercase tracking-widest font-semibold bg-primary/10 border border-primary/20 px-3 py-1 rounded-full">
-                      Exclusive Advisory Portal
+                      Exclusive Client Portal
                     </span>
                     <h2 className="text-3xl font-bold font-clash text-neutral-900 mt-3">Your Roadmap is Being Prepared</h2>
                     <p className="text-neutral-600 text-xs font-sans leading-relaxed max-w-lg">
-                      You are in safe hands. Sebi-registered advisor Arijit De is currently analyzing your active financial profile parameters to prepare a tailormade strategy.
+                      You are in safe hands. Sebi-registered distributor Arijit De is currently analyzing your active financial profile parameters to prepare a tailormade strategy.
                     </p>
                   </div>
                   <div className="bg-white/60 border border-neutral-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center shadow-sm shrink-0 min-w-[160px]">
@@ -1659,7 +1659,7 @@ export default function UserDashboard() {
                         <Loader2 className="w-4 h-4 animate-spin" />
                       </div>
                       <div className="space-y-1">
-                        <h4 className="text-xs font-bold text-neutral-800">2. Advisor Telemetry Audit</h4>
+                        <h4 className="text-xs font-bold text-neutral-800">2. Distributor Telemetry Audit</h4>
                         <p className="text-[11px] text-neutral-600 font-sans leading-normal">
                           Arijit De will audit your selected age limits, expectations, and risk thresholds prior to the consultation call.
                         </p>
@@ -1701,7 +1701,7 @@ export default function UserDashboard() {
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                     </span>
                     <span className="text-[11px] font-sans font-medium text-neutral-600">
-                      Advisor review status: <strong className="text-emerald-700 font-semibold font-mono">Assigned & Preparing</strong>
+                      Distributor Review status: <strong className="text-emerald-700 font-semibold font-mono">Assigned & Preparing</strong>
                     </span>
                   </div>
                 </div>
@@ -2110,11 +2110,11 @@ export default function UserDashboard() {
                   <div className="w-full border border-primary/20 bg-[radial-gradient(circle_at_top_right,rgba(138,92,255,0.06)_0%,transparent_60%)] bg-white/30 backdrop-blur-xl rounded-3xl p-8 md:p-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-8 shadow-2xl relative overflow-hidden">
                     <div className="space-y-4 max-w-xl text-left">
                       <span className="text-[10px] font-mono text-primary border border-primary/30 bg-primary/5 px-3 py-1 rounded-full uppercase tracking-wider">
-                        Premium Advisor Consulting
+                        Premium Distributor Consulting
                       </span>
-                      <h2 className="text-2xl md:text-3xl font-semibold text-neutral-900 tracking-wide">Detailed Advisory Optimization Session</h2>
+                      <h2 className="text-2xl md:text-3xl font-semibold text-neutral-900 tracking-wide">Detailed Distribution Optimization Session</h2>
                       <p className="text-neutral-600 text-xs font-sans leading-relaxed">
-                        Book your 1-on-1 strategy call with our SEBI-registered advisor Arijit De. Get a comprehensive optimization roadmap, personalized tax restructuring report, and active rebalancing insights based on your score.
+                        Book your 1-on-1 strategy call with our SEBI-registered distributor Arijit De. Get a comprehensive optimization roadmap, personalized tax restructuring report, and active rebalancing insights based on your score.
                       </p>
                       <div className="flex gap-6 items-center text-neutral-500 text-xs font-sans pt-1">
                         <div className="flex items-center gap-1.5">
@@ -2180,7 +2180,7 @@ export default function UserDashboard() {
                 <div className="space-y-2">
                   <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">Workspace Activated</h2>
                   <p className="text-neutral-500 text-xs font-sans leading-relaxed">
-                    Welcome to the Premium Advisory Portal! Your 1-on-1 portfolio review discussion booking has been verified.
+                    Welcome to the Premium Client Portal! Your 1-on-1 portfolio review discussion booking has been verified.
                   </p>
                 </div>
 
@@ -2249,7 +2249,7 @@ export default function UserDashboard() {
                     </div>
                     <div className="flex justify-between items-start">
                       <span className="text-neutral-500 font-mono uppercase tracking-wider text-[10px]">Next Steps:</span>
-                      <span className="text-neutral-800 font-medium text-right max-w-[200px]">Our advisory desk is preparing your PDF rebalancing plan.</span>
+                      <span className="text-neutral-800 font-medium text-right max-w-[200px]">Our distribution desk is preparing your PDF rebalancing plan.</span>
                     </div>
                   </div>
                 )}
@@ -2308,7 +2308,7 @@ export default function UserDashboard() {
                 </div>
 
                 <p className="text-xs text-neutral-600 font-sans leading-relaxed font-semibold">
-                  Our advisor will contact you back in some time.
+                  Our distributor will contact you back in some time.
                 </p>
 
                 {scoreReport && (
@@ -2331,7 +2331,7 @@ export default function UserDashboard() {
           <div className="w-full max-w-md bg-white/70 border border-white/40 rounded-3xl p-8 shadow-2xl backdrop-blur-xl animate-in zoom-in-95 duration-300 text-left">
             <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide font-clash">Complete Profile</h2>
             <p className="text-neutral-500 text-xs font-sans mt-2 leading-relaxed">
-              Please enter your details to proceed with your onboarding and premium advisory services.
+              Please enter your details to proceed with your onboarding and premium distribution services.
             </p>
             <form onSubmit={handlePhoneSubmit} className="mt-6 space-y-4">
               <div className="space-y-1.5">

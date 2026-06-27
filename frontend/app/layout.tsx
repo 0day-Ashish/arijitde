@@ -16,17 +16,17 @@ const clash = localFont({
 
 export const metadata: Metadata = {
   title: {
-    default: "FinAnalysis | Premium Portfolio Advisory & Goal-Based Investment Structuring by Arijit De",
+    default: "FinAnalysis | Premium Portfolio Distribution & Goal-Based Investment Structuring by Arijit De",
     template: "%s | FinAnalysis - Arijit De",
   },
-  description: "Advanced financial analysis, SEBI-compliant portfolio advisory, calculator widgets, and custom wealth creation strategies. Optimize your mutual funds, PMS, and direct investments with Arijit De.",
-  keywords: ["FinAnalysis", "Arijit De", "Portfolio Advisory", "Wealth Management", "SIP Calculator", "PMS Advisory", "Mutual Funds India", "Goal-Based Investment Structuring"],
+  description: "Advanced financial analysis, SEBI-compliant portfolio distribution, calculator widgets, and custom wealth creation strategies. Optimize your mutual funds, PMS, and direct investments with Arijit De.",
+  keywords: ["FinAnalysis", "Arijit De", "Portfolio Distribution", "Wealth Management", "SIP Calculator", "Pms Distribution", "Mutual Funds India", "Goal-Based Investment Structuring"],
   authors: [{ name: "Arijit De", url: "https://finanalysis.arijitde.com" }],
   creator: "Arijit De",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://finanalysis.arijitde.com"),
   openGraph: {
-    title: "FinAnalysis | Premium Portfolio Advisory & Goal-Based Investment Structuring by Arijit De",
-    description: "Advanced portfolio health report, SEBI-compliant advisory, interactive calculators, and customized wealth strategy tools. Secure your financial future with expert-led advice.",
+    title: "FinAnalysis | Premium Portfolio Distribution & Goal-Based Investment Structuring by Arijit De",
+    description: "Advanced portfolio health report, SEBI-compliant distribution, interactive calculators, and customized wealth strategy tools. Secure your financial future with expert-led advice.",
     url: "https://finanalysis.arijitde.com",
     siteName: "FinAnalysis",
     locale: "en_IN",
@@ -34,8 +34,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "FinAnalysis | Portfolio Advisory & Wealth Strategies",
-    description: "Custom wealth building strategy tools, calculators, and portfolio advisory led by Arijit De.",
+    title: "FinAnalysis | Portfolio Distribution & Wealth Strategies",
+    description: "Custom wealth building strategy tools, calculators, and portfolio distribution led by Arijit De.",
   },
   robots: {
     index: true,

@@ -639,7 +639,7 @@ export default function SWPCalculator() {
         </div>
       </div>
 
-      {/* SWP Advisory Info Section */}
+      {/* SWP Distribution Info Section */}
       <div className="relative z-10 w-full max-w-5xl mx-auto px-6 pb-24 text-left">
         <div className="bg-white/20 backdrop-blur-3xl border border-border p-8 rounded-3xl flex flex-col gap-6">
           <div className="flex items-center gap-3">
@@ -655,7 +655,7 @@ export default function SWPCalculator() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs text-[#64748B] font-sans leading-relaxed">
             <div className="space-y-2">
               <h4 className="font-bold text-primary font-clash">The 4% Safety Rule</h4>
-              <p>For sustainable lifetime payouts, advisors suggest a starting monthly withdrawal of 0.33% to 0.4% of your total initial corpus. This helps ensure that expected market growth continuously replenishes your capital base, making your fund sustain indefinitely.</p>
+              <p>For sustainable lifetime payouts, experts suggest a starting monthly withdrawal of 0.33% to 0.4% of your total initial corpus. This helps ensure that expected market growth continuously replenishes your capital base, making your fund sustain indefinitely.</p>
             </div>
             <div className="space-y-2">
               <h4 className="font-bold text-primary font-clash">Growth Over Payout</h4>

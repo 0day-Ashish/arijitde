@@ -189,7 +189,7 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
                       </div>
 
                       <p className="text-[10px] leading-relaxed text-muted-foreground font-sans">
-                        Earn more FinPoints by submitting portfolios, answering quizzes, or booking advisory reviews.
+                        Earn more FinPoints by submitting portfolios, answering quizzes, or booking portfolio reviews.
                       </p>
 
                       <a

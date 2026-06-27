@@ -33,7 +33,7 @@ export default function BookAdvisoryCall() {
   const upiId = "arijitde@upi";
 
   useEffect(() => {
-    document.title = "Book Advisory Call | FinAnalysis";
+    document.title = "Book Portfolio Review Discussion | FinAnalysis";
     
     // Auth Guard
     const savedToken = localStorage.getItem("token");
@@ -145,7 +145,7 @@ export default function BookAdvisoryCall() {
             <div className="space-y-2">
               <h2 className="text-2xl font-semibold text-white tracking-wide">Booking Submitted!</h2>
               <p className="text-slate-400 text-xs font-sans leading-relaxed">
-                Thank you for subscribing! Your Advisory Call and PDF Optimization plan booking is pending validation.
+                Thank you for subscribing! Your Portfolio Review Discussion and PDF Optimization plan booking is pending validation.
               </p>
             </div>
 
