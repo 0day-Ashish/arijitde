@@ -211,6 +211,14 @@ export default function ClientDashboard() {
   const [pointsEarnedToday, setPointsEarnedToday] = useState(0);
   const [selectedSlot, setSelectedSlot] = useState<string>("");
 
+  // Booking / Scheduling States
+  const [payments, setPayments] = useState<any[]>([]);
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [slot1, setSlot1] = useState("");
+  const [slot2, setSlot2] = useState("");
+  const [slot3, setSlot3] = useState("");
+  const [mustSchedule, setMustSchedule] = useState(false);
+
   // Uploader tabs
   const [analyzeTab, setAnalyzeTab] = useState<"FILE" | "MANUAL">("FILE");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -402,6 +410,35 @@ export default function ClientDashboard() {
       } catch (ecErr) {
         console.error("Failed to load certified valuation telemetry:", ecErr);
       }
+
+      // 5. Fetch payments and sessions to check if live session is scheduled
+      try {
+        const payRes = await fetch(`${backendUrl}/api/payments/my-payments`, { headers });
+        const payData = await payRes.json();
+        const userPayments = payData.success ? payData.data : [];
+        setPayments(userPayments);
+
+        const sessionsRes = await fetch(`${backendUrl}/api/leads/my-sessions`, { headers });
+        const sessionsData = await sessionsRes.json();
+        const userSessions = sessionsData.success ? sessionsData.data : [];
+        setSessions(userSessions);
+
+        const validPayments = userPayments.filter((p: any) => p.status === "APPROVED" || p.status === "PENDING");
+        const hasPaidLive = validPayments.some((p: any) => p.productType === "LIVE_SESSION" || p.amount === 499 || p.amount === 300 || p.amount === 699);
+        if (hasPaidLive) {
+          const liveSession = userSessions.find((s: any) => s.payment?.status === "APPROVED" || s.payment?.productType === "LIVE_SESSION");
+          const hasScheduled = liveSession && new Date(liveSession.preferredSlot1).getTime() > 0;
+          if (liveSession && !hasScheduled) {
+            setMustSchedule(true);
+          } else {
+            setMustSchedule(false);
+          }
+        } else {
+          setMustSchedule(false);
+        }
+      } catch (checkErr) {
+        console.error("Failed to run schedule guard check:", checkErr);
+      }
     } catch (err) {
       console.error(err);
       setError("Failed to load diagnostic telemetry data.");
@@ -424,6 +461,58 @@ export default function ClientDashboard() {
       }
     } catch (err) {
       setError("Network error running score calculation.");
+    }
+  };
+
+  const handleBookMeeting = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!slot1 || !slot2 || !slot3) {
+      setError("Please select all 3 preferred time slots.");
+      return;
+    }
+
+    const livePayment = payments.find(
+      (p: any) => p.productType === "LIVE_SESSION" && p.status === "APPROVED"
+    );
+
+    if (!livePayment) {
+      setError("No approved Live Portfolio Review Discussion payment found.");
+      return;
+    }
+
+    setError(null);
+    setApiLoading(true);
+    setStatusMsg("Submitting your slot preferences to Arijit...");
+
+    try {
+      const headers = { 
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      };
+      const res = await fetch(`${backendUrl}/api/leads/book-session`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          paymentId: livePayment.id,
+          slot1,
+          slot2,
+          slot3
+        })
+      });
+      const resData = await res.json();
+
+      if (resData.success) {
+        alert("Preferred slots submitted successfully! Arijit will review and confirm one of your slots.");
+        setMustSchedule(false);
+        await fetchClientData();
+      } else {
+        setError(resData.error || "Failed to submit booking preferences.");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Network error while submitting slots.");
+    } finally {
+      setApiLoading(false);
     }
   };
 
@@ -1364,6 +1453,87 @@ export default function ClientDashboard() {
                 </div>
               </div>
             )}
+          </div>
+        ) : mustSchedule ? (
+          /* Distributor Booking Calendar for Paid Session */
+          <div className="w-full max-w-xl mx-auto border border-primary/20 bg-[radial-gradient(circle_at_top_right,rgba(138,92,255,0.06)_0%,transparent_60%)] bg-white/30 backdrop-blur-xl rounded-3xl p-8 md:p-10 flex flex-col gap-6 shadow-2xl relative overflow-hidden animate-in fade-in duration-500 text-left">
+            <div className="space-y-2">
+              <h2 className="text-3xl font-semibold text-neutral-900 tracking-wide font-clash">Schedule Consultation</h2>
+              <p className="text-neutral-600 text-xs font-sans leading-relaxed">
+                You have selected the Live Portfolio Review Discussion. Please select your 3 distinct preferred date and time slots for Arijit to review and confirm one.
+              </p>
+            </div>
+
+            <form onSubmit={handleBookMeeting} className="space-y-6">
+              <div className="space-y-4">
+                {/* Preferred Date & Time Selector 1 */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase font-bold text-neutral-500 tracking-wider block font-mono">Preferred Time Option 1 *</label>
+                  <input
+                    type="datetime-local"
+                    required
+                    value={slot1}
+                    onChange={(e) => setSlot1(e.target.value)}
+                    min={new Date(Date.now() + 3600000).toISOString().slice(0, 16)}
+                    className="w-full bg-white/50 border border-neutral-200 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-primary text-neutral-950 font-mono"
+                  />
+                </div>
+
+                {/* Preferred Date & Time Selector 2 */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase font-bold text-neutral-500 tracking-wider block font-mono">Preferred Time Option 2 *</label>
+                  <input
+                    type="datetime-local"
+                    required
+                    value={slot2}
+                    onChange={(e) => setSlot2(e.target.value)}
+                    min={new Date(Date.now() + 3600000).toISOString().slice(0, 16)}
+                    className="w-full bg-white/50 border border-neutral-200 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-primary text-neutral-950 font-mono"
+                  />
+                </div>
+
+                {/* Preferred Date & Time Selector 3 */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase font-bold text-neutral-500 tracking-wider block font-mono">Preferred Time Option 3 *</label>
+                  <input
+                    type="datetime-local"
+                    required
+                    value={slot3}
+                    onChange={(e) => setSlot3(e.target.value)}
+                    min={new Date(Date.now() + 3600000).toISOString().slice(0, 16)}
+                    className="w-full bg-white/50 border border-neutral-200 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-primary text-neutral-950 font-mono"
+                  />
+                </div>
+              </div>
+
+              {/* Prominent Trust Refund Policy Banner */}
+              <div className="w-full p-4 bg-blue-500/5 border border-blue-500/10 rounded-2xl text-[11px] text-blue-700 font-sans leading-relaxed flex gap-2.5">
+                <span className="text-base">🛡️</span>
+                <span>
+                  <strong>We value your trust.</strong> If your scheduled session does not happen for any reason, you will receive a full refund within 24 hours. No questions asked.
+                </span>
+              </div>
+
+              <div className="flex gap-4 pt-2">
+                <button
+                  type="submit"
+                  disabled={apiLoading || !slot1 || !slot2 || !slot3}
+                  className="w-full py-3.5 bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition duration-200 cursor-pointer shadow-lg disabled:opacity-40"
+                >
+                  {apiLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Submitting Slots...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Submit Booking Slots</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         ) : (
           /* Client Grid Workspace */

@@ -101,7 +101,7 @@ export default function Footer({ footerRef }: FooterProps) {
       </div>
 
       {/* SEBI Compliance Disclaimer Block */}
-      <div className="w-full border-t border-border max-w-5xl mx-auto px-6 pt-8 pb-4 text-center text-xs md:text-sm text-slate-500 font-sans leading-relaxed select-text space-y-1">
+      <div className="w-full max-w-5xl mx-auto px-6 pt-8 pb-4 text-center text-xs md:text-sm text-slate-500 font-sans leading-relaxed select-text space-y-1">
         <p className="font-semibold text-neutral-700">
           Arijit De | AMFI-registered Mutual Fund Distributor | ARN-273396
         </p>
