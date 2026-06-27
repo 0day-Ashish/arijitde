@@ -97,6 +97,16 @@ export default function Footer({ footerRef }: FooterProps) {
         </div>
       </div>
 
+      {/* SEBI Compliance Disclaimer Block */}
+      <div className="w-full border-t border-border max-w-5xl mx-auto px-6 pt-8 pb-4 text-center text-[10px] md:text-[11px] text-slate-500 font-sans leading-relaxed select-text space-y-1">
+        <p className="font-semibold text-neutral-700">
+          Arijit De | AMFI-registered Mutual Fund Distributor | ARN-273396
+        </p>
+        <p>
+          Portfolio reports on this platform are automated technology outputs and do not constitute investment advice under SEBI regulations.
+        </p>
+      </div>
+
       {/* Middle Divider Row */}
       <div className="flex flex-col md:flex-row justify-between items-center w-full border-t border-border max-w-5xl mx-auto px-6 py-6 text-xs text-slate-500 font-sans gap-4">
         <span>©2026 FinAnalysis</span>
