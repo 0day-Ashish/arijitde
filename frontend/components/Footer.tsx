@@ -63,17 +63,20 @@ export default function Footer({ footerRef }: FooterProps) {
             <span className="font-normal">India</span>
           </div>
 
-          {/* Social */}
+          {/* Quick Links */}
           <div className="flex flex-col items-center gap-2.5">
-            <span className="text-primary font-bold text-base md:text-lg">Social</span>
-            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition duration-200 underline decoration-primary/30 underline-offset-4 font-normal">
-              LinkedIn
+            <span className="text-primary font-bold text-base md:text-lg">Quick Links</span>
+            <a href="/#about" className="text-muted-foreground hover:text-primary transition duration-200 underline decoration-primary/30 underline-offset-4 font-normal">
+              About
             </a>
-            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition duration-200 underline decoration-primary/30 underline-offset-4 font-normal">
-              Instagram
+            <a href="/#calculators" className="text-muted-foreground hover:text-primary transition duration-200 underline decoration-primary/30 underline-offset-4 font-normal">
+              Calculators
             </a>
-            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition duration-200 underline decoration-primary/30 underline-offset-4 font-normal">
-              X (Twitter)
+            <a href="/quiz" className="text-muted-foreground hover:text-primary transition duration-200 underline decoration-primary/30 underline-offset-4 font-normal">
+              Investor Quiz
+            </a>
+            <a href="/#faq" className="text-muted-foreground hover:text-primary transition duration-200 underline decoration-primary/30 underline-offset-4 font-normal">
+              FAQ
             </a>
           </div>
         </div>
@@ -98,7 +101,7 @@ export default function Footer({ footerRef }: FooterProps) {
       </div>
 
       {/* SEBI Compliance Disclaimer Block */}
-      <div className="w-full border-t border-border max-w-5xl mx-auto px-6 pt-8 pb-4 text-center text-[10px] md:text-[11px] text-slate-500 font-sans leading-relaxed select-text space-y-1">
+      <div className="w-full border-t border-border max-w-5xl mx-auto px-6 pt-8 pb-4 text-center text-xs md:text-sm text-slate-500 font-sans leading-relaxed select-text space-y-1">
         <p className="font-semibold text-neutral-700">
           Arijit De | AMFI-registered Mutual Fund Distributor | ARN-273396
         </p>
