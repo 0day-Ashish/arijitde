@@ -32,6 +32,52 @@ function parseExcelNumber(val: unknown): number | null {
   return null;
 }
 
+function parseAvgHoldingDays(val: unknown): number | null {
+  if (val === null || val === undefined) return null;
+  const str = String(val).toLowerCase().trim();
+  if (str === '') return null;
+
+  // Case 1: Match "X years Y months" or "X yr Y mo"
+  const yrMoRegex = /(\d+(?:\.\d+)?)\s*(?:years?|yrs?|y)s?,?\s*(\d+(?:\.\d+)?)\s*(?:months?|mos?|m)s?/;
+  const yrMoMatch = str.match(yrMoRegex);
+  if (yrMoMatch) {
+    const yrs = parseFloat(yrMoMatch[1]);
+    const mos = parseFloat(yrMoMatch[2]);
+    return Math.round((yrs * 365) + (mos * 30.417));
+  }
+
+  // Case 2: Match "Y months"
+  const moRegex = /(\d+(?:\.\d+)?)\s*(?:months?|mos?|m)s?/;
+  if (str.includes('month') || str.includes('mo')) {
+    const moMatch = str.match(moRegex);
+    if (moMatch) {
+      const mos = parseFloat(moMatch[1]);
+      return Math.round(mos * 30.417);
+    }
+  }
+
+  // Case 3: Match "X years" or "X yr"
+  const yrRegex = /(\d+(?:\.\d+)?)\s*(?:years?|yrs?|y)s?/;
+  if (str.includes('year') || str.includes('yr')) {
+    const yrMatch = str.match(yrRegex);
+    if (yrMatch) {
+      const yrs = parseFloat(yrMatch[1]);
+      return Math.round(yrs * 365);
+    }
+  }
+
+  // Case 4: Plain number or contains "days"
+  const clean = str.replace(/days?/g, '').replace(/,/g, '').trim();
+  const num = parseFloat(clean);
+  if (isNaN(num)) return null;
+
+  // If the parsed number is small (<= 15), assume it represents years and convert to days
+  if (num <= 15) {
+    return Math.round(num * 365);
+  }
+  return num;
+}
+
 
 // Apply auth and admin middleware to all routes in this router
 router.use(authMiddleware);
@@ -819,7 +865,7 @@ router.post('/portfolio-valuations/upload', upload.single('file'), async (req: A
       currentValue: parseExcelNumber(row["Current Value"]),
       oneDayChange: parseExcelNumber(row["One-Day Change"]),
       dividend: parseExcelNumber(row["Dividend"]),
-      averageHoldingDays: parseExcelNumber(row["Average Holding Days"]),
+      averageHoldingDays: parseAvgHoldingDays(row["Average Holding Days"]),
       gain: parseExcelNumber(row["Gain"]),
       absoluteReturn: parseExcelNumber(row["Absolute Return (%)"]),
       cagr: parseExcelNumber(row["CAGR (%)"]),

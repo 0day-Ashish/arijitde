@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import SoftBoxBlurBg from "@/components/SoftBoxBlurBg";
 import GradualBlur from "@/components/GradualBlur";
 import Lenis from "lenis";
+import Footer from "@/components/Footer";
 
 // ──── Types ────
 type Archetype = "Tiger" | "Elephant" | "Deer" | "Fox" | "Lion";
@@ -343,7 +344,6 @@ export default function Quiz() {
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
   const [hasCachedResult, setHasCachedResult] = useState(false);
-  const [currentTime, setCurrentTime] = useState("");
 
   // Lenis smooth scrolling initialization
   useEffect(() => {
@@ -362,24 +362,6 @@ export default function Quiz() {
       lenis.destroy();
       cancelAnimationFrame(rafId);
     };
-  }, []);
-
-  // Footer clock tracking
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      const options: Intl.DateTimeFormatOptions = {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: false,
-        timeZone: "Asia/Kolkata",
-      };
-      setCurrentTime(now.toLocaleTimeString("en-US", options));
-    };
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
   }, []);
 
   // Mount animation
@@ -998,59 +980,7 @@ export default function Quiz() {
       </div>
 
       {/* Footer Section */}
-      <footer className="w-full bg-transparent border-t border relative z-10 pt-24 pb-0 overflow-hidden mt-auto">
-        <div className="w-full max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-5 gap-12 text-sm font-sans mb-20 text-muted-foreground text-left">
-          <div className="flex flex-col gap-2.5">
-            <span className="text-primary font-medium text-xs tracking-wider uppercase font-mono">India</span>
-            <span className="text-foreground font-normal text-sm font-mono">{currentTime || "12:00:00"}</span>
-            <span className="text-slate-500 text-xs font-mono">(GMT+5:30)</span>
-          </div>
-
-          <div className="flex flex-col gap-2.5">
-            <span className="text-primary font-medium text-xs tracking-wider uppercase font-mono">About</span>
-            <a href="/#about" className="text-muted-foreground hover:text-primary transition duration-200 text-sm">About Us</a>
-            <a href="/#services" className="text-muted-foreground hover:text-primary transition duration-200 text-sm">Services</a>
-            <a href="/#faq" className="text-muted-foreground hover:text-primary transition duration-200 text-sm">FAQ</a>
-          </div>
-
-          <div className="flex flex-col gap-2.5">
-            <span className="text-primary font-medium text-xs tracking-wider uppercase font-mono flex items-center gap-1">
-              Quick Links<span className="text-[9px] text-primary font-mono leading-none align-super">(4)</span>
-            </span>
-            <a href="/sip-calculator" className="text-muted-foreground hover:text-primary transition duration-200 text-sm">SIP Calculator</a>
-            <a href="/onboarding" className="text-muted-foreground hover:text-primary transition duration-200 text-sm">Onboarding</a>
-            <a href="/quiz" className="text-muted-foreground hover:text-primary transition duration-200 text-sm">Investor Quiz</a>
-          </div>
-
-          <div className="flex flex-col gap-2.5">
-            <span className="text-primary font-medium text-xs tracking-wider uppercase font-mono">Contact</span>
-            <a href="mailto:contact@finanalysis.in" className="text-muted-foreground hover:text-primary transition duration-200 text-sm break-all font-mono">
-              contact@finanalysis.in
-            </a>
-          </div>
-        </div>
-
-        <div className="flex flex-col md:flex-row justify-between items-center w-full border-t border max-w-5xl mx-auto px-6 py-6 text-xs text-muted-foreground font-sans gap-4 text-left">
-          <span>©2026 FinAnalysis</span>
-          <div className="flex gap-6">
-            <a href="/" className="hover:text-primary transition duration-200">Privacy</a>
-            <a href="/" className="hover:text-primary transition duration-200">Terms</a>
-            <a href="/" className="hover:text-primary transition duration-200">Cookies</a>
-          </div>
-          <span>Website by <a href="https://arddev.in" target="_blank" rel="noopener noreferrer" className="hover:text-primary font-bold transition duration-200">ard.dev</a></span>
-        </div>
-
-        <div className="w-full overflow-hidden flex justify-center items-end relative h-[14vw] min-h-[100px] mt-10">
-          <div className="absolute bottom-[-10vw] left-1/2 -translate-x-1/2 w-[60vw] h-[20vw] rounded-full bg-[radial-gradient(circle,rgba(0,0,0,0.03)_0%,transparent_70%)] pointer-events-none select-none" />
-          <h1 className="font-chillax text-[18vw] font-bold text-black tracking-tighter leading-none select-none translate-y-[20%] text-center uppercase">
-            FinAnalysis
-          </h1>
-        </div>
-      </footer>
-
-      {isLoaded && (
-        <GradualBlur preset="page-footer" height="2rem" style={{ zIndex: 30 }} />
-      )}
+      <Footer />
     </main>
   );
 }

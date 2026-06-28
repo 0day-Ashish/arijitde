@@ -1483,9 +1483,6 @@ export default function Home() {
         </div>
       )}
 
-      {isLoaded && (
-        <GradualBlur preset="page-footer" height="2rem" style={{ zIndex: 30 }} />
-      )}
     </main>
   );
 }

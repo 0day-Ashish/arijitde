@@ -29,7 +29,8 @@ import {
   FileSpreadsheet,
   Plus,
   Trash2,
-  Save
+  Save,
+  Eye
 } from 'lucide-react';
 
 // Goal Mapping helper
@@ -261,6 +262,29 @@ export default function AdminDashboard() {
         }
       }
     });
+  };
+
+  const formatAvgHolding = (days: number | null | undefined): string => {
+    if (days === null || days === undefined || isNaN(days)) return 'N/A';
+    const years = Math.floor(days / 365);
+    const remainingDays = days % 365;
+    let months = Math.round(remainingDays / 30.417);
+    let finalYears = years;
+    if (months === 12) {
+      finalYears += 1;
+      months = 0;
+    }
+    return `${finalYears}.${months}`;
+  };
+
+  const handleViewFolios = (client: any) => {
+    setSelectedExistingClient(client);
+    setTimeout(() => {
+      const el = document.getElementById("admin-folio-details-section");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 150);
   };
 
   // 3b. Fetch Existing Clients when tab is existingClients or pagination/search changes
@@ -1014,7 +1038,7 @@ export default function AdminDashboard() {
               </div>
             </div>
             <h3 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight font-clash">
-              ₹{stats.totalAUM ? stats.totalAUM.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '0.00'}
+              ₹{stats.totalAUM ? stats.totalAUM.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : '0.00'}
             </h3>
             <p className={`text-[10px] font-mono mt-1 ${activeTab === 'aum' ? 'text-neutral-400' : 'text-neutral-500'}`}>Aggregated assets value</p>
           </div>
@@ -1287,7 +1311,7 @@ export default function AdminDashboard() {
                         </div>
                         <div className="text-right">
                           <span className="text-lg font-bold tracking-tight text-neutral-900 font-clash">
-                            ₹{payment.amount.toLocaleString()}
+                            ₹{payment.amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </span>
                           <span className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-700 text-[10px] font-mono border border-amber-300/30 block mt-1">
                             {payment.status}
@@ -1764,7 +1788,10 @@ export default function AdminDashboard() {
                           <th className="px-6 py-4">Folio</th>
                           <th className="px-6 py-4 text-right">AUM</th>
                           <th className="px-6 py-4 text-right">Absolute Return</th>
-                          <th className="px-6 py-4 text-right">Avg Holding</th>
+                          <th className="px-6 py-4 text-right">
+                            <div className="leading-tight">Avg Holding</div>
+                            <div className="text-[9px] text-neutral-400 font-normal lowercase tracking-normal font-sans font-medium">(in years)</div>
+                          </th>
                           <th className="px-6 py-4 text-right">CAGR (%)</th>
                           <th className="px-6 py-4 text-right">Actions</th>
                         </tr>
@@ -1796,14 +1823,15 @@ export default function AdminDashboard() {
                                   {client.username && <span className="text-neutral-400 font-mono text-[9px]">@{client.username}</span>}
                                 </div>
                               </td>
-                              <td className="px-6 py-4 font-mono text-neutral-700">
+                              <td className="px-6 py-4 font-mono text-neutral-700 max-w-[180px] min-w-[140px]">
                                 {client.folios && client.folios.length > 0 ? (
                                   client.folios.length > 1 ? (
-                                    <div className="relative inline-block w-full max-w-[160px]">
+                                    <div className="flex items-center gap-1.5 w-full min-w-0">
                                       <select
-                                        className="w-full text-xs font-mono bg-neutral-50 border border-neutral-200 text-neutral-800 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-neutral-400 cursor-pointer truncate"
+                                        className="flex-1 min-w-0 text-xs font-mono bg-neutral-50 border border-neutral-200 text-neutral-800 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-neutral-400 cursor-pointer truncate"
                                         defaultValue={client.folios[0].folioNumber || ''}
-                                        title={`${client.folios.length} Folios (Click to view)`}
+                                        title={`${client.folios.length} Folios`}
+                                        onChange={() => handleViewFolios(client)}
                                       >
                                         {client.folios.map((folio: any) => (
                                           <option key={folio.id} value={folio.folioNumber} title={`${folio.folioNumber} - ${folio.schemeName || 'Unknown Scheme'}`}>
@@ -1811,22 +1839,36 @@ export default function AdminDashboard() {
                                           </option>
                                         ))}
                                       </select>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleViewFolios(client)}
+                                        className="p-1 text-neutral-500 hover:text-neutral-900 bg-neutral-100 hover:bg-neutral-200 border border-neutral-200 rounded transition cursor-pointer flex items-center justify-center shrink-0"
+                                        title="View selected folio details"
+                                      >
+                                        <Eye className="w-3.5 h-3.5" />
+                                      </button>
                                     </div>
                                   ) : (
-                                    client.folios[0].folioNumber || 'N/A'
+                                    <button
+                                      onClick={() => handleViewFolios(client)}
+                                      className="font-mono text-xs font-semibold text-neutral-900 bg-neutral-100 hover:bg-neutral-900 hover:text-white px-2 py-0.5 rounded border border-neutral-200 transition duration-150 cursor-pointer"
+                                      title="Click to view details"
+                                    >
+                                      {client.folios[0].folioNumber || 'N/A'}
+                                    </button>
                                   )
                                 ) : 'N/A'}
                               </td>
                               <td className="px-6 py-4 font-mono text-neutral-900 font-bold text-right">
                                 {client.currentValue !== null && client.currentValue !== undefined
-                                  ? `₹${client.currentValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
-                                  : (client.aum !== null && client.aum !== undefined ? `₹${client.aum.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'N/A')}
+                                  ? `₹${client.currentValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`
+                                  : (client.aum !== null && client.aum !== undefined ? `₹${client.aum.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : 'N/A')}
                               </td>
                               <td className="px-6 py-4 font-mono text-neutral-700 text-right">
                                 {client.absoluteReturn !== null && client.absoluteReturn !== undefined ? `${client.absoluteReturn.toFixed(2)}%` : 'N/A'}
                               </td>
                               <td className="px-6 py-4 font-mono text-neutral-700 text-right">
-                                {client.averageHoldingDays !== null && client.averageHoldingDays !== undefined ? `${Math.round(client.averageHoldingDays)} days` : 'N/A'}
+                                {formatAvgHolding(client.averageHoldingDays)}
                               </td>
                               <td className="px-6 py-4 font-mono text-neutral-900 font-bold text-right">
                                 {client.cagr !== null && client.cagr !== undefined ? `${client.cagr.toFixed(2)}%` : 'N/A'}
@@ -1884,7 +1926,7 @@ export default function AdminDashboard() {
                 <div className="relative z-10">
                   <span className="text-[10px] md:text-xs font-mono uppercase tracking-widest text-neutral-400 block mb-2">Total Assets Under Management (AUM)</span>
                   <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight font-clash text-neutral-900">
-                    ₹{aumData.totalAUM ? aumData.totalAUM.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '0.00'}
+                    ₹{aumData.totalAUM ? aumData.totalAUM.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : '0.00'}
                   </h2>
                   <p className="text-xs md:text-sm text-neutral-500 font-sans mt-2">
                     Aggregated sum of all investments across imported mutual fund portfolios.
@@ -1926,7 +1968,7 @@ export default function AdminDashboard() {
                               {scheme.schemeName}
                             </h4>
                             <p className="text-xs text-neutral-500 font-mono mt-1">
-                              Amount Invested: <span className="font-semibold text-neutral-800">₹{scheme.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                              Amount Invested: <span className="font-semibold text-neutral-800">₹{scheme.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                             </p>
                           </div>
                           <div className="flex items-center gap-4 shrink-0">
@@ -2415,8 +2457,8 @@ export default function AdminDashboard() {
                                       {row.fundName}
                                     </td>
                                     <td className="px-3 py-2 text-neutral-500">{row.type}</td>
-                                    <td className="px-3 py-2 text-right text-neutral-900">₹{row.invested.toLocaleString()}</td>
-                                    <td className="px-3 py-2 text-right text-neutral-900 font-semibold">₹{row.currentValue.toLocaleString()}</td>
+                                    <td className="px-3 py-2 text-right text-neutral-900">₹{row.invested.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                    <td className="px-3 py-2 text-right text-neutral-900 font-semibold">₹{row.currentValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                   </tr>
                                 ))}
                               </tbody>
@@ -2560,7 +2602,7 @@ export default function AdminDashboard() {
                       <div className="flex justify-between items-center text-xs">
                         <div>
                           <span className="text-[10px] text-neutral-500 uppercase font-mono">Amount: </span>
-                          <span className="font-bold text-neutral-900 font-mono text-sm">₹{p.amount.toLocaleString()}</span>
+                          <span className="font-bold text-neutral-900 font-mono text-sm">₹{p.amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         </div>
                         <span className={`px-2 py-0.5 rounded text-[9px] font-bold font-mono tracking-wider ${p.status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/20' :
                             p.status === 'REJECTED' ? 'bg-destructive/10 text-destructive border border-destructive/20' :
@@ -2720,9 +2762,9 @@ export default function AdminDashboard() {
                   Distribution & Target Allocation
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <DetailField label="Current AUM" value={selectedExistingClient.aum !== null && selectedExistingClient.aum !== undefined ? `₹${selectedExistingClient.aum.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'N/A'} />
-                  <DetailField label="Target SIP Amount" value={selectedExistingClient.targetSipAmount !== null && selectedExistingClient.targetSipAmount !== undefined ? `₹${selectedExistingClient.targetSipAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'N/A'} />
-                  <DetailField label="Target ELSS Amount" value={selectedExistingClient.targetElssAmount !== null && selectedExistingClient.targetElssAmount !== undefined ? `₹${selectedExistingClient.targetElssAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'N/A'} />
+                  <DetailField label="Current AUM" value={selectedExistingClient.aum !== null && selectedExistingClient.aum !== undefined ? `₹${selectedExistingClient.aum.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : 'N/A'} />
+                  <DetailField label="Target SIP Amount" value={selectedExistingClient.targetSipAmount !== null && selectedExistingClient.targetSipAmount !== undefined ? `₹${selectedExistingClient.targetSipAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : 'N/A'} />
+                  <DetailField label="Target ELSS Amount" value={selectedExistingClient.targetElssAmount !== null && selectedExistingClient.targetElssAmount !== undefined ? `₹${selectedExistingClient.targetElssAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : 'N/A'} />
                   <DetailField label="Target Equity Allocation" value={selectedExistingClient.targetEquityAllocation !== null && selectedExistingClient.targetEquityAllocation !== undefined ? `${selectedExistingClient.targetEquityAllocation}%` : 'N/A'} />
                   <DetailField label="Target Debt Allocation" value={selectedExistingClient.targetDebtAllocation !== null && selectedExistingClient.targetDebtAllocation !== undefined ? `${selectedExistingClient.targetDebtAllocation}%` : 'N/A'} />
                   <DetailField label="Preferred Billing Mode" value={selectedExistingClient.preferredBillingMode} />
@@ -2740,20 +2782,20 @@ export default function AdminDashboard() {
                   Portfolio Valuation Details (Fresh from CSV)
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <DetailField label="Balance Units" value={selectedExistingClient.balanceUnits !== null && selectedExistingClient.balanceUnits !== undefined ? selectedExistingClient.balanceUnits.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : 'N/A'} />
-                  <DetailField label="Purchase Value" value={selectedExistingClient.purchaseValue !== null && selectedExistingClient.purchaseValue !== undefined ? `₹${selectedExistingClient.purchaseValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'N/A'} />
-                  <DetailField label="Current Value (AUM)" value={selectedExistingClient.currentValue !== null && selectedExistingClient.currentValue !== undefined ? `₹${selectedExistingClient.currentValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'N/A'} />
-                  <DetailField label="One-Day Change" value={selectedExistingClient.oneDayChange !== null && selectedExistingClient.oneDayChange !== undefined ? `₹${selectedExistingClient.oneDayChange.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'N/A'} />
-                  <DetailField label="Dividend" value={selectedExistingClient.dividend !== null && selectedExistingClient.dividend !== undefined ? `₹${selectedExistingClient.dividend.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'N/A'} />
-                  <DetailField label="Average Holding Days" value={selectedExistingClient.averageHoldingDays !== null && selectedExistingClient.averageHoldingDays !== undefined ? `${selectedExistingClient.averageHoldingDays} days` : 'N/A'} />
-                  <DetailField label="Gain" value={selectedExistingClient.gain !== null && selectedExistingClient.gain !== undefined ? `₹${selectedExistingClient.gain.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'N/A'} />
+                  <DetailField label="Balance Units" value={selectedExistingClient.balanceUnits !== null && selectedExistingClient.balanceUnits !== undefined ? selectedExistingClient.balanceUnits.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : 'N/A'} />
+                  <DetailField label="Purchase Value" value={selectedExistingClient.purchaseValue !== null && selectedExistingClient.purchaseValue !== undefined ? `₹${selectedExistingClient.purchaseValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : 'N/A'} />
+                  <DetailField label="Current Value (AUM)" value={selectedExistingClient.currentValue !== null && selectedExistingClient.currentValue !== undefined ? `₹${selectedExistingClient.currentValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : 'N/A'} />
+                  <DetailField label="One-Day Change" value={selectedExistingClient.oneDayChange !== null && selectedExistingClient.oneDayChange !== undefined ? `₹${selectedExistingClient.oneDayChange.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : 'N/A'} />
+                  <DetailField label="Dividend" value={selectedExistingClient.dividend !== null && selectedExistingClient.dividend !== undefined ? `₹${selectedExistingClient.dividend.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : 'N/A'} />
+                  <DetailField label="Average Holding" value={formatAvgHolding(selectedExistingClient.averageHoldingDays)} />
+                  <DetailField label="Gain" value={selectedExistingClient.gain !== null && selectedExistingClient.gain !== undefined ? `₹${selectedExistingClient.gain.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : 'N/A'} />
                   <DetailField label="Absolute Return" value={selectedExistingClient.absoluteReturn !== null && selectedExistingClient.absoluteReturn !== undefined ? `${selectedExistingClient.absoluteReturn.toFixed(2)}%` : 'N/A'} />
                   <DetailField label="CAGR (%)" value={selectedExistingClient.cagr !== null && selectedExistingClient.cagr !== undefined ? `${selectedExistingClient.cagr.toFixed(2)}%` : 'N/A'} />
                 </div>
               </div>
 
               {/* Section 4.6: Folio Holdings / Scheme Details */}
-              <div className="border border-neutral-200 bg-neutral-50 rounded-2xl p-5 space-y-4">
+              <div id="admin-folio-details-section" className="border border-neutral-200 bg-neutral-50 rounded-2xl p-5 space-y-4">
                 <div className="flex justify-between items-center border-b border-neutral-200 pb-2">
                   <h3 className="text-xs font-bold font-clash uppercase tracking-wider text-neutral-900">
                     Folio Holdings / Scheme Details ({selectedExistingClient.folios?.length || 0})

@@ -82,17 +82,21 @@ export default function Footer({ footerRef }: FooterProps) {
         </div>
 
         {/* New business profile card */}
-        <div className="w-full max-w-xl mx-auto mt-12 p-6 md:p-8 rounded-3xl border-2 border-dashed border-primary/25 bg-white/20 backdrop-blur-2xl flex flex-col md:flex-row items-center gap-6 md:gap-8 text-center md:text-left select-none">
+        <div className="w-full max-w-xl mx-auto mt-12 p-6 md:p-8 rounded-3xl border border-amber-500/20 bg-gradient-to-br from-white/50 via-white/35 to-amber-500/5 shadow-[0_20px_50px_rgba(245,158,11,0.08)] flex flex-col md:flex-row items-center gap-6 md:gap-8 text-center md:text-left select-none relative overflow-hidden">
+          {/* Decorative glowing background gradients */}
+          <div className="absolute top-0 right-0 w-24 h-24 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
+
           <img
             src="/assets/me.jpeg"
             alt="Arijit De"
-            className="w-24 h-24 md:w-36 md:h-36 rounded-2xl object-cover shrink-0 border border-border shadow-md animate-fade-in"
+            className="w-24 h-24 md:w-36 md:h-36 rounded-2xl object-cover shrink-0 border border-amber-500/15 shadow-md animate-fade-in relative z-10"
           />
-          <div className="flex-1 flex flex-col gap-2.5">
-            <h3 className="font-clash text-xl sm:text-3xl font-semibold text-primary">New investment?</h3>
-            <p className="font-chillax text-base sm:text-xl text-black leading-relaxed">
+          <div className="flex-1 flex flex-col gap-2.5 relative z-10">
+            <h3 className="font-clash text-xl sm:text-3xl font-bold text-amber-800">New investment?</h3>
+            <p className="font-chillax text-base sm:text-xl text-neutral-800 leading-relaxed">
               Reach out today to our CEO for new financial enquiries at{" "}
-              <a href="mailto:contact@finanalysis.in" className="text-primary hover:underline font-semibold font-chillax">
+              <a href="mailto:contact@finanalysis.in" className="text-amber-700 hover:text-amber-900 hover:underline font-semibold font-chillax">
                 contact@finanalysis.in
               </a>
             </p>

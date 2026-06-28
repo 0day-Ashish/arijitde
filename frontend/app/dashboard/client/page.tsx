@@ -30,6 +30,33 @@ import {
 import SoftBoxBlurBg from "@/components/SoftBoxBlurBg";
 import GradualBlur from "@/components/GradualBlur";
 import ChatbotWidget from "@/components/ChatbotWidget";
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
+import Footer from "@/components/Footer";
+
+const SLEEK_COLORS = [
+  "#6366F1", // Indigo
+  "#10B981", // Emerald
+  "#F59E0B", // Amber
+  "#3B82F6", // Blue
+  "#EC4899", // Pink
+  "#8B5CF6", // Purple
+  "#EF4444"  // Red
+];
+
+const CustomTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="bg-white/95 border border-border rounded-xl p-3 shadow-xl backdrop-blur-md text-[11px] font-sans text-left space-y-1">
+        <span className="font-semibold text-neutral-900 block truncate max-w-[200px]">{data.name}</span>
+        <span className="text-neutral-500 font-mono text-[10px]">
+          Value: <strong className="text-neutral-900 font-medium">₹{data.value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</strong>
+        </span>
+      </div>
+    );
+  }
+  return null;
+};
 
 // ──── Quiz Configuration ────
 const GOAL_OPTIONS = [
@@ -323,6 +350,12 @@ export default function ClientDashboard() {
       if (savedBookings) {
         setClientBookings(JSON.parse(savedBookings));
       }
+
+      const bookingSuccessFlag = localStorage.getItem("showBookingSuccess");
+      if (bookingSuccessFlag === "true") {
+        setShowBookingSuccess(true);
+        localStorage.removeItem("showBookingSuccess");
+      }
     } catch (err) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
@@ -502,7 +535,7 @@ export default function ClientDashboard() {
       const resData = await res.json();
 
       if (resData.success) {
-        alert("Preferred slots submitted successfully! Arijit will review and confirm one of your slots.");
+        setShowBookingSuccess(true);
         setMustSchedule(false);
         await fetchClientData();
       } else {
@@ -995,8 +1028,13 @@ export default function ClientDashboard() {
   if (!isLoaded) {
     return (
       <div className="w-full min-h-screen bg-[#F2F0EF] flex flex-col items-center justify-center text-center p-12">
-        <Loader2 className="w-10 h-10 text-primary animate-spin mb-6" />
-        <h3 className="text-lg font-medium text-neutral-900 font-clash">Loading Client portal...</h3>
+        <div className="flex items-center gap-1.5 mb-6">
+          <div className="w-3.5 h-3.5 rounded-full bg-amber-600 animate-bounce" style={{ animationDelay: '0s', animationDuration: '0.8s' }} />
+          <div className="w-3.5 h-3.5 rounded-full bg-amber-600 animate-bounce" style={{ animationDelay: '0.15s', animationDuration: '0.8s' }} />
+          <div className="w-3.5 h-3.5 rounded-full bg-amber-600 animate-bounce" style={{ animationDelay: '0.3s', animationDuration: '0.8s' }} />
+        </div>
+        <h3 className="text-lg font-medium text-neutral-950 font-clash">Loading Client Portal...</h3>
+        <p className="text-neutral-500 text-xs font-sans mt-2">Retrieving SEBI-compliant telemetry data</p>
       </div>
     );
   }
@@ -1043,7 +1081,7 @@ export default function ClientDashboard() {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 w-full max-w-5xl mx-auto px-6 py-12 flex flex-col relative z-10">
+      <div className="flex-1 w-full max-w-6xl mx-auto px-6 py-12 flex flex-col relative z-10">
         {/* Global Error Banner */}
         {error && (
           <div className="w-full max-w-md mx-auto mb-8 p-4 bg-red-500/10 border border-red-500/20 text-red-600 rounded-2xl text-xs flex gap-3 items-start text-left font-sans animate-in fade-in slide-in-from-top-4">
@@ -1542,15 +1580,19 @@ export default function ClientDashboard() {
             {/* 1. Left Sidebar: Profile, Wallet & 1-Click Booking */}
             <div className="md:col-span-1 space-y-6">
               {/* Member profile details */}
-              <div className="bg-white/50 backdrop-blur-xl border border-white/40 shadow-xl rounded-3xl p-6 space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 font-mono text-[9px] font-bold tracking-wider uppercase">
+              <div className="bg-gradient-to-br from-white/50 via-white/35 to-amber-500/5 backdrop-blur-2xl border border-amber-500/20 shadow-[0_20px_50px_rgba(245,158,11,0.08)] rounded-3xl p-6 space-y-4 relative overflow-hidden">
+                {/* Decorative glowing background gradients */}
+                <div className="absolute top-0 right-0 w-24 h-24 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-24 h-24 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
+
+                <div className="flex justify-between items-center relative z-10">
+                  <span className="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-700 font-mono text-[9px] font-bold tracking-wider uppercase">
                     {PLAN_LABELS[userData?.client?.activePlan || "PREMIUM"]}
                   </span>
-                  <Award className="w-4 h-4 text-emerald-600 animate-pulse" />
+                  <Award className="w-4 h-4 text-amber-600 animate-pulse" />
                 </div>
 
-                <div className="space-y-1">
+                <div className="space-y-1 relative z-10">
                   <h2 className="text-xl font-semibold text-neutral-900 tracking-wide font-clash">
                     Welcome, {userData?.name || "Client"}
                   </h2>
@@ -1559,79 +1601,33 @@ export default function ClientDashboard() {
                   </p>
                 </div>
 
-                <div className="border-t border-border/30 pt-3 space-y-2 text-xs font-sans text-neutral-600">
-                  <div className="flex justify-between">
-                    <span>Age:</span>
-                    <span className="font-semibold text-neutral-800">{quizAge} years</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Life Stage:</span>
-                    <span className="font-semibold text-neutral-800">
-                      {LIFE_STAGE_OPTIONS.find(o => o.value === quizLifeStage)?.label || quizLifeStage || "Not set"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Active Goal:</span>
-                    <span className="font-semibold text-neutral-800">
-                      {GOAL_OPTIONS.find(o => o.value === quizGoal)?.label || quizGoal}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Horizon:</span>
-                    <span className="font-semibold text-neutral-800">
-                      {INVESTMENT_TENURE_OPTIONS.find(o => o.value === quizInvestmentTenure)?.label || quizInvestmentTenure || "Not set"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Monthly capacity:</span>
-                    <span className="font-semibold text-neutral-800">
-                      {MONTHLY_INVESTMENT_OPTIONS.find(o => o.value === quizMonthlyInvestment)?.label || quizMonthlyInvestment || "Not set"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Emergency Fund:</span>
-                    <span className="font-semibold text-neutral-800">
-                      {EMERGENCY_FUND_OPTIONS.find(o => o.value === quizEmergencyFund)?.label || quizEmergencyFund || "Not set"}
-                    </span>
-                  </div>
+                <div className="border-t border-amber-500/10 pt-3 space-y-2 text-xs font-sans text-neutral-600 relative z-10">
                   {userData?.pan && (
-                    <div className="flex justify-between font-mono">
-                      <span>PAN Card:</span>
+                    <div className="flex justify-between font-mono items-center">
+                      <span className="text-[9px] font-mono text-amber-700 tracking-widest uppercase font-bold">PAN Number:</span>
                       <span className="font-semibold text-neutral-800">{userData.pan}</span>
                     </div>
                   )}
-                  {userData?.phone && (
-                    <div className="flex justify-between font-mono">
-                      <span>Phone:</span>
-                      <span className="font-semibold text-neutral-800">{userData.phone}</span>
+                  <div className="flex justify-between font-mono items-start">
+                    <span className="text-[9px] font-mono text-amber-700 tracking-widest uppercase font-bold mt-1">Total AUM:</span>
+                    <div className="text-right">
+                      <span className="text-lg font-bold text-neutral-900 font-mono block">
+                        ₹{(existingClientData?.aum || existingClientData?.currentValue || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                      {(() => {
+                        const currentVal = existingClientData?.aum || existingClientData?.currentValue || 0;
+                        const investedVal = existingClientData?.purchaseValue || 0;
+                        const totalGain = currentVal - investedVal;
+                        const totalGainPercent = investedVal > 0 ? (totalGain / investedVal) * 100 : 0;
+                        const isProfit = totalGain >= 0;
+                        return (
+                          <span className={`text-xs font-bold font-mono ${isProfit ? 'text-emerald-600' : 'text-rose-600'}`}>
+                            ({isProfit ? '+' : ''}{totalGainPercent.toFixed(2)}%)
+                          </span>
+                        );
+                      })()}
                     </div>
-                  )}
-                </div>
-
-                <button
-                  onClick={() => { setShowQuiz(true); setQuizStep(1); }}
-                  className="w-full py-2 bg-white/40 border border-border hover:bg-white/60 text-neutral-700 text-xs font-semibold rounded-xl transition cursor-pointer text-center"
-                >
-                  Adjust Investment Target
-                </button>
-              </div>
-
-              {/* FinPoints Wallet */}
-              <div className="bg-white/50 backdrop-blur-xl border border-white/40 shadow-xl rounded-3xl p-6 space-y-4">
-                <div className="flex justify-between items-center border-b border-border/20 pb-2">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-800 flex items-center gap-1.5">
-                    <Wallet className="w-4 h-4 text-primary" />
-                    FinWallet Balance
-                  </h3>
-                  <span className="text-[9px] font-mono text-primary font-bold">1 FP = ₹0.5</span>
-                </div>
-
-                <div className="py-2.5 text-center bg-primary/5 rounded-2xl border border-primary/10">
-                  <span className="text-[10px] font-mono text-primary uppercase tracking-widest block font-bold">FinPoints</span>
-                  <div className="text-3xl font-bold font-mono text-neutral-900 mt-1">
-                    {finPoints} <span className="text-xs font-sans font-medium text-neutral-500 font-semibold">FP</span>
                   </div>
-                  <span className="text-xs font-sans font-medium text-emerald-600 block mt-1">(≈ ₹{(finPoints * 0.5).toFixed(2)})</span>
                 </div>
               </div>
 
@@ -1706,100 +1702,41 @@ export default function ClientDashboard() {
             {/* 2. Middle & Right Main Panel: Flippable quote card and portfolio diagnostics */}
             <div className="md:col-span-2 space-y-6">
               {/* Daily Wisdom card */}
-              <div 
-                className="w-full h-[280px] [perspective:1000px] cursor-pointer"
-                onClick={handleClientQuoteFlip}
-              >
-                <div 
-                  className="relative w-full h-full duration-700 transition-transform"
-                  style={{ 
-                    transformStyle: 'preserve-3d', 
-                    transform: isClientQuoteFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)' 
-                  }}
-                >
-                  {/* Front Side */}
-                  <div 
-                    className="absolute inset-0 w-full h-full p-8 rounded-3xl bg-white/50 backdrop-blur-2xl border border-white/40 shadow-xl flex flex-col justify-between items-center text-center"
-                    style={{ backfaceVisibility: 'hidden' }}
-                  >
-                    <div className="w-full flex justify-between items-center border-b border-border/20 pb-2">
-                      <span className="text-[9px] font-mono text-primary tracking-widest uppercase font-bold flex items-center gap-1">
-                        <Sparkles className="w-3 h-3 text-primary animate-pulse" />
-                        Daily Wisdom
-                      </span>
-                      <span className="text-[9px] font-mono text-neutral-400 font-sans">ACTIVE FOR 24H</span>
-                    </div>
+              <div className="w-full p-8 rounded-3xl bg-gradient-to-br from-amber-100/40 via-white/30 to-amber-500/10 backdrop-blur-2xl border border-amber-500/30 shadow-[0_20px_50px_rgba(245,158,11,0.12)] flex flex-col justify-between items-center text-center overflow-hidden relative">
+                {/* Decorative glowing background gradients */}
+                <div className="absolute top-0 right-0 w-24 h-24 bg-amber-400/20 rounded-full blur-2xl pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-24 h-24 bg-amber-400/20 rounded-full blur-2xl pointer-events-none" />
 
-                    <div className="my-auto py-2">
-                      <p className="text-base md:text-lg font-medium italic leading-relaxed text-neutral-800 font-clash">
-                        "{quotesList[new Date().getDate() % quotesList.length]?.text}"
-                      </p>
-                      <span className="block text-right text-[10px] text-neutral-500 font-mono mt-2 mr-4">
-                        — {quotesList[new Date().getDate() % quotesList.length]?.author}
-                      </span>
-                    </div>
+                {/* Floating typographic quotes */}
+                <span className="absolute left-6 top-12 text-7xl font-serif text-amber-500/10 leading-none pointer-events-none select-none">“</span>
+                <span className="absolute right-6 bottom-12 text-7xl font-serif text-amber-500/10 leading-none pointer-events-none select-none">”</span>
 
-                    <div className="flex justify-center items-center gap-1.5 text-[10px] font-bold text-primary uppercase tracking-wider font-sans">
-                      <span>Tap to flip & claim points</span>
-                      <span className="animate-bounce"><Gift className="w-3.5 h-3.5" /></span>
-                    </div>
-                  </div>
+                <div className="w-full flex justify-between items-center border-b border-amber-500/10 pb-2 relative z-10">
+                  <span className="text-[9px] font-mono text-amber-700 tracking-widest uppercase font-bold flex items-center gap-1">
+                    <Sparkles className="w-3 h-3 text-amber-600 animate-pulse" />
+                    Daily Wisdom
+                  </span>
+                  <span className="text-[9px] font-mono text-amber-600/60 uppercase font-bold">ACTIVE FOR 24H</span>
+                </div>
 
-                  {/* Back Side */}
-                  <div 
-                    className="absolute inset-0 w-full h-full p-8 rounded-3xl bg-white/50 backdrop-blur-2xl border border-white/40 shadow-xl flex flex-col justify-between items-center text-center"
-                    style={{ 
-                      backfaceVisibility: 'hidden',
-                      transform: 'rotateY(180deg)' 
-                    }}
-                  >
-                    <div className="w-full flex justify-between items-center border-b border-border/20 pb-2">
-                      <span className="text-[9px] font-mono text-primary tracking-widest uppercase font-bold flex items-center gap-1">
-                        <Wallet className="w-3 h-3" />
-                        Wisdom Reward
-                      </span>
-                      <span className="text-[9px] font-mono text-neutral-400 font-sans">TODAY'S CLAIM</span>
-                    </div>
-
-                    <div className="w-full my-auto space-y-3">
-                      {pointsEarnedToday > 0 ? (
-                        <div className="space-y-2">
-                          <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 text-center">
-                            <span className="text-[10px] font-mono text-emerald-600 uppercase tracking-widest block font-bold">Points Unlocked</span>
-                            <div className="text-3xl font-bold font-mono text-emerald-700 mt-1 uppercase tracking-wider">
-                              +{pointsEarnedToday} FP
-                            </div>
-                          </div>
-                          <p className="text-[11px] text-neutral-600 leading-relaxed font-sans text-center">
-                            Excellent! {pointsEarnedToday} FP have been credited to your FinWallet.
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="space-y-2">
-                          <div className="bg-neutral-500/10 border border-neutral-500/20 rounded-2xl p-4 text-center">
-                            <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest block font-bold">Already Claimed</span>
-                            <div className="text-sm font-bold text-neutral-700 mt-1 font-mono">
-                              {getRemainingFlipTime()}
-                            </div>
-                          </div>
-                          <p className="text-[11px] text-neutral-600 leading-relaxed font-sans text-center">
-                            Wisdom claimed! TheQuotes card resets every 24 hours. Check back tomorrow.
-                          </p>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="text-[9px] font-mono text-neutral-400">
-                      THANK YOU FOR BEING ON THE {PLAN_LABELS[userData?.client?.activePlan || "PREMIUM"].toUpperCase()}
-                    </div>
-                  </div>
+                <div className="my-auto py-6 relative z-10">
+                  <p className="text-base md:text-lg font-medium italic leading-relaxed text-neutral-900 font-clash">
+                    "{quotesList[new Date().getDate() % quotesList.length]?.text}"
+                  </p>
+                  <span className="block text-right text-[10px] text-amber-700 font-mono mt-2 mr-4 font-bold tracking-wider">
+                    — {quotesList[new Date().getDate() % quotesList.length]?.author}
+                  </span>
                 </div>
               </div>
 
               {/* Official Portfolio Valuation (Admin Certified) */}
               {existingClientData && (
-                <div className="bg-white/50 backdrop-blur-xl border border-white/40 shadow-xl rounded-3xl p-6 space-y-6 animate-in fade-in duration-300">
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-border/20 pb-4 gap-3">
+                <div className="bg-gradient-to-br from-white/50 via-white/35 to-amber-500/5 backdrop-blur-2xl border border-amber-500/20 shadow-[0_20px_50px_rgba(245,158,11,0.08)] rounded-3xl p-6 space-y-6 animate-in fade-in duration-300 relative overflow-hidden">
+                  {/* Decorative glowing background gradients */}
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
+                  <div className="absolute bottom-0 left-0 w-32 h-32 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
+
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-amber-500/10 pb-4 gap-3 relative z-10">
                     <div className="space-y-0.5">
                       <div className="flex items-center gap-2">
                         <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 font-mono text-[9px] font-bold tracking-wider uppercase flex items-center gap-1">
@@ -1822,22 +1759,22 @@ export default function ClientDashboard() {
                   </div>
 
                   {/* Summary Cards */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="p-4 bg-white/60 border border-white/30 rounded-2xl shadow-sm space-y-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 relative z-10">
+                    <div className="p-5 sm:p-6 bg-white/60 border border-white/30 rounded-2xl shadow-sm space-y-1.5">
                       <span className="text-[10px] text-neutral-500 block uppercase font-mono tracking-wider">AUM (Current Value)</span>
-                      <div className="text-xl font-bold font-mono text-neutral-900">
+                      <div className="text-lg sm:text-xl font-bold font-mono text-neutral-900 whitespace-nowrap overflow-hidden text-ellipsis">
                         ₹{(existingClientData.aum || existingClientData.currentValue || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </div>
                     </div>
 
-                    <div className="p-4 bg-white/60 border border-white/30 rounded-2xl shadow-sm space-y-1">
+                    <div className="p-5 sm:p-6 bg-white/60 border border-white/30 rounded-2xl shadow-sm space-y-1.5">
                       <span className="text-[10px] text-neutral-500 block uppercase font-mono tracking-wider">Total Invested</span>
-                      <div className="text-xl font-bold font-mono text-neutral-900">
+                      <div className="text-lg sm:text-xl font-bold font-mono text-neutral-900 whitespace-nowrap overflow-hidden text-ellipsis">
                         ₹{(existingClientData.purchaseValue || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </div>
                     </div>
 
-                    <div className="p-4 bg-white/60 border border-white/30 rounded-2xl shadow-sm space-y-1">
+                    <div className="p-5 sm:p-6 bg-white/60 border border-white/30 rounded-2xl shadow-sm space-y-1.5">
                       <span className="text-[10px] text-neutral-500 block uppercase font-mono tracking-wider">Total Return</span>
                       {(() => {
                         const currentVal = existingClientData.aum || existingClientData.currentValue || 0;
@@ -1847,7 +1784,7 @@ export default function ClientDashboard() {
                         const isProfit = totalGain >= 0;
 
                         return (
-                          <div className={`text-xl font-bold font-mono ${isProfit ? 'text-emerald-600' : 'text-rose-600'}`}>
+                          <div className={`text-lg sm:text-xl font-bold font-mono ${isProfit ? 'text-emerald-600' : 'text-rose-600'} whitespace-nowrap`}>
                             {isProfit ? '+' : ''}₹{totalGain.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             <span className="text-[10px] font-sans font-semibold block mt-0.5">
                               ({isProfit ? '+' : ''}{totalGainPercent.toFixed(2)}%)
@@ -1860,71 +1797,138 @@ export default function ClientDashboard() {
 
                   {/* Scheme Holdings */}
                   {existingClientData.folios && existingClientData.folios.length > 0 && (
-                    <div className="space-y-3 pt-2">
+                    <div className="space-y-4 pt-2 relative z-10">
                       <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-800 flex items-center gap-1.5 font-mono">
                         <Wallet className="w-4 h-4 text-primary" />
                         Mutual Fund Scheme Holdings ({existingClientData.folios.length})
                       </h4>
 
-                      <div className="border border-border/30 bg-white/40 rounded-2xl overflow-hidden font-sans text-xs">
-                        <div className="overflow-x-auto w-full">
-                          <table className="w-full text-left text-neutral-900">
-                            <thead>
-                              <tr className="bg-white/60 border-b border-border/20 text-neutral-500 font-bold font-mono text-[9px] uppercase tracking-wider">
-                                <th className="px-4 py-3">Scheme / Fund Name</th>
-                                <th className="px-4 py-3 text-right">Invested</th>
-                                <th className="px-4 py-3 text-right font-sans">Current Value</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-border/10">
-                              {(() => {
-                                // Group by scheme name to combine multiple folios under same fund
-                                const groupedMap: Record<string, { schemeName: string, invested: number, current: number, units: number }> = {};
-                                existingClientData.folios.forEach((f: any) => {
-                                  const name = f.schemeName || 'Unknown Scheme';
-                                  if (!groupedMap[name]) {
-                                    groupedMap[name] = { schemeName: name, invested: 0, current: 0, units: 0 };
-                                  }
-                                  groupedMap[name].invested += f.purchaseValue || 0;
-                                  groupedMap[name].current += f.aum || 0;
-                                  groupedMap[name].units += f.units || 0;
-                                });
+                      {(() => {
+                        const groupedMap: Record<string, { schemeName: string, invested: number, current: number, units: number }> = {};
+                        existingClientData.folios.forEach((f: any) => {
+                          const name = f.schemeName || 'Unknown Scheme';
+                          if (!groupedMap[name]) {
+                            groupedMap[name] = { schemeName: name, invested: 0, current: 0, units: 0 };
+                          }
+                          groupedMap[name].invested += f.purchaseValue || 0;
+                          groupedMap[name].current += f.aum || 0;
+                          groupedMap[name].units += f.units || 0;
+                        });
 
-                                return Object.values(groupedMap).map((scheme: any) => {
-                                  const profitLossPercent = scheme.invested > 0 ? ((scheme.current - scheme.invested) / scheme.invested) * 100 : 0;
-                                  const isProfit = (scheme.current - scheme.invested) >= 0;
+                        const groupedList = Object.values(groupedMap);
+                        const pieData = groupedList.map((scheme: any) => ({
+                          name: scheme.schemeName,
+                          value: scheme.current
+                        }));
 
-                                  return (
-                                    <tr key={scheme.schemeName} className="hover:bg-white/20 transition duration-150">
-                                      <td className="px-4 py-3.5">
-                                        <div className="font-semibold text-neutral-900 leading-snug">
-                                          {scheme.schemeName}
-                                        </div>
-                                        {scheme.units > 0 && (
-                                          <div className="text-[10px] text-neutral-500 font-mono mt-0.5">
-                                            Units: {scheme.units.toLocaleString()}
-                                          </div>
-                                        )}
-                                      </td>
-                                      <td className="px-4 py-3.5 text-right font-mono text-neutral-600">
-                                        ₹{scheme.invested.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                      </td>
-                                      <td className="px-4 py-3.5 text-right font-mono">
-                                        <span className="font-semibold text-neutral-900 mr-2">
-                                          ₹{scheme.current.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                        </span>
-                                        <span className={`text-[10px] font-sans font-bold ${isProfit ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                          ({isProfit ? '+' : ''}{profitLossPercent.toFixed(2)}%)
-                                        </span>
-                                      </td>
+                        const totalAum = pieData.reduce((acc, curr) => acc + curr.value, 0);
+
+                        return (
+                          <div className="flex flex-col gap-6">
+                            {/* Allocation Pie Chart (rendered on top) */}
+                            <div className="bg-white/40 border border-border/30 rounded-2xl p-5 flex flex-col justify-between items-center shadow-sm relative min-h-[280px] overflow-hidden w-full max-w-md mx-auto">
+                              <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-wider block font-bold mb-3 self-start">
+                                Asset Allocation
+                              </span>
+                              {totalAum > 0 ? (
+                                <div className="w-full flex-1 flex flex-col justify-center items-center">
+                                  <div className="w-full h-[200px] relative">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                      <PieChart>
+                                        <Pie
+                                          data={pieData}
+                                          cx="50%"
+                                          cy="50%"
+                                          innerRadius={45}
+                                          outerRadius={65}
+                                          paddingAngle={3}
+                                          dataKey="value"
+                                        >
+                                          {pieData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={SLEEK_COLORS[index % SLEEK_COLORS.length]} />
+                                          ))}
+                                        </Pie>
+                                        <Tooltip content={<CustomTooltip />} />
+                                        <Legend 
+                                          layout="horizontal" 
+                                          verticalAlign="bottom" 
+                                          align="center"
+                                          iconType="circle"
+                                          content={({ payload }) => (
+                                            <div className="flex flex-wrap gap-x-2.5 gap-y-1 justify-center mt-2 max-h-[60px] overflow-y-auto w-full px-1">
+                                              {payload?.map((entry: any, idx: number) => {
+                                                const percentage = totalAum > 0 ? ((pieData[idx]?.value || 0) / totalAum) * 100 : 0;
+                                                return (
+                                                  <div key={idx} className="flex items-center gap-1 text-[9px] text-neutral-600 font-sans font-medium">
+                                                    <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
+                                                    <span className="truncate max-w-[90px]" title={entry.value}>{entry.value}</span>
+                                                    <span className="text-neutral-400 font-mono">({percentage.toFixed(0)}%)</span>
+                                                  </div>
+                                                );
+                                              })}
+                                            </div>
+                                          )}
+                                        />
+                                      </PieChart>
+                                    </ResponsiveContainer>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="text-neutral-400 text-xs font-sans py-12">
+                                  No asset allocation valuation found.
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Table List (rendered on bottom, full-width) */}
+                            <div className="border border-border/30 bg-white/40 rounded-2xl overflow-hidden font-sans text-xs flex flex-col w-full">
+                              <div className="overflow-x-auto w-full">
+                                <table className="w-full text-left text-neutral-900">
+                                  <thead>
+                                    <tr className="bg-white/60 border-b border-border/20 text-neutral-500 font-bold font-mono text-[9px] uppercase tracking-wider">
+                                      <th className="px-4 py-3">Scheme / Fund Name</th>
+                                      <th className="px-4 py-3 text-right">Invested</th>
+                                      <th className="px-4 py-3 text-right font-sans">Current Value</th>
                                     </tr>
-                                  );
-                                });
-                              })()}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
+                                  </thead>
+                                  <tbody className="divide-y divide-border/10">
+                                    {groupedList.map((scheme: any) => {
+                                      const profitLossPercent = scheme.invested > 0 ? ((scheme.current - scheme.invested) / scheme.invested) * 100 : 0;
+                                      const isProfit = (scheme.current - scheme.invested) >= 0;
+
+                                      return (
+                                        <tr key={scheme.schemeName} className="hover:bg-white/20 transition duration-150">
+                                          <td className="px-4 py-3.5">
+                                            <div className="font-semibold text-neutral-900 leading-snug">
+                                              {scheme.schemeName}
+                                            </div>
+                                            {scheme.units > 0 && (
+                                              <div className="text-[10px] text-neutral-500 font-mono mt-0.5">
+                                                Units: {scheme.units.toLocaleString()}
+                                              </div>
+                                            )}
+                                          </td>
+                                          <td className="px-4 py-3.5 text-right font-mono text-neutral-600">
+                                            ₹{scheme.invested.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                          </td>
+                                          <td className="px-4 py-3.5 text-right font-mono">
+                                            <span className="font-semibold text-neutral-900 mr-2">
+                                              ₹{scheme.current.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            </span>
+                                            <span className={`text-[10px] font-sans font-bold ${isProfit ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                              ({isProfit ? '+' : ''}{profitLossPercent.toFixed(2)}%)
+                                            </span>
+                                          </td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                   )}
                 </div>
@@ -2301,8 +2305,8 @@ export default function ClientDashboard() {
                                 {row.fundName}
                               </td>
                               <td className="px-4 py-3 text-neutral-500 font-mono text-[10px]">{row.type}</td>
-                              <td className="px-4 py-3 text-right text-neutral-900 font-mono">₹{row.invested.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-right text-neutral-900 font-semibold font-mono">₹{row.currentValue.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-right text-neutral-900 font-mono">₹{row.invested.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                              <td className="px-4 py-3 text-right text-neutral-900 font-semibold font-mono">₹{row.currentValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -2326,7 +2330,7 @@ export default function ClientDashboard() {
             <div className="space-y-2">
               <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide font-clash">Call Booked Successfully!</h2>
               <p className="text-neutral-500 text-xs font-sans leading-relaxed">
-                Your 1-on-1 premium portfolio review discussion is scheduled. A SEBI-registered distributor will contact you within 24 hours at <strong className="text-neutral-800 font-mono font-medium">{userData?.phone || "your registered number"}</strong>.
+                Your 1-on-1 premium portfolio review discussion is scheduled. Our AMFI-registered distributor will contact you within 24 hours at <strong className="text-neutral-800 font-mono font-medium">{userData?.phone || "your registered number"}</strong>.
               </p>
             </div>
             <button
@@ -2380,24 +2384,7 @@ export default function ClientDashboard() {
       <ChatbotWidget />
 
       {/* Footer */}
-      <footer className="relative z-10 w-full max-w-5xl mx-auto px-6 pb-12 mt-12 text-center border-t border-neutral-200/50 pt-8">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="text-left space-y-1.5">
-            <span className="font-chillax font-bold text-neutral-800 tracking-wider text-xs uppercase block">Arijit De Partner Network</span>
-            <p className="text-neutral-500 text-[10px] font-sans max-w-sm leading-relaxed">
-              SEBI Registered Mutual Fund Distributor (ARN-285654). Subject to standard market risks.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-6 text-[10px] font-mono text-neutral-500 uppercase tracking-widest">
-            <div className="flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5 text-primary" />
-              <span>LIVE CLOCK: {currentTime || "00:00:00"}</span>
-            </div>
-            <span>©2026 FINANALYSIS</span>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </main>
   );
 }

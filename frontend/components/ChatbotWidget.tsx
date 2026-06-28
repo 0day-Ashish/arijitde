@@ -8,6 +8,7 @@ interface Message {
   id: number;
   sender: "bot" | "user";
   text: string;
+  options?: string[];
 }
 
 interface ChatbotWidgetProps {
@@ -33,38 +34,37 @@ export default function ChatbotWidget({
     }
   };
   const [messages, setMessages] = useState<Message[]>([
-    { id: 1, sender: "bot", text: "Hello! I'm Virtual Arijit assistant, trained on FinAnalysis's 35-year investment playbook. How can I assist you with your portfolio, mutual funds, or goal-based investment structuring goals today? 📈" }
+    { 
+      id: 1, 
+      sender: "bot", 
+      text: "Hello! I'm Virtual Arijit, your personal AI assistant. Before we begin, are you a New User or an Existing Client? Select an option below to get started, or ask a question:",
+      options: ["New User", "Existing Client"]
+    }
   ]);
   const [inputVal, setInputVal] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
-
+ 
   const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
+ 
   useEffect(() => {
     setMounted(true);
   }, []);
-
+ 
   // Auto scroll to bottom of messages
   useEffect(() => {
     if (isChatOpen) {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, isChatOpen, isTyping]);
-
+ 
   if (!mounted) return null;
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputVal.trim() || isTyping) return;
-
-    const userMessageText = inputVal.trim();
+  const sendUserMessage = async (userMessageText: string, currentMessagesState = messages) => {
+    if (isTyping) return;
     const userMsg: Message = { id: Date.now(), sender: "user", text: userMessageText };
-
-    // Update local messages and clear input
-    const updatedMessages = [...messages, userMsg];
+    const updatedMessages = [...currentMessagesState, userMsg];
     setMessages(updatedMessages);
-    setInputVal("");
     setIsTyping(true);
 
     try {
@@ -76,7 +76,7 @@ export default function ChatbotWidget({
         headers["Authorization"] = `Bearer ${token}`;
       }
 
-      // Format messages history for the API
+      // Format messages history for the API (exclude layout-only options attribute)
       const history = updatedMessages.map(msg => ({
         role: msg.sender === "user" ? "user" : "assistant",
         content: msg.text
@@ -101,6 +101,24 @@ export default function ChatbotWidget({
     } finally {
       setIsTyping(false);
     }
+  };
+
+  const handleOptionClick = (opt: string, messageId: number) => {
+    // 1. Clear the option pills from the message in state
+    setMessages(prev => prev.map(m => m.id === messageId ? { ...m, options: undefined } : m));
+    
+    // 2. Submit the message using the updated state to avoid closure lag
+    const clearedMessages = messages.map(m => m.id === messageId ? { ...m, options: undefined } : m);
+    sendUserMessage(opt, clearedMessages);
+  };
+ 
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputVal.trim() || isTyping) return;
+ 
+    const userMessageText = inputVal.trim();
+    setInputVal("");
+    await sendUserMessage(userMessageText);
   };
 
   return (
@@ -141,13 +159,34 @@ export default function ChatbotWidget({
               <div
                 key={msg.id}
                 className={cn(
-                  "max-w-[80%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed border",
-                  msg.sender === "user"
-                    ? "bg-primary/10 border-primary/15 text-primary rounded-br-none self-end text-left font-clash"
-                    : "bg-neutral-100 border-neutral-200 text-neutral-800 rounded-bl-none self-start text-left font-clash"
+                  "max-w-[80%] flex flex-col gap-1.5",
+                  msg.sender === "user" ? "self-end" : "self-start"
                 )}
               >
-                {msg.text}
+                <div
+                  className={cn(
+                    "px-4 py-2.5 rounded-2xl text-sm leading-relaxed border text-left font-clash w-full whitespace-pre-line",
+                    msg.sender === "user"
+                      ? "bg-primary/10 border-primary/15 text-primary rounded-br-none"
+                      : "bg-neutral-100 border-neutral-200 text-neutral-800 rounded-bl-none"
+                  )}
+                >
+                  {msg.text}
+                </div>
+                {msg.options && (
+                  <div className="flex flex-wrap gap-2 mt-0.5 justify-start">
+                    {msg.options.map((opt) => (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => handleOptionClick(opt, msg.id)}
+                        className="px-3.5 py-1.5 bg-[#3A8293]/10 border border-[#3A8293]/20 hover:bg-[#3A8293] hover:text-white text-[#3A8293] rounded-full text-xs font-semibold font-clash transition duration-150 cursor-pointer select-none"
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
             {isTyping && (

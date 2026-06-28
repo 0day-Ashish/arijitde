@@ -13,6 +13,7 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
   const [dashboardUrl, setDashboardUrl] = useState('/onboarding');
   const [isWalletOpen, setIsWalletOpen] = useState(false);
   const [finPoints, setFinPoints] = useState<number>(0);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
   const desktopWalletRef = useRef<HTMLDivElement>(null);
@@ -32,6 +33,7 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
       try {
         const user = JSON.parse(userStr);
         const role = user?.role;
+        setUserRole(role || 'USER');
         if (role === 'ADMIN') {
           setDashboardUrl('/dashboard/admin');
         } else if (role === 'CLIENT') {
@@ -45,6 +47,7 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
       }
     } else {
       setIsLoggedIn(false);
+      setUserRole(null);
       setDashboardUrl('/onboarding');
     }
 
@@ -163,45 +166,46 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
               </a>
             </nav>
 
-            {/* Right: Desktop CTA Buttons */}
             <div className="hidden md:flex items-center gap-3">
               {isLoggedIn ? (
-                <div className="relative" ref={desktopWalletRef}>
-                  <button
-                    onClick={() => setIsWalletOpen(!isWalletOpen)}
-                    title="My Wallet & FinPoints"
-                    className="p-2.5 border border-border bg-white/50 hover:bg-white rounded-xl transition duration-200 cursor-pointer flex items-center justify-center shrink-0"
-                  >
-                    <svg className="w-4 h-4 text-neutral-700 hover:text-primary transition-colors duration-200" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 12V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 00-2-2h-3a2 2 0 00-2 2v1a2 2 0 002 2h3" />
-                    </svg>
-                  </button>
+                userRole !== 'CLIENT' && (
+                  <div className="relative" ref={desktopWalletRef}>
+                    <button
+                      onClick={() => setIsWalletOpen(!isWalletOpen)}
+                      title="My Wallet & FinPoints"
+                      className="p-2.5 border border-border bg-white/50 hover:bg-white rounded-xl transition duration-200 cursor-pointer flex items-center justify-center shrink-0"
+                    >
+                      <svg className="w-4 h-4 text-neutral-700 hover:text-primary transition-colors duration-200" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 12V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 00-2-2h-3a2 2 0 00-2 2v1a2 2 0 002 2h3" />
+                      </svg>
+                    </button>
 
-                  {isWalletOpen && (
-                    <div className="absolute right-0 mt-2.5 w-64 p-5 rounded-2xl bg-white/75 backdrop-blur-2xl border border-border shadow-xl text-left flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-300 z-50">
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider block font-bold">FinPoints Balance</span>
-                        <div className="flex items-baseline gap-1.5 mt-0.5">
-                          <span className="text-3xl font-bold font-clash text-primary leading-none">{finPoints}</span>
-                          <span className="text-xs font-sans font-semibold text-neutral-500">FP</span>
-                          <span className="text-xs font-sans font-medium text-emerald-600 ml-1.5">(≈ ₹{(finPoints * 0.5).toFixed(2)})</span>
+                    {isWalletOpen && (
+                      <div className="absolute right-0 mt-2.5 w-64 p-5 rounded-2xl bg-white/75 backdrop-blur-2xl border border-border shadow-xl text-left flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-300 z-50">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider block font-bold">FinPoints Balance</span>
+                          <div className="flex items-baseline gap-1.5 mt-0.5">
+                            <span className="text-3xl font-bold font-clash text-primary leading-none">{finPoints}</span>
+                            <span className="text-xs font-sans font-semibold text-neutral-500">FP</span>
+                            <span className="text-xs font-sans font-medium text-emerald-600 ml-1.5">(≈ ₹{(finPoints * 0.5).toFixed(2)})</span>
+                          </div>
                         </div>
+
+                        <p className="text-[10px] leading-relaxed text-muted-foreground font-sans">
+                          Earn more FinPoints by submitting portfolios, answering quizzes, or booking portfolio reviews.
+                        </p>
+
+                        <a
+                          href={dashboardUrl}
+                          onClick={() => setIsWalletOpen(false)}
+                          className="w-full text-center py-2 text-xs font-bold text-white bg-primary rounded-xl hover:bg-primary/95 transition duration-200 uppercase tracking-wider"
+                        >
+                          Manage Portfolio
+                        </a>
                       </div>
-
-                      <p className="text-[10px] leading-relaxed text-muted-foreground font-sans">
-                        Earn more FinPoints by submitting portfolios, answering quizzes, or booking portfolio reviews.
-                      </p>
-
-                      <a
-                        href={dashboardUrl}
-                        onClick={() => setIsWalletOpen(false)}
-                        className="w-full text-center py-2 text-xs font-bold text-white bg-primary rounded-xl hover:bg-primary/95 transition duration-200 uppercase tracking-wider"
-                      >
-                        Manage Portfolio
-                      </a>
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
+                )
               ) : (
                 <a
                   href="/onboarding"
@@ -225,41 +229,42 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
               )}
             </div>
 
-            {/* Right: Mobile Hamburger Button */}
             <div className="flex md:hidden items-center gap-3">
               {isLoggedIn ? (
-                <div className="relative" ref={mobileWalletRef}>
-                  <button
-                    onClick={() => setIsWalletOpen(!isWalletOpen)}
-                    title="My Wallet & FinPoints"
-                    className="p-2 border border-border bg-white/50 hover:bg-white rounded-xl transition duration-200 cursor-pointer flex items-center justify-center shrink-0"
-                  >
-                    <svg className="w-4 h-4 text-neutral-700 hover:text-primary transition-colors duration-200" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 12V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 00-2-2h-3a2 2 0 00-2 2v1a2 2 0 002 2h3" />
-                    </svg>
-                  </button>
+                userRole !== 'CLIENT' && (
+                  <div className="relative" ref={mobileWalletRef}>
+                    <button
+                      onClick={() => setIsWalletOpen(!isWalletOpen)}
+                      title="My Wallet & FinPoints"
+                      className="p-2 border border-border bg-white/50 hover:bg-white rounded-xl transition duration-200 cursor-pointer flex items-center justify-center shrink-0"
+                    >
+                      <svg className="w-4 h-4 text-neutral-700 hover:text-primary transition-colors duration-200" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 12V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 00-2-2h-3a2 2 0 00-2 2v1a2 2 0 002 2h3" />
+                      </svg>
+                    </button>
 
-                  {isWalletOpen && (
-                    <div className="absolute right-0 mt-2 w-56 p-4 rounded-2xl bg-white/80 backdrop-blur-2xl border border-border shadow-xl text-left flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-300 z-50">
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-[9px] font-mono text-muted-foreground uppercase tracking-wider block font-bold">FinPoints Balance</span>
-                        <div className="flex items-baseline gap-1 mt-0.5">
-                          <span className="text-2xl font-bold font-clash text-primary leading-none">{finPoints}</span>
-                          <span className="text-[10px] font-sans font-semibold text-neutral-500">FP</span>
-                          <span className="text-[10px] font-sans font-medium text-emerald-600 ml-1.5">(≈ ₹{(finPoints * 0.5).toFixed(2)})</span>
+                    {isWalletOpen && (
+                      <div className="absolute right-0 mt-2 w-56 p-4 rounded-2xl bg-white/80 backdrop-blur-2xl border border-border shadow-xl text-left flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-300 z-50">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-[9px] font-mono text-muted-foreground uppercase tracking-wider block font-bold">FinPoints Balance</span>
+                          <div className="flex items-baseline gap-1 mt-0.5">
+                            <span className="text-2xl font-bold font-clash text-primary leading-none">{finPoints}</span>
+                            <span className="text-[10px] font-sans font-semibold text-neutral-500">FP</span>
+                            <span className="text-[10px] font-sans font-medium text-emerald-600 ml-1.5">(≈ ₹{(finPoints * 0.5).toFixed(2)})</span>
+                          </div>
                         </div>
-                      </div>
 
-                      <a
-                        href={dashboardUrl}
-                        onClick={() => setIsWalletOpen(false)}
-                        className="w-full text-center py-2 text-[10px] font-bold text-white bg-primary rounded-lg hover:bg-primary/95 transition duration-200 uppercase tracking-wider"
-                      >
-                        Manage Portfolio
-                      </a>
-                    </div>
-                  )}
-                </div>
+                        <a
+                          href={dashboardUrl}
+                          onClick={() => setIsWalletOpen(false)}
+                          className="w-full text-center py-2 text-[10px] font-bold text-white bg-primary rounded-lg hover:bg-primary/95 transition duration-200 uppercase tracking-wider"
+                        >
+                          Manage Portfolio
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                )
               ) : (
                 <a
                   href="/onboarding"
