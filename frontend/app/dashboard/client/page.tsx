@@ -298,7 +298,7 @@ export default function ClientDashboard() {
   const [showLogoutWarning, setShowLogoutWarning] = useState(false);
 
   // Client specifics
-  const [activeTab, setActiveTab] = useState<"home" | "portfolio" | "analyze" | "top-mf" | "picks" | "book">("home");
+  const [activeTab, setActiveTab] = useState<"home" | "portfolio" | "analyze" | "top-mf" | "book">("home");
   const [clientBookings, setClientBookings] = useState<string[]>([]);
   const [showBookingSuccess, setShowBookingSuccess] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<string>("");
@@ -1161,13 +1161,7 @@ export default function ClientDashboard() {
                   <TrendingUp className="w-4 h-4" />
                   <span>Top MF Schemes</span>
                 </button>
-                <button
-                  onClick={() => setActiveTab("picks")}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-primary/5 transition duration-150 font-semibold text-xs cursor-pointer text-left w-full ${activeTab === 'picks' ? 'bg-primary/10 text-primary font-bold' : 'text-neutral-600 hover:text-primary'}`}
-                >
-                  <Star className="w-4 h-4" />
-                  <span>Fund Picks</span>
-                </button>
+
                 <button
                   onClick={() => setActiveTab("book")}
                   className={`flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-primary/5 transition duration-150 font-semibold text-xs cursor-pointer text-left w-full ${activeTab === 'book' ? 'bg-primary/10 text-primary font-bold' : 'text-neutral-600 hover:text-primary'}`}
@@ -1916,130 +1910,7 @@ export default function ClientDashboard() {
               </div>
             )}
 
-            {/* Fund Picks (Handpicked Funds) */}
-            {activeTab === "picks" && (
-              <div className="bg-white/50 backdrop-blur-xl border border-white/40 shadow-xl rounded-3xl p-6 space-y-6 animate-in fade-in duration-300 text-left">
-                <div className="border-b border-border/20 pb-4">
-                  <h3 className="text-base font-bold text-neutral-900 font-clash flex items-center gap-2">
-                    <Star className="w-5 h-5 text-amber-500 fill-amber-500 animate-pulse" />
-                    Arijit's Curated Fund Picks
-                  </h3>
-                  <p className="text-neutral-500 text-xs font-sans mt-0.5">
-                    Premium choice recommendations based on deep telemetry scoring, risk parameters, and management stability.
-                  </p>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {/* Pick 1 */}
-                  <div className="bg-gradient-to-br from-white/60 via-white/40 to-emerald-500/5 border border-emerald-500/10 shadow-md rounded-3xl p-5 space-y-4 relative overflow-hidden flex flex-col justify-between">
-                    <div className="absolute top-0 right-0 px-3 py-1 bg-emerald-500/10 text-emerald-800 text-[8px] font-mono font-bold tracking-widest uppercase rounded-bl-2xl">
-                      Aggressive Growth
-                    </div>
-                    <div className="space-y-2">
-                      <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200/50 flex items-center justify-center text-emerald-600 text-sm font-bold">Q</div>
-                      <h4 className="text-xs font-bold text-neutral-900 leading-snug">Quant Small Cap Fund (Direct Growth)</h4>
-                      <p className="text-[10px] text-neutral-500 leading-relaxed font-sans">
-                        Uncapped alpha generator using proprietary predictive modeling telemetry. Perfect for high-risk profiles seeking massive compounding momentum.
-                      </p>
-                    </div>
-                    <div className="pt-2 border-t border-border/20 flex justify-between items-center">
-                      <span className="text-[9px] font-mono font-bold text-neutral-400">AMFI Code: 120849</span>
-                      <button onClick={() => { setActiveTab("top-mf"); setTopMfSearch("120849"); }} className="text-[10px] font-bold text-primary hover:underline cursor-pointer">View NAV Performance &rarr;</button>
-                    </div>
-                  </div>
-
-                  {/* Pick 2 */}
-                  <div className="bg-gradient-to-br from-white/60 via-white/40 to-blue-500/5 border border-blue-500/10 shadow-md rounded-3xl p-5 space-y-4 relative overflow-hidden flex flex-col justify-between">
-                    <div className="absolute top-0 right-0 px-3 py-1 bg-blue-500/10 text-blue-800 text-[8px] font-mono font-bold tracking-widest uppercase rounded-bl-2xl">
-                      Core Flexi Cap
-                    </div>
-                    <div className="space-y-2">
-                      <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200/50 flex items-center justify-center text-blue-600 text-sm font-bold">PP</div>
-                      <h4 className="text-xs font-bold text-neutral-900 leading-snug">Parag Parikh Flexi Cap Fund (Direct Growth)</h4>
-                      <p className="text-[10px] text-neutral-500 leading-relaxed font-sans">
-                        Value investing philosophy combining Indian equities with international tech leaders. Exceptional downside risk protection and management honesty.
-                      </p>
-                    </div>
-                    <div className="pt-2 border-t border-border/20 flex justify-between items-center">
-                      <span className="text-[9px] font-mono font-bold text-neutral-400">AMFI Code: 122639</span>
-                      <button onClick={() => { setActiveTab("top-mf"); setTopMfSearch("122639"); }} className="text-[10px] font-bold text-primary hover:underline cursor-pointer">View NAV Performance &rarr;</button>
-                    </div>
-                  </div>
-
-                  {/* Pick 3 */}
-                  <div className="bg-gradient-to-br from-white/60 via-white/40 to-amber-500/5 border border-amber-500/10 shadow-md rounded-3xl p-5 space-y-4 relative overflow-hidden flex flex-col justify-between">
-                    <div className="absolute top-0 right-0 px-3 py-1 bg-amber-500/10 text-amber-800 text-[8px] font-mono font-bold tracking-widest uppercase rounded-bl-2xl">
-                      Mid Cap Compounding
-                    </div>
-                    <div className="space-y-2">
-                      <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200/50 flex items-center justify-center text-amber-600 text-sm font-bold">H</div>
-                      <h4 className="text-xs font-bold text-neutral-900 leading-snug">HDFC Mid-Cap Opportunities Fund (Direct)</h4>
-                      <p className="text-[10px] text-neutral-500 leading-relaxed font-sans">
-                        The ultimate mid-cap champion with unmatched fund size and sector selection. Consistent track record of beating benchmark index by high margins.
-                      </p>
-                    </div>
-                    <div className="pt-2 border-t border-border/20 flex justify-between items-center">
-                      <span className="text-[9px] font-mono font-bold text-neutral-400">AMFI Code: 120150</span>
-                      <button onClick={() => { setActiveTab("top-mf"); setTopMfSearch("120150"); }} className="text-[10px] font-bold text-primary hover:underline cursor-pointer">View NAV Performance &rarr;</button>
-                    </div>
-                  </div>
-
-                  {/* Pick 4 */}
-                  <div className="bg-gradient-to-br from-white/60 via-white/40 to-indigo-500/5 border border-indigo-500/10 shadow-md rounded-3xl p-5 space-y-4 relative overflow-hidden flex flex-col justify-between">
-                    <div className="absolute top-0 right-0 px-3 py-1 bg-indigo-500/10 text-indigo-800 text-[8px] font-mono font-bold tracking-widest uppercase rounded-bl-2xl">
-                      Stable Bluechip
-                    </div>
-                    <div className="space-y-2">
-                      <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-200/50 flex items-center justify-center text-indigo-600 text-sm font-bold">IC</div>
-                      <h4 className="text-xs font-bold text-neutral-900 leading-snug">ICICI Prudential Bluechip Fund (Direct Growth)</h4>
-                      <p className="text-[10px] text-neutral-500 leading-relaxed font-sans">
-                        High stability investing in India's top 100 enterprise giants. Very low volatility and excellent core portfolio stabilizer for wealth preservation.
-                      </p>
-                    </div>
-                    <div className="pt-2 border-t border-border/20 flex justify-between items-center">
-                      <span className="text-[9px] font-mono font-bold text-neutral-400">AMFI Code: 120586</span>
-                      <button onClick={() => { setActiveTab("top-mf"); setTopMfSearch("120586"); }} className="text-[10px] font-bold text-primary hover:underline cursor-pointer">View NAV Performance &rarr;</button>
-                    </div>
-                  </div>
-
-                  {/* Pick 5 */}
-                  <div className="bg-gradient-to-br from-white/60 via-white/40 to-rose-500/5 border border-rose-500/10 shadow-md rounded-3xl p-5 space-y-4 relative overflow-hidden flex flex-col justify-between">
-                    <div className="absolute top-0 right-0 px-3 py-1 bg-rose-500/10 text-rose-800 text-[8px] font-mono font-bold tracking-widest uppercase rounded-bl-2xl">
-                      Hybrid Income
-                    </div>
-                    <div className="space-y-2">
-                      <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200/50 flex items-center justify-center text-rose-600 text-sm font-bold">PP</div>
-                      <h4 className="text-xs font-bold text-neutral-900 leading-snug">Parag Parikh Conservative Hybrid Fund (Direct)</h4>
-                      <p className="text-[10px] text-neutral-500 leading-relaxed font-sans">
-                        A cautious mix of high-grade debt and conservative equity allocations. Perfect for senior citizens or safety-first investors looking for stable yield over FD.
-                      </p>
-                    </div>
-                    <div className="pt-2 border-t border-border/20 flex justify-between items-center">
-                      <span className="text-[9px] font-mono font-bold text-neutral-400">AMFI Code: 148866</span>
-                      <button onClick={() => { setActiveTab("top-mf"); setTopMfSearch("148866"); }} className="text-[10px] font-bold text-primary hover:underline cursor-pointer">View NAV Performance &rarr;</button>
-                    </div>
-                  </div>
-
-                  {/* Pick 6 */}
-                  <div className="bg-gradient-to-br from-white/60 via-white/40 to-violet-500/5 border border-violet-500/10 shadow-md rounded-3xl p-5 space-y-4 relative overflow-hidden flex flex-col justify-between">
-                    <div className="absolute top-0 right-0 px-3 py-1 bg-violet-500/10 text-violet-800 text-[8px] font-mono font-bold tracking-widest uppercase rounded-bl-2xl">
-                      Tax Saver (ELSS)
-                    </div>
-                    <div className="space-y-2">
-                      <div className="w-10 h-10 rounded-xl bg-violet-50 border border-violet-200/50 flex items-center justify-center text-violet-600 text-sm font-bold">Q</div>
-                      <h4 className="text-xs font-bold text-neutral-900 leading-snug">Quant ELSS Tax Saver Fund (Direct Growth)</h4>
-                      <p className="text-[10px] text-neutral-500 leading-relaxed font-sans">
-                        80C tax deduction benefits combined with stellar active strategy portfolio allocation. Consistently outperforms standard benchmarks in bull markets.
-                      </p>
-                    </div>
-                    <div className="pt-2 border-t border-border/20 flex justify-between items-center">
-                      <span className="text-[9px] font-mono font-bold text-neutral-400">AMFI Code: 120828</span>
-                      <button onClick={() => { setActiveTab("top-mf"); setTopMfSearch("120828"); }} className="text-[10px] font-bold text-primary hover:underline cursor-pointer">View NAV Performance &rarr;</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
 
             {/* Daily Wisdom card */}
             {activeTab === "home" && (
