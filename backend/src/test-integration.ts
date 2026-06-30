@@ -3,7 +3,7 @@ dotenv.config();
 
 import { prisma } from './lib/prisma';
 import { signToken } from './lib/jwt';
-import { LeadStatus, PaymentStatus, Role } from '@prisma/client';
+import { LeadStatus, Role } from '@prisma/client';
 
 async function run() {
   console.log('--- Starting Comprehensive E2E Integration Test ---');
@@ -18,12 +18,11 @@ async function run() {
   });
 
   for (const u of testUsers) {
-    await prisma.mLResult.deleteMany({ where: { portfolio: { userId: u.id } } });
     await prisma.score.deleteMany({ where: { portfolio: { userId: u.id } } });
     await prisma.portfolioRow.deleteMany({ where: { portfolio: { userId: u.id } } });
     await prisma.portfolio.deleteMany({ where: { userId: u.id } });
     await prisma.lead.deleteMany({ where: { userId: u.id } });
-    await prisma.payment.deleteMany({ where: { userId: u.id } });
+    await prisma.advisorySession.deleteMany({ where: { userId: u.id } });
     await prisma.client.deleteMany({ where: { userId: u.id } });
     await prisma.user.delete({ where: { id: u.id } });
   }
@@ -140,111 +139,115 @@ async function run() {
   console.log('Lead status successfully updated to CONTACTED.');
 
   // ==========================================
-  // B. PAYMENTS WORKFLOW
+  // B. FREE ADVISORY SESSION BOOKING WORKFLOW
   // ==========================================
-  console.log('\n--- Testing Payments Workflow ---');
+  console.log('\n--- Testing Advisory Session Booking Workflow ---');
 
-  // B1. Submit Payment (User)
-  console.log('Creating multipart/form-data upload request...');
-  const formData = new FormData();
-  formData.append('amount', '499');
-  formData.append('utrId', 'UTR9988776655');
+  // B1. Book preferred slots (User)
+  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+  const dayAfter = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+  const threeDaysLater = new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString();
 
-  // Append dummy screenshot file
-  const screenshotBlob = new Blob(['fake image binary content'], { type: 'image/png' });
-  formData.append('screenshot', screenshotBlob, 'test-payment.png');
-
-  const uploadRes = await fetch('http://localhost:8000/api/payments', {
+  console.log('User scheduling slot preferences...');
+  const bookSessionRes = await fetch('http://localhost:8000/api/leads/book-session', {
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${userToken}`,
+    },
+    body: JSON.stringify({
+      slot1: tomorrow,
+      slot2: dayAfter,
+      slot3: threeDaysLater,
+    }),
+  });
+
+  const bookSessionJson = (await bookSessionRes.json()) as any;
+  console.log('Book Session Status:', bookSessionRes.status);
+  console.log('Book Session Response:', JSON.stringify(bookSessionJson, null, 2));
+
+  if (!bookSessionRes.ok || !bookSessionJson.success) {
+    throw new Error(`Failed to book advisory session: ${bookSessionJson.error || bookSessionRes.statusText}`);
+  }
+  const sessionId = bookSessionJson.data.id;
+
+  // B2. Get user sessions (User)
+  console.log('User requesting their own sessions...');
+  const getMySessionsRes = await fetch('http://localhost:8000/api/leads/my-sessions', {
     headers: {
       Authorization: `Bearer ${userToken}`,
     },
-    body: formData,
   });
-
-  const uploadJson = (await uploadRes.json()) as any;
-  console.log('Upload Payment Status:', uploadRes.status);
-  console.log('Upload Payment Response:', JSON.stringify(uploadJson, null, 2));
-
-  if (!uploadRes.ok || !uploadJson.success) {
-    throw new Error(`Failed to upload payment: ${uploadJson.error || uploadRes.statusText}`);
+  const getMySessionsJson = (await getMySessionsRes.json()) as any;
+  console.log('User Sessions Response Status:', getMySessionsRes.status);
+  if (!getMySessionsRes.ok || !getMySessionsJson.success) {
+    throw new Error('User failed to fetch their own sessions');
   }
-  const paymentId = uploadJson.data.paymentId;
+  const userSessionMatch = getMySessionsJson.data.find((s: any) => s.id === sessionId);
+  if (!userSessionMatch) {
+    throw new Error('Scheduled session not found in user sessions list!');
+  }
+  console.log('Verified scheduled session is present in user sessions list.');
 
-  // B2. Get payments (Admin)
-  console.log('Admin requesting pending payments list...');
-  const getPaymentsRes = await fetch('http://localhost:8000/api/payments?status=PENDING', {
+  // B3. Get sessions (Admin)
+  console.log('Admin requesting sessions queue...');
+  const getAdminSessionsRes = await fetch('http://localhost:8000/api/leads/admin/sessions', {
     headers: {
       Authorization: `Bearer ${adminToken}`,
     },
   });
-
-  const getPaymentsJson = (await getPaymentsRes.json()) as any;
-  console.log('Admin List Payments Status:', getPaymentsRes.status);
-  if (!getPaymentsRes.ok || !getPaymentsJson.success) {
-    throw new Error('Admin failed to list payments');
+  const getAdminSessionsJson = (await getAdminSessionsRes.json()) as any;
+  console.log('Admin Sessions Response Status:', getAdminSessionsRes.status);
+  if (!getAdminSessionsRes.ok || !getAdminSessionsJson.success) {
+    throw new Error('Admin failed to fetch sessions list');
   }
-
-  const foundPayment = getPaymentsJson.data.payments.find((p: any) => p.id === paymentId);
-  if (!foundPayment) {
-    throw new Error('Uploaded payment not found in admin payments list!');
+  const adminSessionMatch = getAdminSessionsJson.data.find((s: any) => s.id === sessionId);
+  if (!adminSessionMatch) {
+    throw new Error('Scheduled session not found in admin sessions list!');
   }
-  console.log(`Verified pending payment ${paymentId} is present. Screenshot URL is: ${foundPayment.screenshotUrl}`);
+  console.log('Verified scheduled session is present in admin sessions list.');
 
-  // B3. Approve Payment (Admin)
-  console.log('Admin approving payment...');
-  const approveRes = await fetch(`http://localhost:8000/api/payments/${paymentId}/approve`, {
+  // B4. Confirm slots (Admin)
+  console.log('Admin confirming session slot...');
+  const confirmSessionRes = await fetch(`http://localhost:8000/api/leads/admin/sessions/${sessionId}/confirm`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${adminToken}`,
     },
     body: JSON.stringify({
-      action: 'approve',
-      reason: 'UTR verified and amount credited successfully',
+      confirmedSlot: tomorrow,
+      googleMeetLink: 'https://meet.google.com/abc-defg-hij',
     }),
   });
-
-  const approveJson = (await approveRes.json()) as any;
-  console.log('Approve Payment Status:', approveRes.status);
-  console.log('Approve Payment Response:', JSON.stringify(approveJson, null, 2));
-
-  if (!approveRes.ok || !approveJson.success) {
-    throw new Error(`Failed to approve payment: ${approveJson.error || approveRes.statusText}`);
+  const confirmSessionJson = (await confirmSessionRes.json()) as any;
+  console.log('Confirm Session Response Status:', confirmSessionRes.status);
+  if (!confirmSessionRes.ok || !confirmSessionJson.success) {
+    throw new Error(`Admin failed to confirm session: ${confirmSessionJson.error}`);
   }
+  console.log('Session slot successfully confirmed.');
 
-  // B4. Verify Role elevation and Client record creation
-  console.log('Verifying client profile activation and role changes in Neon DB...');
-  const updatedUser = await prisma.user.findUnique({
-    where: { id: user.id },
-    include: { client: true },
+  // B5. Cancel session (Admin)
+  console.log('Admin cancelling session...');
+  const cancelSessionRes = await fetch(`http://localhost:8000/api/leads/admin/sessions/${sessionId}/refund`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${adminToken}`,
+    },
   });
-
-  if (!updatedUser) {
-    throw new Error('User not found in DB after approval!');
+  const cancelSessionJson = (await cancelSessionRes.json()) as any;
+  console.log('Cancel Session Response Status:', cancelSessionRes.status);
+  if (!cancelSessionRes.ok || !cancelSessionJson.success) {
+    throw new Error(`Admin failed to cancel session: ${cancelSessionJson.error}`);
   }
+  console.log('Session successfully cancelled.');
 
-  console.log(`Updated User Role: ${updatedUser.role} (Expected: CLIENT)`);
-  console.log('Client Record:', updatedUser.client);
-
-  if (updatedUser.role !== Role.CLIENT) {
-    throw new Error('User role was not elevated to CLIENT!');
-  }
-
-  if (!updatedUser.client) {
-    throw new Error('Client activation record was not created!');
-  }
-
-  if (updatedUser.client.activePlan !== 'PREMIUM') {
-    throw new Error(`Client active plan is incorrect: ${updatedUser.client.activePlan}`);
-  }
-
-  console.log('--- ALL LEADS & PAYMENTS TESTS PASSED SUCCESSFULLY ---');
+  console.log('--- ALL LEADS & BOOKING TESTS PASSED SUCCESSFULLY ---');
 
   // 4. Clean up test records
   console.log('Cleaning up test records from database...');
   await prisma.client.deleteMany({ where: { userId: { in: [user.id, admin.id] } } });
-  await prisma.payment.deleteMany({ where: { userId: { in: [user.id, admin.id] } } });
+  await prisma.advisorySession.deleteMany({ where: { userId: { in: [user.id, admin.id] } } });
   await prisma.lead.deleteMany({ where: { userId: { in: [user.id, admin.id] } } });
   await prisma.user.deleteMany({ where: { id: { in: [user.id, admin.id] } } });
   console.log('Test clean up completed.');

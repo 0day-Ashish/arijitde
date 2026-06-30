@@ -80,64 +80,6 @@ router.post('/:portfolioId', authMiddleware, async (req: AuthenticatedRequest, r
       },
     });
 
-    // Call ML service (POST) with feature vector
-    // Wrap in try/catch, ML failure should not block scoring
-    try {
-      const mlServiceUrl = process.env.ML_SERVICE_URL || 'http://localhost:8001';
-      // Use globalThis.fetch natively available in Node 18+
-      fetch(`${mlServiceUrl}/analyse`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          rows: portfolio.rows.map((r) => ({
-            type: r.type,
-            sipAmount: r.sipAmount,
-            invested: r.invested,
-            currentValue: r.currentValue,
-            startDate: r.startDate.toISOString(),
-          })),
-          assessment: {
-            age: portfolio.assessment.age,
-            goal: portfolio.assessment.goal,
-            ageRange: portfolio.assessment.ageRange,
-            lifeStage: portfolio.assessment.lifeStage,
-            investmentTenure: portfolio.assessment.investmentTenure,
-            isCompletePortfolio: portfolio.assessment.isCompletePortfolio,
-            investmentStyle: portfolio.assessment.investmentStyle,
-            expectedReturn: portfolio.assessment.expectedReturn,
-            riskBehavior: portfolio.assessment.riskBehavior,
-            monthlyInvestment: (portfolio.assessment as any).monthlyInvestment,
-            emergencyFund: (portfolio.assessment as any).emergencyFund,
-          },
-        }),
-      })
-        .then(async (response) => {
-          if (!response.ok) {
-            const errText = await response.text();
-            console.error(`ML service returned error status ${response.status}: ${errText}`);
-            return;
-          }
-          const result = await response.json();
-          console.log('ML service response:', result);
-
-          // Save entry to MLResult table
-          await prisma.mLResult.upsert({
-            where: { portfolioId: portfolio.id },
-            update: {},
-            create: {
-              portfolioId: portfolio.id,
-            },
-          });
-        })
-        .catch((fetchErr) => {
-          console.error('Async background fetch to ML service failed:', fetchErr);
-        });
-    } catch (mlErr) {
-      console.error('Failed to dispatch request to ML service:', mlErr);
-    }
-
     res.json({
       success: true,
       data: score,

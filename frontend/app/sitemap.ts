@@ -5,7 +5,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const routes = [
     '',
-    '/book',
     '/quiz',
     '/onboarding',
     '/emi-calculator',
@@ -28,6 +27,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     url: `${baseUrl}${route}`,
     lastModified: new Date().toISOString(),
     changeFrequency: route === '' ? 'daily' : 'monthly',
-    priority: route === '' ? 1.0 : route === '/book' || route === '/quiz' ? 0.8 : 0.5,
+    priority: route === '' ? 1.0 : route === '/quiz' ? 0.8 : 0.5,
   }));
 }

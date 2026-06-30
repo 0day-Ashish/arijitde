@@ -109,7 +109,7 @@ interface ScoreData {
 
 export default function UserDashboard() {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [userData, setUserData] = useState<{ id: string; name?: string; email?: string; phone?: string; role?: string; walletBalance?: number; createdAt?: string; referralCode?: string } | null>(null);
+  const [userData, setUserData] = useState<{ id: string; name?: string; email?: string; phone?: string; role?: string; createdAt?: string; referralCode?: string } | null>(null);
   const [token, setToken] = useState<string | null>(null);
 
   // Flow & State control
@@ -239,16 +239,6 @@ export default function UserDashboard() {
       return;
     }
 
-    // Find the approved Live Consultation payment
-    const livePayment = payments.find(
-      (p: any) => p.productType === "LIVE_SESSION" && p.status === "APPROVED"
-    );
-
-    if (!livePayment) {
-      setError("No approved Live Portfolio Review Discussion payment found. Please purchase the Portfolio Review Session first.");
-      return;
-    }
-
     setError(null);
     setApiLoading(true);
     setStatusMsg("Submitting your slot preferences to Arijit...");
@@ -262,7 +252,6 @@ export default function UserDashboard() {
         method: "POST",
         headers,
         body: JSON.stringify({
-          paymentId: livePayment.id,
           slot1,
           slot2,
           slot3
@@ -271,8 +260,7 @@ export default function UserDashboard() {
       const resData = await res.json();
 
       if (resData.success) {
-        localStorage.setItem("showBookingSuccess", "true");
-        window.location.href = "/dashboard/client";
+        await fetchDashboardState();
       } else {
         setError(resData.error || "Failed to submit booking preferences.");
       }
@@ -348,8 +336,8 @@ export default function UserDashboard() {
       const userSessions = sessionsData.success ? sessionsData.data : [];
       setSessions(userSessions);
 
-      // If user is already approved CLIENT or has pending payment, show the status panel
-      const hasPendingOrApproved = currentRole === "CLIENT" || userPayments.some((p: any) => p.status === "PENDING" || p.status === "APPROVED");
+      // If user has a booked session, show the status panel
+      const hasSession = userSessions.length > 0;
 
       // 3. Fetch assessments
       const assessRes = await fetch(`${backendUrl}/api/assess`, { headers });
@@ -375,27 +363,6 @@ export default function UserDashboard() {
       if (latestAssessment.monthlyInvestment) setQuizMonthlyInvestment(latestAssessment.monthlyInvestment);
       if (latestAssessment.emergencyFund) setQuizEmergencyFund(latestAssessment.emergencyFund);
 
-      // Routing checks based on payment
-      const validPayments = userPayments.filter((p: any) => p.status === "PENDING" || p.status === "APPROVED");
-      const hasPaidAI = validPayments.some((p: any) => p.productType === "AI_ANALYSIS" || p.amount === 249 || p.amount === 0);
-      const hasPaidLive = validPayments.some((p: any) => p.productType === "LIVE_SESSION" || p.amount === 499 || p.amount === 300 || p.amount === 699);
-
-      if (!hasPaidAI && !hasPaidLive) {
-        setDashboardStage("PAYMENT_CHOICE");
-        return;
-      }
-
-      // If they paid for Live Consultation, check if they have scheduled their slots
-      if (hasPaidLive) {
-        const liveSession = userSessions.find((s: any) => s.payment?.status === "APPROVED" || s.payment?.productType === "LIVE_SESSION");
-        // Check if preferredSlot1 is Unix epoch (value is 0) to know if they haven't scheduled yet
-        const hasScheduled = liveSession && new Date(liveSession.preferredSlot1).getTime() > 0;
-        if (liveSession && !hasScheduled) {
-          setDashboardStage("BOOKING");
-          return;
-        }
-      }
-
       // 4. Fetch portfolios
       const portRes = await fetch(`${backendUrl}/api/portfolio`, { headers });
       const portData = await portRes.json();
@@ -411,7 +378,7 @@ export default function UserDashboard() {
 
       if (latestPortfolio.score) {
         setScoreReport(latestPortfolio.score);
-        if (hasPendingOrApproved) {
+        if (hasSession) {
           setDashboardStage("CLIENT_STATUS");
         } else {
           setDashboardStage("REPORT");
@@ -894,11 +861,7 @@ export default function UserDashboard() {
         <div className="flex items-center gap-4">
           {userData && (
             <>
-              {/* Wallet Balance Display */}
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 border border-primary/20 text-xs font-semibold text-primary shadow-sm hover:scale-[1.02] transition duration-200">
-                <Coins className="w-3.5 h-3.5 text-primary animate-pulse" />
-                <span>Wallet: ₹{userData.walletBalance?.toFixed(2) || "0.00"}</span>
-              </div>
+
               {/* Referral Code Pill */}
               {userData.referralCode && (
                 <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs font-medium text-emerald-700 font-mono">
@@ -1251,196 +1214,6 @@ export default function UserDashboard() {
           </div>
         )}
 
-        {dashboardStage === "PAYMENT_CHOICE" && (
-          (() => {
-            const createdTime = userData?.createdAt ? new Date(userData.createdAt).getTime() : 0;
-            const isFirstWeek = userData?.createdAt ? (Date.now() - createdTime) <= 7 * 24 * 60 * 60 * 1000 : false;
-            
-            const walletBalance = userData?.walletBalance || 0;
-            
-            // Product 1: AI Model Scan
-            const aiBase = isFirstWeek ? 0 : 299;
-            const aiWalletUse = Math.min(walletBalance, aiBase);
-            const aiFinal = aiBase - aiWalletUse;
-
-            // Product 2: Live Portfolio Review Discussion
-            const liveBase = isFirstWeek ? 300 : 699;
-            const liveWalletUse = Math.min(walletBalance, liveBase);
-            const liveFinal = liveBase - liveWalletUse;
-
-            return (
-              <div className="w-full max-w-4xl flex flex-col items-center gap-8 animate-in fade-in duration-500">
-                <div className="text-center max-w-2xl space-y-3">
-                  <span className="text-[10px] font-mono text-primary border border-primary/30 bg-primary/5 px-3 py-1 rounded-full uppercase tracking-wider">
-                    Unlock Your Advanced Scan
-                  </span>
-                  <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold font-clash text-neutral-900 tracking-tight leading-none">
-                    Choose Your Scanning Method
-                  </h1>
-                  <p className="text-neutral-500 text-xs font-sans leading-relaxed">
-                    Take the next step to analyze your mutual fund portfolio. Select AI-driven automated analysis or 1-on-1 distributor review.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
-                  
-                  {/* Option A: AI Model Scan */}
-                  <div className="border border-neutral-200 bg-white/40 backdrop-blur-xl rounded-3xl p-8 flex flex-col justify-between hover:border-primary/40 hover:shadow-2xl transition-all duration-300 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-all duration-300"></div>
-                    
-                    <div className="space-y-6">
-                      <div className="flex justify-between items-start">
-                        <span className="p-3 bg-primary/10 rounded-2xl">
-                          <Sparkles className="w-6 h-6 text-primary animate-pulse" />
-                        </span>
-                        <span className="px-2.5 py-1 text-[9px] font-mono uppercase font-bold tracking-widest bg-primary/10 text-primary border border-primary/20 rounded-full">
-                          Automated ML
-                        </span>
-                      </div>
-
-                      <div className="space-y-2">
-                        <h2 className="text-2xl font-bold font-clash text-neutral-900">Advanced AI ML Scan</h2>
-                        <p className="text-neutral-600 text-xs font-sans leading-relaxed">
-                          Instant evaluation using our proprietary ML model. Uncovers asset allocations, overlap insights, and performance benchmarks instantly.
-                        </p>
-                      </div>
-
-                      <ul className="space-y-3 text-xs text-neutral-600 font-sans border-t border-neutral-100 pt-6">
-                        <li className="flex items-center gap-2">
-                          <ShieldCheck className="w-4 h-4 text-emerald-600 animate-pulse" />
-                          <span>Instant upload & processing</span>
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <ShieldCheck className="w-4 h-4 text-emerald-600 animate-pulse" />
-                          <span>AI Diversification & Asset Allocation breakdown</span>
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <ShieldCheck className="w-4 h-4 text-emerald-600 animate-pulse" />
-                          <span>Cost-efficient self-service portal</span>
-                        </li>
-                        {isFirstWeek && (
-                          <li className="flex items-center gap-2 text-emerald-700 font-bold bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-lg">
-                            <span>✨ Free for first 7 days!</span>
-                          </li>
-                        )}
-                      </ul>
-                    </div>
-
-                    <div className="mt-8 pt-6 border-t border-neutral-100 flex flex-col gap-4">
-                      {walletBalance > 0 && aiBase > 0 && (
-                        <div className="flex justify-between items-center text-xs font-sans text-neutral-500">
-                          <span>Wallet Balance:</span>
-                          <span>-₹{aiWalletUse.toFixed(2)}</span>
-                        </div>
-                      )}
-                      <div className="flex items-center justify-between gap-4">
-                        <div>
-                          <span className="text-[10px] text-neutral-400 line-through block font-mono">₹999</span>
-                          {aiWalletUse > 0 ? (
-                            <div className="flex items-center gap-2">
-                              <span className="text-neutral-400 line-through text-xs font-mono">₹{aiBase}</span>
-                              <span className="text-3xl font-bold text-neutral-900 font-chillax">₹{aiFinal}</span>
-                            </div>
-                          ) : (
-                            <span className="text-3xl font-bold text-neutral-900 font-chillax">₹{aiBase}</span>
-                          )}
-                        </div>
-                        <button
-                          onClick={() => handleInitiatePayment("AI_ANALYSIS")}
-                          disabled={apiLoading}
-                          className="px-6 py-3.5 bg-neutral-900 hover:bg-neutral-800 text-white font-bold text-xs rounded-xl transition duration-200 cursor-pointer shadow-lg disabled:opacity-40"
-                        >
-                          Select AI Scan
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Option B: Trusted Distributor Scan */}
-                  <div className="border border-primary/20 bg-[radial-gradient(circle_at_top_right,rgba(138,92,255,0.06)_0%,transparent_60%)] bg-white/30 backdrop-blur-xl rounded-3xl p-8 flex flex-col justify-between hover:border-primary/50 hover:shadow-2xl transition-all duration-300 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/25 transition-all duration-300"></div>
-
-                    <div className="space-y-6">
-                      <div className="flex justify-between items-start">
-                        <span className="p-3 bg-primary/10 rounded-2xl">
-                          <Users className="w-6 h-6 text-primary" />
-                        </span>
-                        <span className="px-2.5 py-1 text-[9px] font-mono uppercase font-bold tracking-widest bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 rounded-full">
-                          Human Distributor
-                        </span>
-                      </div>
-
-                      <div className="space-y-2">
-                        <h2 className="text-2xl font-bold font-clash text-neutral-900">Distributor Consult</h2>
-                        <p className="text-neutral-600 text-xs font-sans leading-relaxed">
-                          1-on-1 session with SEBI registered distributor Arijit De. In-depth custom roadmap, tax restructuring advice, and active rebalancing strategy.
-                        </p>
-                      </div>
-
-                      <ul className="space-y-3 text-xs text-neutral-600 font-sans border-t border-neutral-100 pt-6">
-                        <li className="flex items-center gap-2">
-                          <ShieldCheck className="w-4 h-4 text-emerald-600 animate-pulse" />
-                          <span>Live 1-on-1 strategy video consultation</span>
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <ShieldCheck className="w-4 h-4 text-emerald-600 animate-pulse" />
-                          <span>Tax optimization & restructuring audit</span>
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <ShieldCheck className="w-4 h-4 text-emerald-600 animate-pulse" />
-                          <span>Direct Q&A session with Arijit De</span>
-                        </li>
-                        {isFirstWeek && (
-                          <li className="flex items-center gap-2 text-primary font-bold bg-primary/10 border border-primary/20 px-2 py-1 rounded-lg">
-                            <span>✨ Week 1 Special Promo Rate!</span>
-                          </li>
-                        )}
-                      </ul>
-                    </div>
-
-                    <div className="mt-8 pt-6 border-t border-neutral-100 flex flex-col gap-4">
-                      {walletBalance > 0 && (
-                        <div className="flex justify-between items-center text-xs font-sans text-neutral-500">
-                          <span>Wallet Balance:</span>
-                          <span>-₹{liveWalletUse.toFixed(2)}</span>
-                        </div>
-                      )}
-                      <div className="flex items-center justify-between gap-4">
-                        <div>
-                          <span className="text-[10px] text-neutral-400 line-through block font-mono">₹1,999</span>
-                          {liveWalletUse > 0 ? (
-                            <div className="flex items-center gap-2">
-                              <span className="text-neutral-400 line-through text-xs font-mono">₹{liveBase}</span>
-                              <span className="text-3xl font-bold text-neutral-900 font-chillax">₹{liveFinal}</span>
-                            </div>
-                          ) : (
-                            <span className="text-3xl font-bold text-neutral-900 font-chillax">₹{liveBase}</span>
-                          )}
-                        </div>
-                        <button
-                          onClick={() => handleInitiatePayment("LIVE_SESSION")}
-                          disabled={apiLoading}
-                          className="px-6 py-3.5 bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-xs rounded-xl transition duration-200 cursor-pointer shadow-lg disabled:opacity-40"
-                        >
-                          Select Distributor Scan
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                </div>
-
-                {/* Prominent Trust Refund Policy Banner */}
-                <div className="w-full p-5 bg-blue-500/5 border border-blue-500/10 rounded-2xl text-xs text-blue-700 font-sans leading-relaxed text-center max-w-2xl flex flex-col sm:flex-row items-center justify-center gap-3">
-                  <span className="text-lg">🛡️</span>
-                  <span>
-                    <strong>We value your trust.</strong> If your scheduled session does not happen for any reason, you will receive a full refund within 24 hours. No questions asked.
-                  </span>
-                </div>
-              </div>
-            );
-          })()
-        )}
 
         {/* ----------------- STAGE 1.7: DISTRIBUTOR BOOKING CALENDAR ----------------- */}
         {dashboardStage === "BOOKING" && (
@@ -2079,71 +1852,44 @@ export default function UserDashboard() {
             </div>
 
             {/* CTA Box: Book Call */}
-            {!(userData?.role === "CLIENT" || payments.some((p: any) => p.status === "PENDING" || p.status === "APPROVED")) && (
-              (() => {
-                const createdTime = userData?.createdAt ? new Date(userData.createdAt).getTime() : 0;
-                const isFirstWeek = userData?.createdAt ? (Date.now() - createdTime) <= 7 * 24 * 60 * 60 * 1000 : false;
-                const liveBase = isFirstWeek ? 300 : 699;
-                const walletBalance = userData?.walletBalance || 0;
-                const liveWalletUse = Math.min(walletBalance, liveBase);
-                const liveFinal = liveBase - liveWalletUse;
-
-                return (
-                  <div className="w-full border border-primary/20 bg-[radial-gradient(circle_at_top_right,rgba(138,92,255,0.06)_0%,transparent_60%)] bg-white/30 backdrop-blur-xl rounded-3xl p-8 md:p-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-8 shadow-2xl relative overflow-hidden">
-                    <div className="space-y-4 max-w-xl text-left">
-                      <span className="text-[10px] font-mono text-primary border border-primary/30 bg-primary/5 px-3 py-1 rounded-full uppercase tracking-wider">
-                        Premium Distributor Consulting
-                      </span>
-                      <h2 className="text-2xl md:text-3xl font-semibold text-neutral-900 tracking-wide">Detailed Distribution Optimization Session</h2>
-                      <p className="text-neutral-600 text-xs font-sans leading-relaxed">
-                        Book your 1-on-1 strategy call with our SEBI-registered distributor Arijit De. Get a comprehensive optimization roadmap, personalized tax restructuring report, and active rebalancing insights based on your score.
-                      </p>
-                      <div className="flex gap-6 items-center text-neutral-500 text-xs font-sans pt-1">
-                        <div className="flex items-center gap-1.5">
-                          <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                          <span>SEBI MFD Compliant</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <FileText className="w-4 h-4 text-primary" />
-                          <span>Includes Detailed PDF</span>
-                        </div>
-                      </div>
+            {sessions.length === 0 && (
+              <div className="w-full border border-primary/20 bg-[radial-gradient(circle_at_top_right,rgba(138,92,255,0.06)_0%,transparent_60%)] bg-white/30 backdrop-blur-xl rounded-3xl p-8 md:p-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-8 shadow-2xl relative overflow-hidden">
+                <div className="space-y-4 max-w-xl text-left">
+                  <span className="text-[10px] font-mono text-primary border border-primary/30 bg-primary/5 px-3 py-1 rounded-full uppercase tracking-wider">
+                    Free Distributor Consulting
+                  </span>
+                  <h2 className="text-2xl md:text-3xl font-semibold text-neutral-900 tracking-wide">Detailed Distribution Optimization Session</h2>
+                  <p className="text-neutral-600 text-xs font-sans leading-relaxed">
+                    Book your 1-on-1 strategy call with our distributor Arijit De for free! Get a comprehensive optimization roadmap, personalized tax restructuring report, and active rebalancing insights based on your score.
+                  </p>
+                  <div className="flex gap-6 items-center text-neutral-500 text-xs font-sans pt-1">
+                    <div className="flex items-center gap-1.5">
+                      <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                      <span>SEBI MFD Compliant</span>
                     </div>
-
-                    <div className="w-full md:w-auto shrink-0 flex flex-col items-center justify-center p-6 bg-white/40 border border-white/30 rounded-2xl md:min-w-[240px] text-center">
-                      <div className="text-[10px] font-mono text-neutral-400 line-through">₹1,999</div>
-                      {liveWalletUse > 0 ? (
-                        <div className="flex flex-col items-center">
-                          <span className="text-xs text-neutral-400 line-through font-mono">₹{liveBase}</span>
-                          <div className="text-4xl font-semibold font-chillax text-neutral-900 mt-1">₹{liveFinal}</div>
-                          <span className="text-[10px] text-emerald-600 font-mono">(-₹{liveWalletUse} wallet)</span>
-                        </div>
-                      ) : (
-                        <div className="text-4xl font-semibold font-chillax text-neutral-900 mt-1">₹{liveBase}</div>
-                      )}
-                      <span className="text-[9px] font-mono text-neutral-400 uppercase tracking-widest mt-1">One-time booking fee</span>
-
-                      <button
-                        onClick={() => handleInitiatePayment("LIVE_SESSION")}
-                        disabled={apiLoading}
-                        className="w-full mt-6 py-3.5 bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition duration-200 cursor-pointer shadow-lg disabled:opacity-40"
-                      >
-                        {apiLoading ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            <span>Processing...</span>
-                          </>
-                        ) : (
-                          <>
-                            <span>Pay & Book Call</span>
-                            <ChevronRight className="w-4 h-4" />
-                          </>
-                        )}
-                      </button>
+                    <div className="flex items-center gap-1.5">
+                      <FileText className="w-4 h-4 text-primary" />
+                      <span>Includes Detailed PDF</span>
                     </div>
                   </div>
-                );
-              })()
+                </div>
+
+                <div className="w-full md:w-auto shrink-0 flex flex-col items-center justify-center p-6 bg-white/40 border border-white/30 rounded-2xl md:min-w-[240px] text-center font-sans">
+                  <div className="text-4xl font-semibold font-chillax text-neutral-900 mt-1">FREE</div>
+                  <span className="text-[9px] font-mono text-neutral-400 uppercase tracking-widest mt-1">Limited Time Offer</span>
+
+                  <button
+                    onClick={() => {
+                      setDashboardStage("BOOKING");
+                      fetchFreeSlots();
+                    }}
+                    className="w-full mt-6 py-3.5 bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition duration-200 cursor-pointer shadow-lg"
+                  >
+                    <span>Book Consultation</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
             )}
 
           </div>

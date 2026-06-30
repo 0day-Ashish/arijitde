@@ -407,7 +407,6 @@ router.get('/:id', authMiddleware, async (req: AuthenticatedRequest, res: Respon
       include: {
         rows: true,
         score: true,
-        mlResult: true,
       },
     });
 
@@ -446,7 +445,6 @@ router.get('/', authMiddleware, async (req: AuthenticatedRequest, res: Response,
       include: {
         rows: true,
         score: true,
-        mlResult: true,
       },
       orderBy: { createdAt: 'desc' },
     });

@@ -9,7 +9,6 @@ import { signToken } from '../lib/jwt';
 import { authMiddleware } from '../middleware/auth';
 import type { AuthenticatedRequest } from '../middleware/auth';
 import { OAuth2Client } from 'google-auth-library';
-import { checkAndAwardDailyLoginReward, processExpiredTokens } from '../services/wallet';
 
 async function generateUniqueReferralCode() {
   let referralCode = '';
@@ -153,7 +152,6 @@ router.post('/otp/verify', authLimiter, async (req, res, next) => {
           email: user.email,
           name: user.name,
           role: user.role,
-          finPoints: user.finPoints,
         },
       },
     });
@@ -254,7 +252,6 @@ router.post('/google', authLimiter, async (req, res, next) => {
           role: user.role,
           phone: user.phone,
           pan: user.pan,
-          finPoints: user.finPoints,
         },
       },
     });
@@ -270,8 +267,6 @@ router.post('/google', authLimiter, async (req, res, next) => {
 router.get('/me', authMiddleware, async (req: AuthenticatedRequest, res: Response, next) => {
   try {
     const userId = req.user!.id;
-    const clientDate = req.query.clientDate as string;
-
     let user = req.user!;
 
     // 1. Backfill referral code if missing (legacy users)
@@ -290,44 +285,6 @@ router.get('/me', authMiddleware, async (req: AuthenticatedRequest, res: Respons
           }
         }
       }) as any;
-    }
-
-    // 2. Claim daily login / Sunday reward if clientDate is passed
-    if (clientDate) {
-      await checkAndAwardDailyLoginReward(userId, clientDate);
-      const freshUser = await prisma.user.findUnique({
-        where: { id: userId },
-        include: {
-          client: {
-            select: {
-              activePlan: true,
-              advisorNotes: true,
-              activatedAt: true,
-            }
-          }
-        }
-      });
-      if (freshUser) {
-        user = freshUser as any;
-      }
-    } else {
-      // Clean/expire tokens and sync walletBalance
-      await processExpiredTokens(userId);
-      const freshUser = await prisma.user.findUnique({
-        where: { id: userId },
-        include: {
-          client: {
-            select: {
-              activePlan: true,
-              advisorNotes: true,
-              activatedAt: true,
-            }
-          }
-        }
-      });
-      if (freshUser) {
-        user = freshUser as any;
-      }
     }
 
     res.json({
@@ -457,7 +414,6 @@ router.post('/pan/login', authLimiter, async (req, res, next) => {
           role: user.role,
           phone: user.phone,
           pan: user.pan,
-          finPoints: user.finPoints,
         },
       },
     });
@@ -750,7 +706,6 @@ router.post('/activation/verify-otp', authLimiter, async (req, res, next) => {
           role: user.role,
           pan: user.pan,
           phone: user.phone,
-          finPoints: user.finPoints,
         }
       }
     });
@@ -759,54 +714,7 @@ router.post('/activation/verify-otp', authLimiter, async (req, res, next) => {
   }
 });
 
-// 12. POST /api/auth/claim-daily-reward
-const claimRewardSchema = z.object({
-  clientDate: z.string().min(1, 'Client date string is required'),
-});
 
-router.post('/claim-daily-reward', authMiddleware, async (req: AuthenticatedRequest, res: Response, next) => {
-  try {
-    const { clientDate } = claimRewardSchema.parse(req.body);
-    const userId = req.user!.id;
-
-    // Fetch fresh user data to compare dates
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!user) {
-      res.status(404).json({ success: false, error: 'User not found' });
-      return;
-    }
-
-    if (user.lastQuoteFlipDate === clientDate) {
-      res.status(400).json({ success: false, error: 'Already claimed today' });
-      return;
-    }
-
-    // Roll random points (1 to 5)
-    const points = Math.floor(Math.random() * 5) + 1;
-    const newBalance = user.finPoints + points;
-
-    await prisma.user.update({
-      where: { id: userId },
-      data: {
-        finPoints: newBalance,
-        lastQuoteFlipDate: clientDate,
-      },
-    });
-
-    res.json({
-      success: true,
-      data: {
-        pointsClaimed: points,
-        newBalance,
-      },
-    });
-  } catch (error) {
-    next(error);
-  }
-});
 
 export default router;
 

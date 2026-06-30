@@ -53,7 +53,7 @@ const servicesData = [
 const faqData = [
   {
     question: "Is the portfolio health report really free?",
-    answer: "Yes. Your first portfolio health report is completely free. If you'd like a fresh analysis after that, it is available at a nominal fee — with loyalty discounts available through our daily reward system."
+    answer: "Yes. Your portfolio health report is completely free."
   },
   {
     question: "How is my portfolio score calculated?",
@@ -61,7 +61,7 @@ const faqData = [
   },
   {
     question: "Do I need to be a client to use the platform?",
-    answer: "No. Anyone can sign up, take the Investor Personality Assessment, and upload their portfolio for analysis — completely free on the first attempt."
+    answer: "No. Anyone can sign up, take the Investor Personality Assessment, and upload their portfolio for analysis"
   },
   {
     question: "Can I analyze a portfolio that wasn't built through your distribution?",
@@ -90,10 +90,6 @@ const faqData = [
   {
     question: "How do I schedule a consultation?",
     answer: "After your analysis, you can book a call directly through the platform by selecting your preferred time slot. Calls are available daily between 8:00 PM and 1:00 AM. You can also request a callback and we'll reach out to confirm."
-  },
-  {
-    question: "What is the daily reward system?",
-    answer: "Every time you log in, you earn ₹1 in platform credits. Sunday visits earn a ₹10 bonus. Credits accumulate and can be redeemed against the fee for your next portfolio health report. Credits expire after 180 days."
   },
   {
     question: "Who is behind this platform?",
@@ -127,6 +123,7 @@ export default function Home() {
   // Daily Rewards Section States
   const [isFlipped, setIsFlipped] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [dashboardUrl, setDashboardUrl] = useState("/onboarding");
   const [dailyQuote, setDailyQuote] = useState({ text: "", author: "" });
 
   // Contact Form States
@@ -243,6 +240,20 @@ export default function Home() {
     // Check if token exists
     const token = localStorage.getItem("token");
     setIsLoggedIn(!!token);
+
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        if (user.role === "ADMIN") {
+          setDashboardUrl("/dashboard/admin");
+        } else {
+          setDashboardUrl("/dashboard/user");
+        }
+      } catch (e) {
+        setDashboardUrl("/dashboard/user");
+      }
+    }
 
     // Select daily quote based on calendar day
     const quotesList = [
@@ -1091,10 +1102,7 @@ export default function Home() {
                   </span>
                 </div>
 
-                <div className="px-6 py-3 bg-amber-500/10 border border-amber-500/35 hover:bg-amber-500/20 rounded-full flex justify-center items-center gap-2 text-[10px] md:text-xs font-bold text-amber-800 uppercase tracking-widest shadow-sm transition-all duration-300 relative z-10">
-                  <span>Tap Card to Claim Reward</span>
-                  <span className="animate-bounce text-sm">🎁</span>
-                </div>
+
               </div>
 
               {/* Back Side of Card */}
@@ -1110,112 +1118,35 @@ export default function Home() {
                 <div className="absolute bottom-0 left-0 w-24 h-24 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
 
                 <div className="w-full flex justify-between items-center pb-3.5 relative z-10">
-                  <span className="text-[10px] font-mono text-amber-700 tracking-widest uppercase font-bold">Reward Portal</span>
-                  <span className="text-[9px] font-mono text-amber-600/60 uppercase font-bold">ACTIVE TODAY</span>
+                  <span className="text-[10px] font-mono text-amber-700 tracking-widest uppercase font-bold">Advisor Profile</span>
+                  <span className="text-[9px] font-mono text-amber-600/60 uppercase font-bold">SEBI REGISTERED</span>
                 </div>
 
-                {isLoggedIn ? (
-                  // Logged In State: Show claimed points reward
-                  <div className="w-full my-auto space-y-4 relative z-10">
-                    {hasClaimedToday && (
-                      <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center">
-                        <style>{`
-                          .coin-particle {
-                            position: absolute;
-                            font-size: 28px;
-                            pointer-events: none;
-                            opacity: 0;
-                          }
-                          .coin-1 { animation: float-coin-1 1.4s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
-                          .coin-2 { animation: float-coin-2 1.4s cubic-bezier(0.25, 1, 0.5, 1) 0.1s forwards; }
-                          .coin-3 { animation: float-coin-3 1.4s cubic-bezier(0.25, 1, 0.5, 1) 0.2s forwards; }
-                          .coin-4 { animation: float-coin-4 1.4s cubic-bezier(0.25, 1, 0.5, 1) 0.15s forwards; }
-                          .coin-5 { animation: float-coin-5 1.4s cubic-bezier(0.25, 1, 0.5, 1) 0.25s forwards; }
-
-                          @keyframes float-coin-1 {
-                            0% { transform: translate(0, 0) scale(0.3) rotate(0deg); opacity: 0; }
-                            15% { opacity: 1; }
-                            100% { transform: translate(-80px, -110px) scale(1.4) rotate(360deg); opacity: 0; }
-                          }
-                          @keyframes float-coin-2 {
-                            0% { transform: translate(0, 0) scale(0.3) rotate(0deg); opacity: 0; }
-                            15% { opacity: 1; }
-                            100% { transform: translate(80px, -110px) scale(1.4) rotate(-360deg); opacity: 0; }
-                          }
-                          @keyframes float-coin-3 {
-                            0% { transform: translate(0, 0) scale(0.3) rotate(0deg); opacity: 0; }
-                            15% { opacity: 1; }
-                            100% { transform: translate(-40px, -130px) scale(1.4) rotate(180deg); opacity: 0; }
-                          }
-                          @keyframes float-coin-4 {
-                            0% { transform: translate(0, 0) scale(0.3) rotate(0deg); opacity: 0; }
-                            15% { opacity: 1; }
-                            100% { transform: translate(40px, -130px) scale(1.4) rotate(-180deg); opacity: 0; }
-                          }
-                          @keyframes float-coin-5 {
-                            0% { transform: translate(0, 0) scale(0.3) rotate(0deg); opacity: 0; }
-                            15% { opacity: 1; }
-                            100% { transform: translate(0px, -150px) scale(1.5) rotate(90deg); opacity: 0; }
-                          }
-                        `}</style>
-                        <span className="coin-particle coin-1">🪙</span>
-                        <span className="coin-particle coin-2">🪙</span>
-                        <span className="coin-particle coin-3">🪙</span>
-                        <span className="coin-particle coin-4">🪙</span>
-                        <span className="coin-particle coin-5">🪙</span>
-                      </div>
-                    )}
-
-                    <div className="flex flex-col items-center justify-center space-y-2">
-                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 border border-amber-300 shadow-[0_0_25px_rgba(245,158,11,0.35)] flex items-center justify-center text-white text-3xl shadow-inner animate-pulse">
-                        🪙
-                      </div>
-                      <div className="flex items-baseline gap-1 mt-2">
-                        <span className="text-4xl md:text-5xl font-extrabold font-clash text-amber-600 leading-none">+{rewardAmount || 3}</span>
-                        <span className="text-xs font-sans font-bold text-amber-700">FP</span>
-                      </div>
-                      <h3 className="text-base font-bold font-clash text-amber-800 mt-1">
-                        {rewardClaimed ? "Reward Claimed!" : "Already Claimed Today!"}
-                      </h3>
-                      <p className="text-xs text-[#64748B] leading-relaxed font-sans max-w-xs mx-auto">
-                        {rewardClaimed
-                          ? `Congratulations! ${rewardAmount} FinPoints have been successfully added to your wallet balance.`
-                          : `You have already claimed today's reward. Come back tomorrow to collect more points!`}
-                      </p>
+                <div className="w-full my-auto space-y-4 relative z-10">
+                  <div className="flex flex-col items-center justify-center space-y-2">
+                    <div className="w-16 h-16 rounded-full border border-primary/20 overflow-hidden shrink-0 flex items-center justify-center bg-primary/5">
+                      <img
+                        src="/assets/me.jpeg"
+                        alt="Arijit De"
+                        className="w-full h-full object-cover"
+                      />
                     </div>
+                    <h3 className="text-lg font-bold font-clash text-neutral-900 mt-1">Arijit De</h3>
+                    <p className="text-xs text-neutral-500 font-mono">SEBI Mutual Fund Distributor</p>
+                    <p className="text-xs text-neutral-600 leading-relaxed font-sans max-w-sm mx-auto">
+                      Helping retail and corporate investors optimize their mutual fund distribution portfolios, restructure tax impact, and execute active rebalancing.
+                    </p>
                   </div>
-                ) : (
-                  // Logged Out State: Prompt login
-                  <div className="w-full my-auto space-y-4 relative z-10">
-                    <div className="flex flex-col items-center justify-center space-y-3">
-                      <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-600 text-2xl relative shadow-inner animate-pulse">
-                        <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                        </svg>
-                      </div>
-                      <h3 className="text-base font-bold font-clash text-amber-800 mt-1">Daily Reward Locked</h3>
-                      <p className="text-xs text-[#64748B] leading-relaxed font-sans max-w-xs mx-auto">
-                        Sign in to unlock and claim today's random FinPoints (up to 5 FP). Your points can be used to unlock priority review sessions!
-                      </p>
-                    </div>
-                  </div>
-                )}
+                </div>
 
-                <div className="w-full relative z-10">
-                  {isLoggedIn ? (
-                    <div className="flex justify-center items-center gap-1.5 text-xs font-bold text-emerald-600 uppercase tracking-widest bg-emerald-500/10 border border-emerald-500/20 py-2.5 rounded-xl">
-                      <span>Claimed successfully</span>
-                      <span>✓</span>
-                    </div>
-                  ) : (
-                    <a
-                      href="/onboarding"
-                      onClick={(e) => e.stopPropagation()} // Stop click propagating to rotate card back
-                      className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-center block rounded-xl text-xs font-bold uppercase tracking-widest transition-all duration-200 shadow-md"
-                    >
-                      Sign In to Claim Reward
-                    </a>
-                  )}
+                <div className="w-full relative z-10 font-sans">
+                  <a
+                    href={isLoggedIn ? dashboardUrl : "/onboarding"}
+                    onClick={(e) => e.stopPropagation()}
+                    className="block w-full text-center py-3 bg-primary hover:bg-primary/95 text-white font-bold text-xs rounded-xl transition duration-200"
+                  >
+                    {isLoggedIn ? "Access Dashboard" : "Book Free Consultation"}
+                  </a>
                 </div>
               </div>
             </div>

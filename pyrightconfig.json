@@ -1,9 +1,0 @@
-{
-  "executionEnvironments": [
-    {
-      "root": "ml-service",
-      "venvPath": "ml-service",
-      "venv": "venv"
-    }
-  ]
-}

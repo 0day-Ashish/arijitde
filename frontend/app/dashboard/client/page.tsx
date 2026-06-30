@@ -25,7 +25,9 @@ import {
   HelpCircle,
   FileText,
   User,
-  ArrowRight
+  ArrowRight,
+  Home,
+  Briefcase
 } from "lucide-react";
 import SoftBoxBlurBg from "@/components/SoftBoxBlurBg";
 import GradualBlur from "@/components/GradualBlur";
@@ -229,13 +231,9 @@ export default function ClientDashboard() {
   const [showLogoutWarning, setShowLogoutWarning] = useState(false);
 
   // Client specifics
-  const [finPoints, setFinPoints] = useState<number>(0);
-  const [lastQuoteFlipTime, setLastQuoteFlipTime] = useState<string | null>(null);
-  const [isClientQuoteFlipped, setIsClientQuoteFlipped] = useState(false);
-  const [usePointsForDiscount, setUsePointsForDiscount] = useState(false);
+  const [activeTab, setActiveTab] = useState<"home" | "portfolio" | "analyze" | "book">("home");
   const [clientBookings, setClientBookings] = useState<string[]>([]);
   const [showBookingSuccess, setShowBookingSuccess] = useState(false);
-  const [pointsEarnedToday, setPointsEarnedToday] = useState(0);
   const [selectedSlot, setSelectedSlot] = useState<string>("");
 
   // Booking / Scheduling States
@@ -335,17 +333,6 @@ export default function ClientDashboard() {
       setIsLoaded(true);
 
       // Load client states
-      const savedPoints = localStorage.getItem("finPointsBalance");
-      if (savedPoints) {
-        setFinPoints(Number(savedPoints));
-      } else {
-        localStorage.setItem("finPointsBalance", "0");
-        setFinPoints(0);
-      }
-
-      const savedFlipTime = localStorage.getItem("lastQuoteFlipTime");
-      setLastQuoteFlipTime(savedFlipTime);
-
       const savedBookings = localStorage.getItem("clientBookings");
       if (savedBookings) {
         setClientBookings(JSON.parse(savedBookings));
@@ -389,10 +376,6 @@ export default function ClientDashboard() {
         const uObj = meData.data;
         setUserData(uObj);
         localStorage.setItem("user", JSON.stringify(uObj));
-        if (uObj.finPoints !== undefined) {
-          setFinPoints(uObj.finPoints);
-          localStorage.setItem("finPointsBalance", uObj.finPoints.toString());
-        }
       }
 
       // 2. Fetch assessments
@@ -444,34 +427,7 @@ export default function ClientDashboard() {
         console.error("Failed to load certified valuation telemetry:", ecErr);
       }
 
-      // 5. Fetch payments and sessions to check if live session is scheduled
-      try {
-        const payRes = await fetch(`${backendUrl}/api/payments/my-payments`, { headers });
-        const payData = await payRes.json();
-        const userPayments = payData.success ? payData.data : [];
-        setPayments(userPayments);
 
-        const sessionsRes = await fetch(`${backendUrl}/api/leads/my-sessions`, { headers });
-        const sessionsData = await sessionsRes.json();
-        const userSessions = sessionsData.success ? sessionsData.data : [];
-        setSessions(userSessions);
-
-        const validPayments = userPayments.filter((p: any) => p.status === "APPROVED" || p.status === "PENDING");
-        const hasPaidLive = validPayments.some((p: any) => p.productType === "LIVE_SESSION" || p.amount === 499 || p.amount === 300 || p.amount === 699);
-        if (hasPaidLive) {
-          const liveSession = userSessions.find((s: any) => s.payment?.status === "APPROVED" || s.payment?.productType === "LIVE_SESSION");
-          const hasScheduled = liveSession && new Date(liveSession.preferredSlot1).getTime() > 0;
-          if (liveSession && !hasScheduled) {
-            setMustSchedule(true);
-          } else {
-            setMustSchedule(false);
-          }
-        } else {
-          setMustSchedule(false);
-        }
-      } catch (checkErr) {
-        console.error("Failed to run schedule guard check:", checkErr);
-      }
     } catch (err) {
       console.error(err);
       setError("Failed to load diagnostic telemetry data.");
@@ -549,59 +505,7 @@ export default function ClientDashboard() {
     }
   };
 
-  // Flip quote reward
-  const handleClientQuoteFlip = async () => {
-    if (!isClientQuoteFlipped) {
-      const today = new Date().toDateString();
-      const claimedDate = localStorage.getItem('dailyRewardClaimedDate');
 
-      if (claimedDate !== today) {
-        try {
-          const res = await fetch(`${backendUrl}/api/auth/claim-daily-reward`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ clientDate: today })
-          });
-          const data = await res.json();
-          if (data.success && data.data) {
-            const points = data.data.pointsClaimed;
-            const newBalance = data.data.newBalance;
-
-            setFinPoints(newBalance);
-            setPointsEarnedToday(points);
-            localStorage.setItem("finPointsBalance", newBalance.toString());
-            localStorage.setItem("dailyRewardClaimedDate", today);
-            
-            // Notify other components
-            window.dispatchEvent(new Event("points-updated"));
-          } else {
-            if (data.error === 'Already claimed today') {
-              localStorage.setItem("dailyRewardClaimedDate", today);
-              setPointsEarnedToday(0);
-            }
-          }
-        } catch (err) {
-          console.error("Failed to claim daily reward from dashboard", err);
-          setPointsEarnedToday(0);
-        }
-      } else {
-        setPointsEarnedToday(0);
-      }
-      setIsClientQuoteFlipped(true);
-    } else {
-      setIsClientQuoteFlipped(false);
-    }
-  };
-
-  const getRemainingFlipTime = () => {
-    const claimedDate = localStorage.getItem('dailyRewardClaimedDate');
-    const today = new Date().toDateString();
-    if (claimedDate !== today) return "Ready to flip!";
-    return "Come back tomorrow!";
-  };
 
   // 1-Click Booking
   const handleClientBookCall = async () => {
@@ -889,17 +793,6 @@ export default function ClientDashboard() {
         setUserData(fetchedUser);
 
         // Load client states
-        const savedPoints = localStorage.getItem("finPointsBalance");
-        if (savedPoints) {
-          setFinPoints(Number(savedPoints));
-        } else {
-          localStorage.setItem("finPointsBalance", "0");
-          setFinPoints(0);
-        }
-
-        const savedFlipTime = localStorage.getItem("lastQuoteFlipTime");
-        setLastQuoteFlipTime(savedFlipTime);
-
         const savedBookings = localStorage.getItem("clientBookings");
         if (savedBookings) {
           setClientBookings(JSON.parse(savedBookings));
@@ -1081,7 +974,51 @@ export default function ClientDashboard() {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 w-full max-w-6xl mx-auto px-6 py-12 flex flex-col relative z-10">
+      <div className="flex-1 w-full max-w-full px-4 md:px-8 py-12 flex flex-col lg:flex-row gap-8 relative z-10">
+        
+        {/* Sticky Sidebar */}
+        {token && userData && (
+          <aside className="lg:w-64 shrink-0 lg:sticky lg:top-28 h-fit space-y-6 relative z-30 animate-in fade-in duration-300">
+            <div className="bg-white/35 backdrop-blur-xl border border-border shadow-md rounded-3xl p-6 flex flex-col gap-4 text-left">
+              <div className="flex items-center gap-2.5 pb-2 border-b border-border/50">
+                <LayoutGrid className="w-5 h-5 text-primary" />
+                <span className="font-chillax font-bold tracking-wider text-xs uppercase text-neutral-500">Navigation</span>
+              </div>
+              <nav className="flex flex-col gap-2">
+                <button
+                  onClick={() => setActiveTab("home")}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-primary/5 transition duration-150 font-semibold text-xs cursor-pointer text-left w-full ${activeTab === 'home' ? 'bg-primary/10 text-primary font-bold' : 'text-neutral-600 hover:text-primary'}`}
+                >
+                  <Home className="w-4 h-4" />
+                  <span>Home</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab("portfolio")}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-primary/5 transition duration-150 font-semibold text-xs cursor-pointer text-left w-full ${activeTab === 'portfolio' ? 'bg-primary/10 text-primary font-bold' : 'text-neutral-600 hover:text-primary'}`}
+                >
+                  <Briefcase className="w-4 h-4" />
+                  <span>Portfolio</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab("analyze")}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-primary/5 transition duration-150 font-semibold text-xs cursor-pointer text-left w-full ${activeTab === 'analyze' ? 'bg-primary/10 text-primary font-bold' : 'text-neutral-600 hover:text-primary'}`}
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>Analyze</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab("book")}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-primary/5 transition duration-150 font-semibold text-xs cursor-pointer text-left w-full ${activeTab === 'book' ? 'bg-primary/10 text-primary font-bold' : 'text-neutral-600 hover:text-primary'}`}
+                >
+                  <Calendar className="w-4 h-4" />
+                  <span>Book</span>
+                </button>
+              </nav>
+            </div>
+          </aside>
+        )}
+
+        <div className="flex-1 flex flex-col gap-8 w-full min-w-0">
         {/* Global Error Banner */}
         {error && (
           <div className="w-full max-w-md mx-auto mb-8 p-4 bg-red-500/10 border border-red-500/20 text-red-600 rounded-2xl text-xs flex gap-3 items-start text-left font-sans animate-in fade-in slide-in-from-top-4">
@@ -1492,95 +1429,13 @@ export default function ClientDashboard() {
               </div>
             )}
           </div>
-        ) : mustSchedule ? (
-          /* Distributor Booking Calendar for Paid Session */
-          <div className="w-full max-w-xl mx-auto border border-primary/20 bg-[radial-gradient(circle_at_top_right,rgba(138,92,255,0.06)_0%,transparent_60%)] bg-white/30 backdrop-blur-xl rounded-3xl p-8 md:p-10 flex flex-col gap-6 shadow-2xl relative overflow-hidden animate-in fade-in duration-500 text-left">
-            <div className="space-y-2">
-              <h2 className="text-3xl font-semibold text-neutral-900 tracking-wide font-clash">Schedule Consultation</h2>
-              <p className="text-neutral-600 text-xs font-sans leading-relaxed">
-                You have selected the Live Portfolio Review Discussion. Please select your 3 distinct preferred date and time slots for Arijit to review and confirm one.
-              </p>
-            </div>
-
-            <form onSubmit={handleBookMeeting} className="space-y-6">
-              <div className="space-y-4">
-                {/* Preferred Date & Time Selector 1 */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase font-bold text-neutral-500 tracking-wider block font-mono">Preferred Time Option 1 *</label>
-                  <input
-                    type="datetime-local"
-                    required
-                    value={slot1}
-                    onChange={(e) => setSlot1(e.target.value)}
-                    min={new Date(Date.now() + 3600000).toISOString().slice(0, 16)}
-                    className="w-full bg-white/50 border border-neutral-200 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-primary text-neutral-950 font-mono"
-                  />
-                </div>
-
-                {/* Preferred Date & Time Selector 2 */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase font-bold text-neutral-500 tracking-wider block font-mono">Preferred Time Option 2 *</label>
-                  <input
-                    type="datetime-local"
-                    required
-                    value={slot2}
-                    onChange={(e) => setSlot2(e.target.value)}
-                    min={new Date(Date.now() + 3600000).toISOString().slice(0, 16)}
-                    className="w-full bg-white/50 border border-neutral-200 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-primary text-neutral-950 font-mono"
-                  />
-                </div>
-
-                {/* Preferred Date & Time Selector 3 */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase font-bold text-neutral-500 tracking-wider block font-mono">Preferred Time Option 3 *</label>
-                  <input
-                    type="datetime-local"
-                    required
-                    value={slot3}
-                    onChange={(e) => setSlot3(e.target.value)}
-                    min={new Date(Date.now() + 3600000).toISOString().slice(0, 16)}
-                    className="w-full bg-white/50 border border-neutral-200 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-primary text-neutral-950 font-mono"
-                  />
-                </div>
-              </div>
-
-              {/* Prominent Trust Refund Policy Banner */}
-              <div className="w-full p-4 bg-blue-500/5 border border-blue-500/10 rounded-2xl text-[11px] text-blue-700 font-sans leading-relaxed flex gap-2.5">
-                <span className="text-base">🛡️</span>
-                <span>
-                  <strong>We value your trust.</strong> If your scheduled session does not happen for any reason, you will receive a full refund within 24 hours. No questions asked.
-                </span>
-              </div>
-
-              <div className="flex gap-4 pt-2">
-                <button
-                  type="submit"
-                  disabled={apiLoading || !slot1 || !slot2 || !slot3}
-                  className="w-full py-3.5 bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition duration-200 cursor-pointer shadow-lg disabled:opacity-40"
-                >
-                  {apiLoading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Submitting Slots...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Submit Booking Slots</span>
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
         ) : (
-          /* Client Grid Workspace */
-          <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-8 items-start select-text text-left">
+          /* Client Workspace */
+          <div className="w-full select-text text-left space-y-8">
             
-            {/* 1. Left Sidebar: Profile, Wallet & 1-Click Booking */}
-            <div className="md:col-span-1 space-y-6">
-              {/* Member profile details */}
-              <div className="bg-gradient-to-br from-white/50 via-white/35 to-amber-500/5 backdrop-blur-2xl border border-amber-500/20 shadow-[0_20px_50px_rgba(245,158,11,0.08)] rounded-3xl p-6 space-y-4 relative overflow-hidden">
+            {/* Member profile details */}
+            {activeTab === "home" && (
+              <div className="bg-gradient-to-br from-white/50 via-white/35 to-amber-500/5 backdrop-blur-2xl border border-amber-500/20 shadow-[0_20px_50px_rgba(245,158,11,0.08)] rounded-3xl p-6 space-y-4 relative overflow-hidden animate-in fade-in duration-300">
                 {/* Decorative glowing background gradients */}
                 <div className="absolute top-0 right-0 w-24 h-24 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
                 <div className="absolute bottom-0 left-0 w-24 h-24 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
@@ -1630,9 +1485,11 @@ export default function ClientDashboard() {
                   </div>
                 </div>
               </div>
+            )}
 
-              {/* 1-Click Booking Widget */}
-              <div className="bg-white/50 backdrop-blur-xl border border-white/40 shadow-xl rounded-3xl p-6 space-y-4">
+            {/* 1-Click Booking Widget */}
+            {activeTab === "book" && (
+              <div className="bg-white/50 backdrop-blur-xl border border-white/40 shadow-xl rounded-3xl p-6 space-y-4 max-w-2xl mx-auto animate-in fade-in duration-300">
                 <div className="flex justify-between items-center border-b border-border/20 pb-2">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-800 flex items-center gap-1.5">
                     <Calendar className="w-4 h-4 text-primary" />
@@ -1697,12 +1554,11 @@ export default function ClientDashboard() {
                   </div>
                 )}
               </div>
-            </div>
+            )}
 
-            {/* 2. Middle & Right Main Panel: Flippable quote card and portfolio diagnostics */}
-            <div className="md:col-span-2 space-y-6">
-              {/* Daily Wisdom card */}
-              <div className="w-full p-8 rounded-3xl bg-gradient-to-br from-amber-100/40 via-white/30 to-amber-500/10 backdrop-blur-2xl border border-amber-500/30 shadow-[0_20px_50px_rgba(245,158,11,0.12)] flex flex-col justify-between items-center text-center overflow-hidden relative">
+            {/* Daily Wisdom card */}
+            {activeTab === "home" && (
+              <div className="w-full p-8 rounded-3xl bg-gradient-to-br from-amber-100/40 via-white/30 to-amber-500/10 backdrop-blur-2xl border border-amber-500/30 shadow-[0_20px_50px_rgba(245,158,11,0.12)] flex flex-col justify-between items-center text-center overflow-hidden relative min-h-[220px] animate-in fade-in duration-300">
                 {/* Decorative glowing background gradients */}
                 <div className="absolute top-0 right-0 w-24 h-24 bg-amber-400/20 rounded-full blur-2xl pointer-events-none" />
                 <div className="absolute bottom-0 left-0 w-24 h-24 bg-amber-400/20 rounded-full blur-2xl pointer-events-none" />
@@ -1728,10 +1584,11 @@ export default function ClientDashboard() {
                   </span>
                 </div>
               </div>
+            )}
 
-              {/* Official Portfolio Valuation (Admin Certified) */}
-              {existingClientData && (
-                <div className="bg-gradient-to-br from-white/50 via-white/35 to-amber-500/5 backdrop-blur-2xl border border-amber-500/20 shadow-[0_20px_50px_rgba(245,158,11,0.08)] rounded-3xl p-6 space-y-6 animate-in fade-in duration-300 relative overflow-hidden">
+            {/* Official Portfolio Valuation (Admin Certified) */}
+            {activeTab === "portfolio" && existingClientData && (
+              <div className="bg-gradient-to-br from-white/50 via-white/35 to-amber-500/5 backdrop-blur-2xl border border-amber-500/20 shadow-[0_20px_50px_rgba(245,158,11,0.08)] rounded-3xl p-6 space-y-6 animate-in fade-in duration-300 relative overflow-hidden">
                   {/* Decorative glowing background gradients */}
                   <div className="absolute top-0 right-0 w-32 h-32 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
                   <div className="absolute bottom-0 left-0 w-32 h-32 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
@@ -1934,8 +1791,9 @@ export default function ClientDashboard() {
                 </div>
               )}
 
-              {/* Portfolio Diagnostics Board */}
-              <div className="bg-white/50 backdrop-blur-xl border border-white/40 shadow-xl rounded-3xl p-6 space-y-6">
+            {/* Portfolio Diagnostics Board */}
+            {activeTab === "analyze" && (
+              <div className="bg-white/50 backdrop-blur-xl border border-white/40 shadow-xl rounded-3xl p-6 space-y-6 animate-in fade-in duration-300">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-border/20 pb-4 gap-3">
                   <div className="space-y-0.5">
                     <h3 className="text-base font-bold text-neutral-900 font-clash">
@@ -2269,10 +2127,11 @@ export default function ClientDashboard() {
                   </form>
                 )}
               </div>
+            )}
 
-              {/* Current Investments / Holdings Card */}
-              {activePortfolio && activePortfolio.rows && activePortfolio.rows.length > 0 && (
-                <div className="bg-white/50 backdrop-blur-xl border border-white/40 shadow-xl rounded-3xl p-6 space-y-4">
+            {/* Current Investments / Holdings Card */}
+            {activeTab === "analyze" && activePortfolio && activePortfolio.rows && activePortfolio.rows.length > 0 && (
+              <div className="bg-white/50 backdrop-blur-xl border border-white/40 shadow-xl rounded-3xl p-6 space-y-4 animate-in fade-in duration-300">
                   <div className="flex justify-between items-center border-b border-border/20 pb-2">
                     <h3 className="text-sm font-bold font-clash text-neutral-800 flex items-center gap-1.5">
                       <FileSpreadsheet className="w-4 h-4 text-primary" />
@@ -2315,9 +2174,9 @@ export default function ClientDashboard() {
                   </div>
                 </div>
               )}
-            </div>
           </div>
         )}
+        </div>
       </div>
 
       {/* Booking Success Modal Overlay */}

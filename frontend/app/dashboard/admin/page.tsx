@@ -68,7 +68,6 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalClients: 0,
-    pendingPayments: 0,
     totalLeads: 0,
     attendedLeads: 0,
     totalFolios: 0,
@@ -77,7 +76,7 @@ export default function AdminDashboard() {
     totalAUM: 0,
   });
   const [usersList, setUsersList] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<'users' | 'payments' | 'existingClients' | 'consultations' | 'aum' | 'liveSessions'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'existingClients' | 'consultations' | 'aum' | 'liveSessions'>('users');
 
   // Live Portfolio Review Discussion Queue state variables
   const [advisorySessions, setAdvisorySessions] = useState<any[]>([]);
@@ -154,7 +153,6 @@ export default function AdminDashboard() {
   const [fetchingAvailability, setFetchingAvailability] = useState(false);
 
   const [screenshotModalUrl, setScreenshotModalUrl] = useState<string | null>(null);
-  const [processingPaymentId, setProcessingPaymentId] = useState<string | null>(null);
 
   // Custom Confirm Modal state
   const [confirmModal, setConfirmModal] = useState<{
@@ -841,47 +839,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // Verify/Approve/Reject Payments
-  const handleProcessPayment = async (paymentId: string, action: 'approve' | 'reject') => {
-    try {
-      setProcessingPaymentId(paymentId);
-      const headers = {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      };
-
-      const res = await fetch(`${backendUrl}/api/payments/${paymentId}/approve`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ action, reason: action === 'approve' ? 'Verified by admin' : 'Rejected receipt' }),
-      });
-
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || 'Failed to process payment');
-      }
-
-      const resData = await res.json();
-
-      // Reload admin dataset to update role changes and receipts
-      await fetchAdminData();
-
-      // If we are currently showing a user in details drawer, re-fetch it from usersList
-      if (selectedUser) {
-        const updatedUser = usersList.find(u => u.payments.some((p: any) => p.id === paymentId));
-        if (updatedUser) {
-          setSelectedUser(updatedUser);
-        }
-      }
-
-      alert(`Payment transaction has been ${action === 'approve' ? 'approved' : 'rejected'} successfully.`);
-    } catch (err: any) {
-      alert(err.message || 'Failed to process payment');
-    } finally {
-      setProcessingPaymentId(null);
-    }
-  };
-
   // Filtered Users List
   const filteredUsers = usersList.filter(user => {
     const matchesSearch =
@@ -894,13 +851,6 @@ export default function AdminDashboard() {
 
     return matchesSearch && matchesRole;
   });
-
-  // Compile list of pending payments across all users
-  const pendingPaymentsList = usersList.flatMap(user =>
-    (user.payments || [])
-      .filter((p: any) => p.status === 'PENDING')
-      .map((p: any) => ({ ...p, user }))
-  );
 
   // Compile list of all leads across all users
   const allLeadsList = usersList.flatMap(user =>
@@ -1086,18 +1036,7 @@ export default function AdminDashboard() {
           >
             Users Registry ({filteredUsers.length})
           </button>
-          <button
-            onClick={() => setActiveTab('payments')}
-            className={`py-3 text-sm font-bold font-clash tracking-wide border-b-2 cursor-pointer transition duration-200 flex items-center gap-2 whitespace-nowrap ${activeTab === 'payments' ? 'border-neutral-900 text-neutral-900' : 'border-transparent text-neutral-500 hover:text-neutral-900'
-              }`}
-          >
-            Payments Log
-            {stats.pendingPayments > 0 && (
-              <span className="px-2 py-0.5 text-[10px] bg-amber-500 text-white rounded-full font-bold">
-                {stats.pendingPayments}
-              </span>
-            )}
-          </button>
+
           <button
             onClick={() => setActiveTab('consultations')}
             className={`py-3 text-sm font-bold font-clash tracking-wide border-b-2 cursor-pointer transition duration-200 flex items-center gap-2 whitespace-nowrap ${activeTab === 'consultations' ? 'border-neutral-900 text-neutral-900' : 'border-transparent text-neutral-500 hover:text-neutral-900'
@@ -1185,7 +1124,6 @@ export default function AdminDashboard() {
                         <th className="px-6 py-4">Register Date</th>
                         <th className="px-6 py-4">User Details</th>
                         <th className="px-6 py-4">Role</th>
-                        <th className="px-6 py-4">Payment Status</th>
                         <th className="px-6 py-4">Activity Summary</th>
                         <th className="px-6 py-4 text-right">Actions</th>
                       </tr>
@@ -1193,7 +1131,7 @@ export default function AdminDashboard() {
                     <tbody className="divide-y divide-neutral-200">
                       {filteredUsers.length === 0 ? (
                         <tr>
-                          <td colSpan={6} className="px-6 py-12 text-center text-sm text-neutral-500 font-mono">
+                          <td colSpan={5} className="px-6 py-12 text-center text-sm text-neutral-500 font-mono">
                             No matching user accounts found in registry
                           </td>
                         </tr>
@@ -1232,20 +1170,6 @@ export default function AdminDashboard() {
                                 {user.role}
                               </span>
                             </td>
-                            <td className="px-6 py-5 whitespace-nowrap">
-                              {user.payments && user.payments.length > 0 ? (
-                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${user.payments[0].status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/25' :
-                                    user.payments[0].status === 'REJECTED' ? 'bg-rose-500/10 text-rose-700 border border-rose-500/25' :
-                                      'bg-amber-500/10 text-amber-700 border border-amber-500/25'
-                                  }`}>
-                                  {user.payments[0].status}
-                                </span>
-                              ) : (
-                                <span className="px-2 py-0.5 rounded text-[10px] font-medium text-neutral-400 bg-neutral-100 font-mono">
-                                  UNPAID
-                                </span>
-                              )}
-                            </td>
                             <td className="px-6 py-5">
                               <div className="flex flex-wrap gap-2 text-[10px] font-mono text-neutral-500">
                                 <span className="px-1.5 py-0.5 bg-neutral-50 border border-neutral-200 rounded">
@@ -1253,9 +1177,6 @@ export default function AdminDashboard() {
                                 </span>
                                 <span className="px-1.5 py-0.5 bg-neutral-50 border border-neutral-200 rounded">
                                   Portfolios: {user.portfolios?.length || 0}
-                                </span>
-                                <span className="px-1.5 py-0.5 bg-neutral-50 border border-neutral-200 rounded">
-                                  Payments: {user.payments?.length || 0}
                                 </span>
                               </div>
                             </td>
@@ -1278,96 +1199,7 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {activeTab === 'payments' && (
-            <div className="space-y-4">
-              <h2 className="text-sm font-bold font-clash text-neutral-500 uppercase tracking-wider mb-2">
-                Awaiting Verification ({pendingPaymentsList.length})
-              </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {pendingPaymentsList.length === 0 ? (
-                  <div className="col-span-2 border border-dashed border-neutral-200 rounded-2xl p-12 text-center text-sm text-neutral-500 bg-neutral-50 font-mono">
-                    <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto mb-4" />
-                    All user payment transactions are cleared! No pending verifications.
-                  </div>
-                ) : (
-                  pendingPaymentsList.map((payment) => (
-                    <div
-                      key={payment.id}
-                      className="border border-neutral-200 bg-white rounded-2xl p-6 flex flex-col gap-4 shadow-sm hover:shadow-md transition duration-300 text-neutral-900"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-semibold text-neutral-900 text-sm">
-                            {payment.user?.name || 'Anonymous User'}
-                          </h3>
-                          <p className="text-xs text-neutral-500 font-mono">{payment.user?.email}</p>
-                          {payment.user?.phone && (
-                            <p className="text-xs text-neutral-600 font-semibold font-mono mt-0.5">Phone: {payment.user.phone}</p>
-                          )}
-                          <span className="text-[10px] text-neutral-500 font-mono mt-1 block">
-                            Submitted: {new Date(payment.createdAt).toLocaleString()}
-                          </span>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-lg font-bold tracking-tight text-neutral-900 font-clash">
-                            ₹{payment.amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          </span>
-                          <span className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-700 text-[10px] font-mono border border-amber-300/30 block mt-1">
-                            {payment.status}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="border border-neutral-200 bg-neutral-50 rounded-xl p-3 text-xs font-mono space-y-1">
-                        <div><span className="text-neutral-500">UTR ID:</span> {payment.utrId || 'N/A'}</div>
-                        <div><span className="text-neutral-500">Payment ID:</span> <span className="text-[10px]">{payment.id}</span></div>
-                      </div>
-
-                      {payment.screenshotUrl ? (
-                        <div className="relative group border border-neutral-200 rounded-xl overflow-hidden aspect-video bg-black max-h-[140px]">
-                          <img
-                            src={`${backendUrl}${payment.screenshotUrl}`}
-                            alt="Receipt Screenshot"
-                            className="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-90 cursor-zoom-in"
-                            onClick={() => setScreenshotModalUrl(`${backendUrl}${payment.screenshotUrl}`)}
-                          />
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-300 pointer-events-none">
-                            <span className="text-[10px] font-bold text-white uppercase tracking-wider bg-black/60 px-3 py-1.5 rounded-lg border border-white/20">
-                              Zoom Receipt
-                            </span>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="border border-dashed border-neutral-200 rounded-xl py-8 text-center text-xs text-neutral-500 font-mono">
-                          No screenshot uploaded
-                        </div>
-                      )}
-
-                      <div className="flex gap-3 mt-2">
-                        <button
-                          onClick={() => handleProcessPayment(payment.id, 'reject')}
-                          disabled={processingPaymentId === payment.id}
-                          className="flex-1 py-2.5 border border-destructive/20 hover:border-destructive/40 hover:bg-destructive/10 text-destructive text-xs font-bold rounded-xl transition duration-200 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
-                        >
-                          <XCircle className="w-3.5 h-3.5" />
-                          Reject Receipt
-                        </button>
-                        <button
-                          onClick={() => handleProcessPayment(payment.id, 'approve')}
-                          disabled={processingPaymentId === payment.id}
-                          className="flex-1 py-2.5 bg-neutral-900 text-white text-xs font-bold rounded-xl hover:bg-neutral-800 transition duration-200 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
-                        >
-                          <CheckCircle className="w-3.5 h-3.5 text-amber-400" />
-                          {processingPaymentId === payment.id ? 'Processing...' : 'Verify & Approve'}
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          )}
 
           {activeTab === 'consultations' && (
             <div className="space-y-4">
@@ -2137,21 +1969,7 @@ export default function AdminDashboard() {
                     <span className="text-neutral-500 block text-[10px] uppercase">PAN Number</span>
                     <span className="text-neutral-900 font-mono">{selectedUser.pan || 'Not provided'}</span>
                   </div>
-                  <div>
-                    <span className="text-neutral-500 block text-[10px] uppercase">Payment Status</span>
-                    {selectedUser.payments && selectedUser.payments.length > 0 ? (
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${selectedUser.payments[0].status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/25' :
-                          selectedUser.payments[0].status === 'REJECTED' ? 'bg-rose-500/10 text-rose-700 border border-rose-500/25' :
-                            'bg-amber-500/10 text-amber-700 border border-amber-500/25'
-                        }`}>
-                        {selectedUser.payments[0].status}
-                      </span>
-                    ) : (
-                      <span className="px-2 py-0.5 rounded text-[10px] font-medium text-neutral-400 bg-neutral-100 font-mono">
-                        UNPAID
-                      </span>
-                    )}
-                  </div>
+
                 </div>
 
                 {/* Role Switcher */}
@@ -2586,77 +2404,7 @@ export default function AdminDashboard() {
                 )}
               </div>
 
-              {/* Payments History */}
-              <div className="border border-neutral-200 bg-neutral-50 rounded-2xl p-5 space-y-4 font-sans text-neutral-900">
-                <h3 className="text-xs font-bold font-clash uppercase tracking-wider text-neutral-900 border-b border-neutral-200 pb-2">
-                  Payments Ledger ({selectedUser.payments?.length || 0})
-                </h3>
 
-                {(!selectedUser.payments || selectedUser.payments.length === 0) ? (
-                  <p className="text-xs text-neutral-500 font-mono text-center py-4">
-                    No payment transactions recorded.
-                  </p>
-                ) : (
-                  selectedUser.payments.map((p: any) => (
-                    <div key={p.id} className="border border-neutral-200 bg-white rounded-xl p-4 flex flex-col gap-3 font-sans">
-                      <div className="flex justify-between items-center text-xs">
-                        <div>
-                          <span className="text-[10px] text-neutral-500 uppercase font-mono">Amount: </span>
-                          <span className="font-bold text-neutral-900 font-mono text-sm">₹{p.amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                        </div>
-                        <span className={`px-2 py-0.5 rounded text-[9px] font-bold font-mono tracking-wider ${p.status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/20' :
-                            p.status === 'REJECTED' ? 'bg-destructive/10 text-destructive border border-destructive/20' :
-                              'bg-amber-500/10 text-amber-700 border border-amber-500/20 animate-pulse'
-                          }`}>
-                          {p.status}
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4 text-[10px] font-mono text-neutral-500 border-t border-neutral-200 pt-2">
-                        <div>
-                          <span>UTR Transaction ID</span>
-                          <span className="block text-neutral-900 mt-0.5">{p.utrId || 'N/A'}</span>
-                        </div>
-                        <div>
-                          <span>Submitted On</span>
-                          <span className="block text-neutral-900 mt-0.5">{new Date(p.createdAt).toLocaleString()}</span>
-                        </div>
-                      </div>
-
-                      {p.screenshotUrl && (
-                        <div className="flex items-center justify-between border-t border-neutral-200 pt-2 mt-1">
-                          <button
-                            onClick={() => setScreenshotModalUrl(`${backendUrl}${p.screenshotUrl}`)}
-                            className="inline-flex items-center gap-1 text-[10px] font-bold text-neutral-700 hover:text-neutral-900 tracking-wider uppercase font-clash cursor-pointer"
-                          >
-                            Inspect Receipt Screenshot
-                            <ExternalLink className="w-3 h-3 text-neutral-500" />
-                          </button>
-
-                          {p.status === 'PENDING' && (
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => handleProcessPayment(p.id, 'reject')}
-                                disabled={processingPaymentId === p.id}
-                                className="px-2 py-1 border border-destructive/20 text-destructive hover:bg-destructive/10 rounded font-mono text-[9px] font-bold cursor-pointer"
-                              >
-                                Reject
-                              </button>
-                              <button
-                                onClick={() => handleProcessPayment(p.id, 'approve')}
-                                disabled={processingPaymentId === p.id}
-                                className="px-2 py-1 bg-neutral-900 text-white hover:bg-neutral-800 rounded font-mono text-[9px] font-bold cursor-pointer"
-                              >
-                                Approve
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  ))
-                )}
-              </div>
 
             </div>
 

@@ -3,7 +3,6 @@ import type { Response } from 'express';
 import { z } from 'zod';
 import fs from 'fs';
 import path from 'path';
-import Razorpay from 'razorpay';
 import { prisma } from '../lib/prisma';
 import { authMiddleware } from '../middleware/auth';
 import type { AuthenticatedRequest } from '../middleware/auth';
@@ -154,17 +153,7 @@ router.put('/:id/status', authMiddleware, adminMiddleware, async (req: Authentic
       },
     });
 
-    // Award 10 points if transitioned to CONVERTED (booking completion)
-    if (existingLead.status !== 'CONVERTED' && status === 'CONVERTED') {
-      await prisma.user.update({
-        where: { id: existingLead.userId },
-        data: {
-          finPoints: {
-            increment: 10,
-          },
-        },
-      });
-    }
+
 
     res.json({
       success: true,
@@ -236,7 +225,6 @@ router.get('/availability', authMiddleware, async (req: AuthenticatedRequest, re
 // ==========================================
 
 const bookSessionSchema = z.object({
-  paymentId: z.string().uuid('Invalid payment ID format'),
   slot1: z.string().refine((val) => !isNaN(Date.parse(val)), { message: 'Invalid slot 1 format' }).transform((val) => new Date(val)),
   slot2: z.string().refine((val) => !isNaN(Date.parse(val)), { message: 'Invalid slot 2 format' }).transform((val) => new Date(val)),
   slot3: z.string().refine((val) => !isNaN(Date.parse(val)), { message: 'Invalid slot 3 format' }).transform((val) => new Date(val)),
@@ -251,49 +239,44 @@ const adminUpdateNotesSchema = z.object({
   notes: z.string().optional(),
 });
 
-// 6. POST /api/leads/book-session (user books preferred slots after payment)
+// 6. POST /api/leads/book-session (user books preferred slots directly for free)
 router.post('/book-session', authMiddleware, async (req: AuthenticatedRequest, res: Response, next) => {
   try {
-    const { paymentId, slot1, slot2, slot3 } = bookSessionSchema.parse(req.body);
+    const { slot1, slot2, slot3 } = bookSessionSchema.parse(req.body);
     const userId = req.user!.id;
 
-    // Verify payment exists and is approved for this user and product LIVE_SESSION
-    const payment = await prisma.payment.findUnique({
-      where: { id: paymentId },
+    // Find if user already has an advisory session
+    let session = await prisma.advisorySession.findFirst({
+      where: { userId },
     });
 
-    if (!payment || payment.userId !== userId || payment.status !== 'APPROVED' || payment.productType !== 'LIVE_SESSION') {
-      res.status(400).json({
-        success: false,
-        error: 'Eligible approved payment for Live Advisory Session not found.',
+    if (session) {
+      // Update slots
+      session = await prisma.advisorySession.update({
+        where: { id: session.id },
+        data: {
+          preferredSlot1: slot1,
+          preferredSlot2: slot2,
+          preferredSlot3: slot3,
+          status: 'PENDING',
+        },
       });
-      return;
+    } else {
+      // Create new session
+      session = await prisma.advisorySession.create({
+        data: {
+          userId,
+          preferredSlot1: slot1,
+          preferredSlot2: slot2,
+          preferredSlot3: slot3,
+          status: 'PENDING',
+        },
+      });
     }
-
-    // Find session request linked to payment
-    const session = await prisma.advisorySession.findUnique({
-      where: { paymentId },
-    });
-
-    if (!session) {
-      res.status(404).json({ success: false, error: 'Advisory session record not found' });
-      return;
-    }
-
-    // Update session slots
-    const updatedSession = await prisma.advisorySession.update({
-      where: { id: session.id },
-      data: {
-        preferredSlot1: slot1,
-        preferredSlot2: slot2,
-        preferredSlot3: slot3,
-        status: 'PENDING',
-      },
-    });
 
     res.json({
       success: true,
-      data: updatedSession,
+      data: session,
       message: 'Slots registered. Arijit will confirm your schedule soon.',
     });
   } catch (error) {
@@ -307,7 +290,6 @@ router.get('/my-sessions', authMiddleware, async (req: AuthenticatedRequest, res
     const userId = req.user!.id;
     const sessions = await prisma.advisorySession.findMany({
       where: { userId },
-      include: { payment: true },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -328,7 +310,6 @@ router.get('/admin/sessions', authMiddleware, adminMiddleware, async (req: Authe
         user: {
           select: { name: true, phone: true, email: true },
         },
-        payment: true,
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -431,15 +412,15 @@ router.post('/admin/sessions/:id/notes', authMiddleware, adminMiddleware, async 
   }
 });
 
-// 11. POST /api/admin/sessions/:id/refund (process refund, admin only)
+// 11. POST /api/admin/sessions/:id/refund (cancel session, admin only)
 router.post('/admin/sessions/:id/refund', authMiddleware, adminMiddleware, async (req: AuthenticatedRequest, res: Response, next) => {
   try {
     const id = req.params.id as string;
 
-    const session = (await prisma.advisorySession.findUnique({
+    const session = await prisma.advisorySession.findUnique({
       where: { id },
-      include: { payment: true, user: true },
-    })) as any;
+      include: { user: true },
+    });
 
     if (!session) {
       res.status(404).json({ success: false, error: 'Session not found' });
@@ -447,59 +428,31 @@ router.post('/admin/sessions/:id/refund', authMiddleware, adminMiddleware, async
     }
 
     if (session.status === 'REFUNDED') {
-      res.status(400).json({ success: false, error: 'Session is already refunded' });
+      res.status(400).json({ success: false, error: 'Session is already cancelled' });
       return;
     }
 
-    // Update statuses to REFUNDED in database
-    await prisma.$transaction(async (tx) => {
-      await tx.advisorySession.update({
-        where: { id },
-        data: { status: 'REFUNDED' },
-      });
-
-      await tx.payment.update({
-        where: { id: session.paymentId },
-        data: { status: 'REFUNDED' },
-      });
+    // Update status to REFUNDED in database
+    await prisma.advisorySession.update({
+      where: { id },
+      data: { status: 'REFUNDED' },
     });
 
-    // Trigger Razorpay refund if it was a real Razorpay payment
-    if (session.payment.razorpayPaymentId && !session.payment.razorpayPaymentId.startsWith('pay_mock_') && !session.payment.razorpayPaymentId.startsWith('manual_')) {
-      try {
-        const isRazorpayConfigured = !!(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET);
-        if (isRazorpayConfigured) {
-          const razorpayInstance = new Razorpay({
-            key_id: process.env.RAZORPAY_KEY_ID!,
-            key_secret: process.env.RAZORPAY_KEY_SECRET!,
-          });
-          await razorpayInstance.payments.refund(session.payment.razorpayPaymentId, {
-            amount: Math.round(session.payment.amount * 100), // full amount in paise
-          });
-        }
-      } catch (rzpErr) {
-        console.error('Failed to trigger Razorpay API refund:', rzpErr);
-      }
-    }
-
-    // Send refund email notification
+    // Send cancellation email notification
     try {
       if (session.user.email) {
         const mailOptions = {
           from: `"Arijit De | FinAnalysis" <${process.env.GMAIL_USER}>`,
           to: session.user.email,
-          subject: 'Refund Confirmed - Live Advisory Session',
-          text: `Hi ${session.user.name || 'Investor'},\n\nWe have processed a full refund of ₹${session.payment.amount} for your live session. It will reflect in your account within 24 hours.`,
+          subject: 'Cancellation Confirmed - Live Advisory Session',
+          text: `Hi ${session.user.name || 'Investor'},\n\nWe have cancelled your scheduled live session.`,
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 25px; border: 1px solid #fca5a5; border-radius: 12px; background-color: #fffaf0;">
               <h2 style="color: #DC2626; text-align: center; margin-top: 0;">FinAnalysis</h2>
-              <h3 style="color: #991B1B; margin-bottom: 20px;">Refund Initiated Successfully</h3>
+              <h3 style="color: #991B1B; margin-bottom: 20px;">Session Cancelled</h3>
               <p style="font-size: 15px; color: #7F1D1D; line-height: 1.6;">Hi <strong>${session.user.name || 'Investor'}</strong>,</p>
               <p style="font-size: 15px; color: #7F1D1D; line-height: 1.6;">
-                As per our refund policy, we have initiated a full refund of <strong>₹${session.payment.amount}</strong> for your scheduled advisory session.
-              </p>
-              <p style="font-size: 15px; color: #7F1D1D; line-height: 1.6;">
-                Your funds should reflect in your source account within 24 hours depending on Razorpay processing times.
+                We have cancelled your scheduled advisory session. If you want to re-schedule, please visit your dashboard.
               </p>
               <div style="border-top: 1px solid #FECACA; margin-top: 30px; padding-top: 15px; font-size: 12px; color: #B91C1C; text-align: center;">
                 If you have any questions, reply to this email. We appreciate your trust in us.
@@ -510,10 +463,10 @@ router.post('/admin/sessions/:id/refund', authMiddleware, adminMiddleware, async
         await transporter.sendMail(mailOptions);
       }
     } catch (emailErr) {
-      console.error('Failed to send refund notification email:', emailErr);
+      console.error('Failed to send cancellation notification email:', emailErr);
     }
 
-    res.json({ success: true, message: 'Session and payment successfully refunded.' });
+    res.json({ success: true, message: 'Session successfully cancelled.' });
   } catch (error) {
     next(error);
   }
