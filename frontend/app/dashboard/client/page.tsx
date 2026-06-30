@@ -27,7 +27,9 @@ import {
   User,
   ArrowRight,
   Home,
-  Briefcase
+  Briefcase,
+  TrendingUp,
+  Star
 } from "lucide-react";
 import SoftBoxBlurBg from "@/components/SoftBoxBlurBg";
 import GradualBlur from "@/components/GradualBlur";
@@ -181,6 +183,59 @@ const getSchemeCategory = (name: string): string => {
   return "Equity - Other";
 };
 
+const TOP_50_SCHEMES = [
+  { code: "120849", name: "Quant Small Cap Fund Direct Growth", category: "Small Cap" },
+  { code: "120150", name: "HDFC Mid-Cap Opportunities Fund Direct Growth", category: "Mid Cap" },
+  { code: "122639", name: "Parag Parikh Flexi Cap Fund Direct Growth", category: "Flexi Cap" },
+  { code: "118834", name: "Mirae Asset Large Cap Fund Direct Growth", category: "Large Cap" },
+  { code: "120586", name: "ICICI Prudential Bluechip Fund Direct Growth", category: "Large Cap" },
+  { code: "120547", name: "Axis Small Cap Fund Direct Growth", category: "Small Cap" },
+  { code: "119775", name: "SBI Bluechip Fund Direct Growth", category: "Large Cap" },
+  { code: "120716", name: "Nippon India Small Cap Fund Direct Growth", category: "Small Cap" },
+  { code: "120823", name: "Quant Active Fund Direct Growth", category: "Flexi Cap" },
+  { code: "120841", name: "Quant Infrastructure Fund Direct Growth", category: "Equity - Other" },
+  { code: "119077", name: "HDFC Top 100 Fund Direct Growth", category: "Large Cap" },
+  { code: "119062", name: "HDFC Small Cap Fund Direct Growth", category: "Small Cap" },
+  { code: "148866", name: "Parag Parikh Conservative Hybrid Fund Direct Growth", category: "Hybrid" },
+  { code: "119778", name: "SBI Contra Fund Direct Growth", category: "Equity - Other" },
+  { code: "120593", name: "ICICI Prudential Asset Allocator Fund Direct Growth", category: "Hybrid" },
+  { code: "120530", name: "Axis Midcap Fund Direct Growth", category: "Mid Cap" },
+  { code: "135796", name: "Tata Digital India Fund Direct Growth", category: "Equity - Other" },
+  { code: "127039", name: "Motilal Oswal Midcap Fund Direct Growth", category: "Mid Cap" },
+  { code: "145347", name: "Motilal Oswal Nasdaq 100 FOF Direct Growth", category: "Equity - Other" },
+  { code: "125497", name: "SBI Small Cap Fund Direct Growth", category: "Small Cap" },
+  { code: "120165", name: "Kotak Emerging Equity Fund Direct Growth", category: "Mid Cap" },
+  { code: "119565", name: "DSP Small Cap Fund Direct Growth", category: "Small Cap" },
+  { code: "120828", name: "Quant ELSS Tax Saver Fund Direct Growth", category: "ELSS (Tax Saver)" },
+  { code: "135781", name: "Mirae Asset ELSS Tax Saver Fund Direct Growth", category: "ELSS (Tax Saver)" },
+  { code: "145001", name: "Canara Robeco Small Cap Fund Direct Growth", category: "Small Cap" },
+  { code: "119067", name: "HDFC Flexi Cap Fund Direct Growth", category: "Flexi Cap" },
+  { code: "142544", name: "Parag Parikh Liquid Fund Direct Growth", category: "Debt" },
+  { code: "118556", name: "ICICI Prudential Liquid Fund Direct Growth", category: "Debt" },
+  { code: "119782", name: "SBI Liquid Fund Direct Growth", category: "Debt" },
+  { code: "119280", name: "Axis Liquid Fund Direct Growth", category: "Debt" },
+  { code: "119098", name: "HDFC Liquid Fund Direct Growth", category: "Debt" },
+  { code: "120842", name: "Quant Liquid Fund Direct Growth", category: "Debt" },
+  { code: "118683", name: "Nippon India Liquid Fund Direct Growth", category: "Debt" },
+  { code: "145952", name: "Parag Parikh Arbitrage Fund Direct Growth", category: "Hybrid" },
+  { code: "120597", name: "ICICI Prudential Equity & Debt Fund Direct Growth", category: "Hybrid" },
+  { code: "119792", name: "SBI Equity Hybrid Fund Direct Growth", category: "Hybrid" },
+  { code: "119053", name: "HDFC Balanced Advantage Fund Direct Growth", category: "Hybrid" },
+  { code: "120592", name: "ICICI Prudential Balanced Advantage Fund Direct Growth", category: "Hybrid" },
+  { code: "144709", name: "Nippon India Balanced Advantage Fund Direct Growth", category: "Hybrid" },
+  { code: "120840", name: "Quant Multi Asset Fund Direct Growth", category: "Hybrid" },
+  { code: "120821", name: "Quant Absolute Fund Direct Growth", category: "Hybrid" },
+  { code: "119096", name: "HDFC Hybrid Debt Fund Direct Growth", category: "Hybrid" },
+  { code: "125197", name: "SBI Magnum Midcap Fund Direct Growth", category: "Mid Cap" },
+  { code: "119560", name: "DSP Natural Resources Fund Direct Growth", category: "Equity - Other" },
+  { code: "120516", name: "Axis Bluechip Fund Direct Growth", category: "Large Cap" },
+  { code: "120598", name: "ICICI Prudential Nifty 50 Index Fund Direct Growth", category: "Large Cap" },
+  { code: "119082", name: "HDFC Index Fund Nifty 50 Plan Direct Growth", category: "Large Cap" },
+  { code: "120713", name: "UTI Nifty 50 Index Fund Direct Growth", category: "Large Cap" },
+  { code: "149206", name: "Navi Nifty 50 Index Fund Direct Growth", category: "Large Cap" },
+  { code: "122909", name: "Bandhan Sterling Value Fund Direct Growth", category: "Equity - Other" }
+];
+
 export default function ClientDashboard() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [userData, setUserData] = useState<{ 
@@ -243,10 +298,19 @@ export default function ClientDashboard() {
   const [showLogoutWarning, setShowLogoutWarning] = useState(false);
 
   // Client specifics
-  const [activeTab, setActiveTab] = useState<"home" | "portfolio" | "analyze" | "book">("home");
+  const [activeTab, setActiveTab] = useState<"home" | "portfolio" | "analyze" | "top-mf" | "picks" | "book">("home");
   const [clientBookings, setClientBookings] = useState<string[]>([]);
   const [showBookingSuccess, setShowBookingSuccess] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<string>("");
+
+  // Top MF States
+  const [navCache, setNavCache] = useState<Record<string, { latestNav: number, navDate: string, return1Y: number, return3Y: number, fullData: any }>>({});
+  const [topMfLoading, setTopMfLoading] = useState(false);
+  const [topMfSearch, setTopMfSearch] = useState("");
+  const [topMfCategoryFilter, setTopMfCategoryFilter] = useState("All");
+  const [topMfPage, setTopMfPage] = useState(1);
+  const [topMfSortBy, setTopMfSortBy] = useState<"1Y" | "3Y" | "name">("3Y");
+  const [allNavsLoaded, setAllNavsLoaded] = useState(false);
 
   // Booking / Scheduling States
   const [payments, setPayments] = useState<any[]>([]);
@@ -368,6 +432,78 @@ export default function ClientDashboard() {
       fetchClientData();
     }
   }, [token]);
+
+  // Fetch all 50 top mutual fund details in the background/parallel on top-mf load
+  useEffect(() => {
+    if (activeTab !== "top-mf" || allNavsLoaded) return;
+
+    const fetchAllNavs = async () => {
+      setTopMfLoading(true);
+      const newCache = { ...navCache };
+      let updated = false;
+
+      // Batching fetches to prevent rate limiting (10 at a time)
+      const batches = [];
+      const batchSize = 10;
+      for (let i = 0; i < TOP_50_SCHEMES.length; i += batchSize) {
+        batches.push(TOP_50_SCHEMES.slice(i, i + batchSize));
+      }
+
+      for (const batch of batches) {
+        try {
+          await Promise.all(
+            batch.map(async (scheme) => {
+              if (newCache[scheme.code]) return;
+              try {
+                const res = await fetch(`https://api.mfapi.in/mf/${scheme.code}`);
+                const data = await res.json();
+                if (data && data.data && data.data.length > 0) {
+                  const history = data.data; // Sorted from latest to oldest
+                  const latestNav = parseFloat(history[0].nav);
+                  const navDate = history[0].date;
+
+                  let return1Y = 0;
+                  const idx1Y = Math.min(250, history.length - 1);
+                  if (idx1Y > 0) {
+                    const pastNav = parseFloat(history[idx1Y].nav);
+                    return1Y = pastNav > 0 ? ((latestNav - pastNav) / pastNav) * 100 : 0;
+                  }
+
+                  let return3Y = 0;
+                  const idx3Y = Math.min(750, history.length - 1);
+                  if (idx3Y > 0) {
+                    const pastNav = parseFloat(history[idx3Y].nav);
+                    return3Y = pastNav > 0 ? (Math.pow(latestNav / pastNav, 1 / 3) - 1) * 100 : 0;
+                  }
+
+                  newCache[scheme.code] = {
+                    latestNav,
+                    navDate,
+                    return1Y,
+                    return3Y,
+                    fullData: history
+                  };
+                  updated = true;
+                }
+              } catch (err) {
+                console.error(`Failed to fetch NAV for ${scheme.name}:`, err);
+              }
+            })
+          );
+        } catch (err) {
+          console.error("Batch fetch error:", err);
+        }
+      }
+
+      if (updated) {
+        setNavCache(newCache);
+      }
+      setAllNavsLoaded(true);
+      setTopMfLoading(false);
+    };
+
+    fetchAllNavs();
+  }, [activeTab, allNavsLoaded]);
 
   const fetchClientData = async () => {
     try {
@@ -1019,6 +1155,20 @@ export default function ClientDashboard() {
                   <span>Analyze</span>
                 </button>
                 <button
+                  onClick={() => setActiveTab("top-mf")}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-primary/5 transition duration-150 font-semibold text-xs cursor-pointer text-left w-full ${activeTab === 'top-mf' ? 'bg-primary/10 text-primary font-bold' : 'text-neutral-600 hover:text-primary'}`}
+                >
+                  <TrendingUp className="w-4 h-4" />
+                  <span>Top MF Schemes</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab("picks")}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-primary/5 transition duration-150 font-semibold text-xs cursor-pointer text-left w-full ${activeTab === 'picks' ? 'bg-primary/10 text-primary font-bold' : 'text-neutral-600 hover:text-primary'}`}
+                >
+                  <Star className="w-4 h-4" />
+                  <span>Fund Picks</span>
+                </button>
+                <button
                   onClick={() => setActiveTab("book")}
                   className={`flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-primary/5 transition duration-150 font-semibold text-xs cursor-pointer text-left w-full ${activeTab === 'book' ? 'bg-primary/10 text-primary font-bold' : 'text-neutral-600 hover:text-primary'}`}
                 >
@@ -1565,6 +1715,329 @@ export default function ClientDashboard() {
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Top MF Schemes Explorer */}
+            {activeTab === "top-mf" && (
+              <div className="bg-white/50 backdrop-blur-xl border border-white/40 shadow-xl rounded-3xl p-6 space-y-6 animate-in fade-in duration-300 text-left">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-border/20 pb-4 gap-3">
+                  <div className="space-y-0.5 text-left">
+                    <h3 className="text-base font-bold text-neutral-900 font-clash">
+                      Top Mutual Fund Schemes (AMFI)
+                    </h3>
+                    <p className="text-neutral-500 text-xs font-sans">
+                      Explore live NAV performance telemetry of top mutual funds directly from AMFI API.
+                    </p>
+                  </div>
+                  {topMfLoading && (
+                    <span className="text-[10px] text-primary font-bold flex items-center gap-1 bg-primary/10 px-2.5 py-1 rounded border border-primary/20 animate-pulse">
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      UPDATING NAV TELEMETRY...
+                    </span>
+                  )}
+                </div>
+
+                {/* Filters Row */}
+                <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-white/40 border border-white/20 p-4 rounded-2xl">
+                  {/* Search Bar */}
+                  <input
+                    type="text"
+                    placeholder="Search by name or AMFI code..."
+                    value={topMfSearch}
+                    onChange={(e) => { setTopMfSearch(e.target.value); setTopMfPage(1); }}
+                    className="w-full md:w-72 bg-white/50 border border-neutral-200 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-primary text-neutral-900 font-sans shadow-sm"
+                  />
+
+                  {/* Category Filter */}
+                  <div className="flex flex-wrap gap-1.5 justify-end w-full md:w-auto">
+                    {["All", "Large Cap", "Mid Cap", "Small Cap", "Flexi Cap", "ELSS (Tax Saver)", "Debt", "Hybrid"].map((cat) => (
+                      <button
+                        key={cat}
+                        onClick={() => { setTopMfCategoryFilter(cat); setTopMfPage(1); }}
+                        className={`px-3 py-1.5 rounded-xl border text-[10px] font-bold cursor-pointer transition ${topMfCategoryFilter === cat ? "bg-primary border-primary text-white" : "bg-white/50 border-neutral-200 text-neutral-600 hover:text-neutral-900"}`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Sorting dropdown */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-mono text-neutral-400 uppercase font-bold">Sort By</span>
+                    <select
+                      value={topMfSortBy}
+                      onChange={(e) => setTopMfSortBy(e.target.value as any)}
+                      className="bg-white/50 border border-neutral-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-primary text-neutral-900 shadow-sm"
+                    >
+                      <option value="3Y">3Y Return (CAGR)</option>
+                      <option value="1Y">1Y Return</option>
+                      <option value="name">Name</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Schemes Table */}
+                <div className="border border-border/30 bg-white/40 rounded-2xl overflow-hidden font-sans text-xs flex flex-col w-full shadow-sm">
+                  <div className="overflow-x-auto w-full">
+                    <table className="w-full text-left text-neutral-900">
+                      <thead>
+                        <tr className="bg-white/60 border-b border-border/20 text-neutral-500 font-bold font-mono text-[9px] uppercase tracking-wider">
+                          <th className="px-4 py-3.5">AMFI Code</th>
+                          <th className="px-4 py-3.5">Scheme Name</th>
+                          <th className="px-4 py-3.5">Category</th>
+                          <th className="px-4 py-3.5 text-right">Latest NAV</th>
+                          <th className="px-4 py-3.5 text-right">1Y Return</th>
+                          <th className="px-4 py-3.5 text-right">3Y CAGR</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border/10 font-sans">
+                        {(() => {
+                          const filtered = TOP_50_SCHEMES.filter((s) => {
+                            const matchesSearch = s.name.toLowerCase().includes(topMfSearch.toLowerCase()) || s.code.includes(topMfSearch);
+                            const matchesCategory = topMfCategoryFilter === "All" || s.category === topMfCategoryFilter;
+                            return matchesSearch && matchesCategory;
+                          });
+
+                          const sorted = [...filtered].sort((a, b) => {
+                            const aData = navCache[a.code];
+                            const bData = navCache[b.code];
+                            if (topMfSortBy === "1Y") {
+                              return (bData?.return1Y || -999) - (aData?.return1Y || -999);
+                            }
+                            if (topMfSortBy === "3Y") {
+                              return (bData?.return3Y || -999) - (aData?.return3Y || -999);
+                            }
+                            return a.name.localeCompare(b.name);
+                          });
+
+                          const PAGE_SIZE = 10;
+                          const total = sorted.length;
+                          const totalPages = Math.ceil(total / PAGE_SIZE);
+                          const pageSubset = sorted.slice((topMfPage - 1) * PAGE_SIZE, topMfPage * PAGE_SIZE);
+
+                          if (pageSubset.length === 0) {
+                            return (
+                              <tr>
+                                <td colSpan={6} className="px-4 py-8 text-center text-neutral-400">
+                                  No matching mutual fund schemes found.
+                                </td>
+                              </tr>
+                            );
+                          }
+
+                          return (
+                            <>
+                              {pageSubset.map((scheme) => {
+                                const cache = navCache[scheme.code];
+                                return (
+                                  <tr key={scheme.code} className="hover:bg-white/20 transition duration-150">
+                                    <td className="px-4 py-3.5 font-mono text-[10px] text-neutral-400 font-bold">
+                                      {scheme.code}
+                                    </td>
+                                    <td className="px-4 py-3.5 font-semibold text-neutral-900 truncate max-w-[320px]" title={scheme.name}>
+                                      {scheme.name}
+                                    </td>
+                                    <td className="px-4 py-3.5">
+                                      <span className="px-2 py-0.5 bg-neutral-100 border border-neutral-200/50 rounded-lg text-[9px] font-bold text-neutral-600">
+                                        {scheme.category}
+                                      </span>
+                                    </td>
+                                    <td className="px-4 py-3.5 text-right font-semibold font-mono text-neutral-900">
+                                      {cache ? `₹${cache.latestNav.toFixed(4)}` : (
+                                        <span className="text-[10px] text-neutral-300 animate-pulse">Loading...</span>
+                                      )}
+                                    </td>
+                                    <td className="px-4 py-3.5 text-right font-bold font-mono">
+                                      {cache ? (
+                                        <span className={cache.return1Y >= 0 ? "text-emerald-600" : "text-rose-600"}>
+                                          {cache.return1Y >= 0 ? "+" : ""}{cache.return1Y.toFixed(2)}%
+                                        </span>
+                                      ) : (
+                                        <span className="text-[10px] text-neutral-300 animate-pulse">Loading...</span>
+                                      )}
+                                    </td>
+                                    <td className="px-4 py-3.5 text-right font-bold font-mono">
+                                      {cache ? (
+                                        <span className={cache.return3Y >= 0 ? "text-emerald-600" : "text-rose-600"}>
+                                          {cache.return3Y >= 0 ? "+" : ""}{cache.return3Y.toFixed(2)}%
+                                        </span>
+                                      ) : (
+                                        <span className="text-[10px] text-neutral-300 animate-pulse">Loading...</span>
+                                      )}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </>
+                          );
+                        })()}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Pagination Controls */}
+                  {(() => {
+                    const filtered = TOP_50_SCHEMES.filter((s) => {
+                      const matchesSearch = s.name.toLowerCase().includes(topMfSearch.toLowerCase()) || s.code.includes(topMfSearch);
+                      const matchesCategory = topMfCategoryFilter === "All" || s.category === topMfCategoryFilter;
+                      return matchesSearch && matchesCategory;
+                    });
+                    const PAGE_SIZE = 10;
+                    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+
+                    if (totalPages <= 1) return null;
+
+                    return (
+                      <div className="bg-white/60 px-4 py-3 border-t border-border/20 flex justify-between items-center text-xs text-neutral-500 font-sans">
+                        <span>
+                          Showing page <strong className="text-neutral-800">{topMfPage}</strong> of <strong className="text-neutral-800">{totalPages}</strong> ({filtered.length} total schemes)
+                        </span>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setTopMfPage((p) => Math.max(1, p - 1))}
+                            disabled={topMfPage === 1}
+                            className="px-3 py-1.5 bg-white border border-neutral-200 rounded-lg font-bold text-neutral-600 hover:text-neutral-900 disabled:opacity-40 hover:bg-neutral-50 transition cursor-pointer"
+                          >
+                            Prev
+                          </button>
+                          <button
+                            onClick={() => setTopMfPage((p) => Math.min(totalPages, p + 1))}
+                            disabled={topMfPage === totalPages}
+                            className="px-3 py-1.5 bg-white border border-neutral-200 rounded-lg font-bold text-neutral-600 hover:text-neutral-900 disabled:opacity-40 hover:bg-neutral-50 transition cursor-pointer"
+                          >
+                            Next
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+            )}
+
+            {/* Fund Picks (Handpicked Funds) */}
+            {activeTab === "picks" && (
+              <div className="bg-white/50 backdrop-blur-xl border border-white/40 shadow-xl rounded-3xl p-6 space-y-6 animate-in fade-in duration-300 text-left">
+                <div className="border-b border-border/20 pb-4">
+                  <h3 className="text-base font-bold text-neutral-900 font-clash flex items-center gap-2">
+                    <Star className="w-5 h-5 text-amber-500 fill-amber-500 animate-pulse" />
+                    Arijit's Curated Fund Picks
+                  </h3>
+                  <p className="text-neutral-500 text-xs font-sans mt-0.5">
+                    Premium choice recommendations based on deep telemetry scoring, risk parameters, and management stability.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {/* Pick 1 */}
+                  <div className="bg-gradient-to-br from-white/60 via-white/40 to-emerald-500/5 border border-emerald-500/10 shadow-md rounded-3xl p-5 space-y-4 relative overflow-hidden flex flex-col justify-between">
+                    <div className="absolute top-0 right-0 px-3 py-1 bg-emerald-500/10 text-emerald-800 text-[8px] font-mono font-bold tracking-widest uppercase rounded-bl-2xl">
+                      Aggressive Growth
+                    </div>
+                    <div className="space-y-2">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200/50 flex items-center justify-center text-emerald-600 text-sm font-bold">Q</div>
+                      <h4 className="text-xs font-bold text-neutral-900 leading-snug">Quant Small Cap Fund (Direct Growth)</h4>
+                      <p className="text-[10px] text-neutral-500 leading-relaxed font-sans">
+                        Uncapped alpha generator using proprietary predictive modeling telemetry. Perfect for high-risk profiles seeking massive compounding momentum.
+                      </p>
+                    </div>
+                    <div className="pt-2 border-t border-border/20 flex justify-between items-center">
+                      <span className="text-[9px] font-mono font-bold text-neutral-400">AMFI Code: 120849</span>
+                      <button onClick={() => { setActiveTab("top-mf"); setTopMfSearch("120849"); }} className="text-[10px] font-bold text-primary hover:underline cursor-pointer">View NAV Performance &rarr;</button>
+                    </div>
+                  </div>
+
+                  {/* Pick 2 */}
+                  <div className="bg-gradient-to-br from-white/60 via-white/40 to-blue-500/5 border border-blue-500/10 shadow-md rounded-3xl p-5 space-y-4 relative overflow-hidden flex flex-col justify-between">
+                    <div className="absolute top-0 right-0 px-3 py-1 bg-blue-500/10 text-blue-800 text-[8px] font-mono font-bold tracking-widest uppercase rounded-bl-2xl">
+                      Core Flexi Cap
+                    </div>
+                    <div className="space-y-2">
+                      <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200/50 flex items-center justify-center text-blue-600 text-sm font-bold">PP</div>
+                      <h4 className="text-xs font-bold text-neutral-900 leading-snug">Parag Parikh Flexi Cap Fund (Direct Growth)</h4>
+                      <p className="text-[10px] text-neutral-500 leading-relaxed font-sans">
+                        Value investing philosophy combining Indian equities with international tech leaders. Exceptional downside risk protection and management honesty.
+                      </p>
+                    </div>
+                    <div className="pt-2 border-t border-border/20 flex justify-between items-center">
+                      <span className="text-[9px] font-mono font-bold text-neutral-400">AMFI Code: 122639</span>
+                      <button onClick={() => { setActiveTab("top-mf"); setTopMfSearch("122639"); }} className="text-[10px] font-bold text-primary hover:underline cursor-pointer">View NAV Performance &rarr;</button>
+                    </div>
+                  </div>
+
+                  {/* Pick 3 */}
+                  <div className="bg-gradient-to-br from-white/60 via-white/40 to-amber-500/5 border border-amber-500/10 shadow-md rounded-3xl p-5 space-y-4 relative overflow-hidden flex flex-col justify-between">
+                    <div className="absolute top-0 right-0 px-3 py-1 bg-amber-500/10 text-amber-800 text-[8px] font-mono font-bold tracking-widest uppercase rounded-bl-2xl">
+                      Mid Cap Compounding
+                    </div>
+                    <div className="space-y-2">
+                      <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200/50 flex items-center justify-center text-amber-600 text-sm font-bold">H</div>
+                      <h4 className="text-xs font-bold text-neutral-900 leading-snug">HDFC Mid-Cap Opportunities Fund (Direct)</h4>
+                      <p className="text-[10px] text-neutral-500 leading-relaxed font-sans">
+                        The ultimate mid-cap champion with unmatched fund size and sector selection. Consistent track record of beating benchmark index by high margins.
+                      </p>
+                    </div>
+                    <div className="pt-2 border-t border-border/20 flex justify-between items-center">
+                      <span className="text-[9px] font-mono font-bold text-neutral-400">AMFI Code: 120150</span>
+                      <button onClick={() => { setActiveTab("top-mf"); setTopMfSearch("120150"); }} className="text-[10px] font-bold text-primary hover:underline cursor-pointer">View NAV Performance &rarr;</button>
+                    </div>
+                  </div>
+
+                  {/* Pick 4 */}
+                  <div className="bg-gradient-to-br from-white/60 via-white/40 to-indigo-500/5 border border-indigo-500/10 shadow-md rounded-3xl p-5 space-y-4 relative overflow-hidden flex flex-col justify-between">
+                    <div className="absolute top-0 right-0 px-3 py-1 bg-indigo-500/10 text-indigo-800 text-[8px] font-mono font-bold tracking-widest uppercase rounded-bl-2xl">
+                      Stable Bluechip
+                    </div>
+                    <div className="space-y-2">
+                      <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-200/50 flex items-center justify-center text-indigo-600 text-sm font-bold">IC</div>
+                      <h4 className="text-xs font-bold text-neutral-900 leading-snug">ICICI Prudential Bluechip Fund (Direct Growth)</h4>
+                      <p className="text-[10px] text-neutral-500 leading-relaxed font-sans">
+                        High stability investing in India's top 100 enterprise giants. Very low volatility and excellent core portfolio stabilizer for wealth preservation.
+                      </p>
+                    </div>
+                    <div className="pt-2 border-t border-border/20 flex justify-between items-center">
+                      <span className="text-[9px] font-mono font-bold text-neutral-400">AMFI Code: 120586</span>
+                      <button onClick={() => { setActiveTab("top-mf"); setTopMfSearch("120586"); }} className="text-[10px] font-bold text-primary hover:underline cursor-pointer">View NAV Performance &rarr;</button>
+                    </div>
+                  </div>
+
+                  {/* Pick 5 */}
+                  <div className="bg-gradient-to-br from-white/60 via-white/40 to-rose-500/5 border border-rose-500/10 shadow-md rounded-3xl p-5 space-y-4 relative overflow-hidden flex flex-col justify-between">
+                    <div className="absolute top-0 right-0 px-3 py-1 bg-rose-500/10 text-rose-800 text-[8px] font-mono font-bold tracking-widest uppercase rounded-bl-2xl">
+                      Hybrid Income
+                    </div>
+                    <div className="space-y-2">
+                      <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200/50 flex items-center justify-center text-rose-600 text-sm font-bold">PP</div>
+                      <h4 className="text-xs font-bold text-neutral-900 leading-snug">Parag Parikh Conservative Hybrid Fund (Direct)</h4>
+                      <p className="text-[10px] text-neutral-500 leading-relaxed font-sans">
+                        A cautious mix of high-grade debt and conservative equity allocations. Perfect for senior citizens or safety-first investors looking for stable yield over FD.
+                      </p>
+                    </div>
+                    <div className="pt-2 border-t border-border/20 flex justify-between items-center">
+                      <span className="text-[9px] font-mono font-bold text-neutral-400">AMFI Code: 148866</span>
+                      <button onClick={() => { setActiveTab("top-mf"); setTopMfSearch("148866"); }} className="text-[10px] font-bold text-primary hover:underline cursor-pointer">View NAV Performance &rarr;</button>
+                    </div>
+                  </div>
+
+                  {/* Pick 6 */}
+                  <div className="bg-gradient-to-br from-white/60 via-white/40 to-violet-500/5 border border-violet-500/10 shadow-md rounded-3xl p-5 space-y-4 relative overflow-hidden flex flex-col justify-between">
+                    <div className="absolute top-0 right-0 px-3 py-1 bg-violet-500/10 text-violet-800 text-[8px] font-mono font-bold tracking-widest uppercase rounded-bl-2xl">
+                      Tax Saver (ELSS)
+                    </div>
+                    <div className="space-y-2">
+                      <div className="w-10 h-10 rounded-xl bg-violet-50 border border-violet-200/50 flex items-center justify-center text-violet-600 text-sm font-bold">Q</div>
+                      <h4 className="text-xs font-bold text-neutral-900 leading-snug">Quant ELSS Tax Saver Fund (Direct Growth)</h4>
+                      <p className="text-[10px] text-neutral-500 leading-relaxed font-sans">
+                        80C tax deduction benefits combined with stellar active strategy portfolio allocation. Consistently outperforms standard benchmarks in bull markets.
+                      </p>
+                    </div>
+                    <div className="pt-2 border-t border-border/20 flex justify-between items-center">
+                      <span className="text-[9px] font-mono font-bold text-neutral-400">AMFI Code: 120828</span>
+                      <button onClick={() => { setActiveTab("top-mf"); setTopMfSearch("120828"); }} className="text-[10px] font-bold text-primary hover:underline cursor-pointer">View NAV Performance &rarr;</button>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
