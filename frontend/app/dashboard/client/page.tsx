@@ -169,6 +169,18 @@ const PLAN_LABELS: Record<string, string> = {
   MAX: "Max Portfolio Plan",
 };
 
+const getSchemeCategory = (name: string): string => {
+  const n = name.toLowerCase();
+  if (n.includes("bluechip") || n.includes("large cap") || n.includes("large-cap") || n.includes("index")) return "Large Cap";
+  if (n.includes("mid cap") || n.includes("midcap") || n.includes("mid-cap")) return "Mid Cap";
+  if (n.includes("small cap") || n.includes("smallcap") || n.includes("small-cap")) return "Small Cap";
+  if (n.includes("flexi cap") || n.includes("flexicap") || n.includes("flexi-cap") || n.includes("multicap") || n.includes("multi cap")) return "Flexi Cap";
+  if (n.includes("elss") || n.includes("tax saver") || n.includes("tax-saver")) return "ELSS (Tax Saver)";
+  if (n.includes("debt") || n.includes("bond") || n.includes("liquid") || n.includes("treasury") || n.includes("money market") || n.includes("gilt")) return "Debt";
+  if (n.includes("hybrid") || n.includes("balanced") || n.includes("arbitrage") || n.includes("asset allocator")) return "Hybrid";
+  return "Equity - Other";
+};
+
 export default function ClientDashboard() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [userData, setUserData] = useState<{ 
@@ -1662,6 +1674,8 @@ export default function ClientDashboard() {
 
                       {(() => {
                         const groupedMap: Record<string, { schemeName: string, invested: number, current: number, units: number }> = {};
+                        const categoryMap: Record<string, { name: string, value: number }> = {};
+
                         existingClientData.folios.forEach((f: any) => {
                           const name = f.schemeName || 'Unknown Scheme';
                           if (!groupedMap[name]) {
@@ -1670,6 +1684,12 @@ export default function ClientDashboard() {
                           groupedMap[name].invested += f.purchaseValue || 0;
                           groupedMap[name].current += f.aum || 0;
                           groupedMap[name].units += f.units || 0;
+
+                          const category = getSchemeCategory(name);
+                          if (!categoryMap[category]) {
+                            categoryMap[category] = { name: category, value: 0 };
+                          }
+                          categoryMap[category].value += f.aum || 0;
                         });
 
                         const groupedList = Object.values(groupedMap);
@@ -1677,64 +1697,125 @@ export default function ClientDashboard() {
                           name: scheme.schemeName,
                           value: scheme.current
                         }));
+                        const categoryPieData = Object.values(categoryMap);
 
                         const totalAum = pieData.reduce((acc, curr) => acc + curr.value, 0);
 
                         return (
-                          <div className="flex flex-col gap-6">
-                            {/* Allocation Pie Chart (rendered on top) */}
-                            <div className="bg-white/40 border border-border/30 rounded-2xl p-5 flex flex-col justify-between items-center shadow-sm relative min-h-[280px] overflow-hidden w-full max-w-md mx-auto">
-                              <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-wider block font-bold mb-3 self-start">
-                                Asset Allocation
-                              </span>
-                              {totalAum > 0 ? (
-                                <div className="w-full flex-1 flex flex-col justify-center items-center">
-                                  <div className="w-full h-[200px] relative">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                      <PieChart>
-                                        <Pie
-                                          data={pieData}
-                                          cx="50%"
-                                          cy="50%"
-                                          innerRadius={45}
-                                          outerRadius={65}
-                                          paddingAngle={3}
-                                          dataKey="value"
-                                        >
-                                          {pieData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={SLEEK_COLORS[index % SLEEK_COLORS.length]} />
-                                          ))}
-                                        </Pie>
-                                        <Tooltip content={<CustomTooltip />} />
-                                        <Legend 
-                                          layout="horizontal" 
-                                          verticalAlign="bottom" 
-                                          align="center"
-                                          iconType="circle"
-                                          content={({ payload }) => (
-                                            <div className="flex flex-wrap gap-x-2.5 gap-y-1 justify-center mt-2 max-h-[60px] overflow-y-auto w-full px-1">
-                                              {payload?.map((entry: any, idx: number) => {
-                                                const percentage = totalAum > 0 ? ((pieData[idx]?.value || 0) / totalAum) * 100 : 0;
-                                                return (
-                                                  <div key={idx} className="flex items-center gap-1 text-[9px] text-neutral-600 font-sans font-medium">
-                                                    <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
-                                                    <span className="truncate max-w-[90px]" title={entry.value}>{entry.value}</span>
-                                                    <span className="text-neutral-400 font-mono">({percentage.toFixed(0)}%)</span>
-                                                  </div>
-                                                );
-                                              })}
-                                            </div>
-                                          )}
-                                        />
-                                      </PieChart>
-                                    </ResponsiveContainer>
+                          <div className="flex flex-col gap-6 w-full">
+                            {/* Grid wrapper for both charts side by side */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                              
+                              {/* Chart 1: Scheme Allocation */}
+                              <div className="bg-white/40 border border-border/30 rounded-2xl p-5 flex flex-col justify-between items-center shadow-sm relative min-h-[300px] overflow-hidden w-full">
+                                <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-wider block font-bold mb-3 self-start">
+                                  Asset Allocation (By Scheme)
+                                </span>
+                                {totalAum > 0 ? (
+                                  <div className="w-full flex-1 flex flex-col justify-center items-center">
+                                    <div className="w-full h-[200px] relative">
+                                      <ResponsiveContainer width="100%" height="100%">
+                                        <PieChart>
+                                          <Pie
+                                            data={pieData}
+                                            cx="50%"
+                                            cy="50%"
+                                            innerRadius={45}
+                                            outerRadius={65}
+                                            paddingAngle={3}
+                                            dataKey="value"
+                                          >
+                                            {pieData.map((entry, index) => (
+                                              <Cell key={`cell-${index}`} fill={SLEEK_COLORS[index % SLEEK_COLORS.length]} />
+                                            ))}
+                                          </Pie>
+                                          <Tooltip content={<CustomTooltip />} />
+                                          <Legend 
+                                            layout="horizontal" 
+                                            verticalAlign="bottom" 
+                                            align="center"
+                                            iconType="circle"
+                                            content={({ payload }) => (
+                                              <div className="flex flex-wrap gap-x-2.5 gap-y-1 justify-center mt-2 max-h-[60px] overflow-y-auto w-full px-1">
+                                                {payload?.map((entry: any, idx: number) => {
+                                                  const percentage = totalAum > 0 ? ((pieData[idx]?.value || 0) / totalAum) * 100 : 0;
+                                                  return (
+                                                    <div key={idx} className="flex items-center gap-1 text-[9px] text-neutral-600 font-sans font-medium font-bold">
+                                                      <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
+                                                      <span className="truncate max-w-[90px]" title={entry.value}>{entry.value}</span>
+                                                      <span className="text-neutral-400 font-mono font-medium">({percentage.toFixed(0)}%)</span>
+                                                    </div>
+                                                  );
+                                                })}
+                                              </div>
+                                            )}
+                                          />
+                                        </PieChart>
+                                      </ResponsiveContainer>
+                                    </div>
                                   </div>
-                                </div>
-                              ) : (
-                                <div className="text-neutral-400 text-xs font-sans py-12">
-                                  No asset allocation valuation found.
-                                </div>
-                              )}
+                                ) : (
+                                  <div className="text-neutral-400 text-xs font-sans py-12">
+                                    No asset allocation valuation found.
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Chart 2: Category Allocation */}
+                              <div className="bg-white/40 border border-border/30 rounded-2xl p-5 flex flex-col justify-between items-center shadow-sm relative min-h-[300px] overflow-hidden w-full">
+                                <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-wider block font-bold mb-3 self-start">
+                                  Category Allocation (By Segment)
+                                </span>
+                                {totalAum > 0 ? (
+                                  <div className="w-full flex-1 flex flex-col justify-center items-center">
+                                    <div className="w-full h-[200px] relative">
+                                      <ResponsiveContainer width="100%" height="100%">
+                                        <PieChart>
+                                          <Pie
+                                            data={categoryPieData}
+                                            cx="50%"
+                                            cy="50%"
+                                            innerRadius={45}
+                                            outerRadius={65}
+                                            paddingAngle={3}
+                                            dataKey="value"
+                                          >
+                                            {categoryPieData.map((entry, index) => (
+                                              <Cell key={`cell-${index}`} fill={SLEEK_COLORS[(index + 3) % SLEEK_COLORS.length]} />
+                                            ))}
+                                          </Pie>
+                                          <Tooltip content={<CustomTooltip />} />
+                                          <Legend 
+                                            layout="horizontal" 
+                                            verticalAlign="bottom" 
+                                            align="center"
+                                            iconType="circle"
+                                            content={({ payload }) => (
+                                              <div className="flex flex-wrap gap-x-2.5 gap-y-1 justify-center mt-2 max-h-[60px] overflow-y-auto w-full px-1">
+                                                {payload?.map((entry: any, idx: number) => {
+                                                  const percentage = totalAum > 0 ? ((categoryPieData[idx]?.value || 0) / totalAum) * 100 : 0;
+                                                  return (
+                                                    <div key={idx} className="flex items-center gap-1 text-[9px] text-neutral-600 font-sans font-medium font-bold">
+                                                      <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
+                                                      <span className="truncate max-w-[90px]" title={entry.value}>{entry.value}</span>
+                                                      <span className="text-neutral-400 font-mono font-medium">({percentage.toFixed(0)}%)</span>
+                                                    </div>
+                                                  );
+                                                })}
+                                              </div>
+                                            )}
+                                          />
+                                        </PieChart>
+                                      </ResponsiveContainer>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="text-neutral-400 text-xs font-sans py-12">
+                                    No category allocation valuation found.
+                                  </div>
+                                )}
+                              </div>
+
                             </div>
 
                             {/* Table List (rendered on bottom, full-width) */}
