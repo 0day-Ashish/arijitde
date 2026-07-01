@@ -1900,7 +1900,7 @@ export default function AdminDashboard() {
                                 ))}
                               </Pie>
                               <Tooltip
-                                formatter={(value: number) => [`₹${value.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`, 'Amount']}
+                                formatter={(value: any) => [`₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`, 'Amount']}
                                 contentStyle={{
                                   background: '#ffffff',
                                   border: '1px solid #e5e5e5',
