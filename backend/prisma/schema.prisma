@@ -32,6 +32,7 @@ model User {
   leads             Lead[]
   client            Client?
   advisorySessions  AdvisorySession[]
+  supportQueries    SupportQuery[]
 }
 
 enum Role {
@@ -396,6 +397,19 @@ model AdvisorySession {
   notes          String?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
+
+  @@index([userId])
+}
+
+model SupportQuery {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject   String
+  message   String
+  status    String   @default("PENDING") // PENDING, RESOLVED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
 }

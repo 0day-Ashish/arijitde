@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import SessionSync from "@/components/SessionSync";
+import CursorFollower from "@/components/CursorFollower";
 
 const chillax = localFont({
   src: "../public/fonts/Chillax-Regular.otf",
@@ -83,6 +84,7 @@ export default function RootLayout({
           }}
         />
         <SessionSync />
+        <CursorFollower />
         {children}
       </body>
     </html>

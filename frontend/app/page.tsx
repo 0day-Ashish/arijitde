@@ -135,10 +135,7 @@ export default function Home() {
   const [contactError, setContactError] = useState<string | null>(null);
   const [submittedName, setSubmittedName] = useState("");
 
-  // Reward States
-  const [rewardClaimed, setRewardClaimed] = useState(false);
-  const [rewardAmount, setRewardAmount] = useState(0);
-  const [hasClaimedToday, setHasClaimedToday] = useState(false);
+
 
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -190,49 +187,6 @@ export default function Home() {
       const token = localStorage.getItem("token");
       const loggedInNow = !!token;
       setIsLoggedIn(loggedInNow);
-
-      if (loggedInNow) {
-        const claimedDate = localStorage.getItem('dailyRewardClaimedDate');
-        const today = new Date().toDateString();
-
-        if (claimedDate !== today) {
-          try {
-            const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-            const res = await fetch(`${backendUrl}/api/auth/claim-daily-reward`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-              },
-              body: JSON.stringify({ clientDate: today })
-            });
-            const data = await res.json();
-            if (data.success && data.data) {
-              const points = data.data.pointsClaimed;
-              const newBalance = data.data.newBalance;
-
-              localStorage.setItem("finPointsBalance", newBalance.toString());
-              localStorage.setItem("dailyRewardClaimedDate", today);
-              localStorage.setItem("lastRewardAmount", points.toString());
-
-              setRewardAmount(points);
-              setRewardClaimed(true);
-              setHasClaimedToday(true);
-
-              // Notify navbar
-              window.dispatchEvent(new Event("points-updated"));
-            } else {
-              if (data.error === 'Already claimed today') {
-                localStorage.setItem("dailyRewardClaimedDate", today);
-                setHasClaimedToday(true);
-                setRewardClaimed(true);
-              }
-            }
-          } catch (err) {
-            console.error("Failed to claim daily reward from DB", err);
-          }
-        }
-      }
     }
   };
 
@@ -268,17 +222,7 @@ export default function Home() {
     const day = new Date().getDate();
     setDailyQuote(quotesList[day % quotesList.length] || quotesList[0]);
 
-    // Check if daily reward claimed today
-    const claimedDate = localStorage.getItem('dailyRewardClaimedDate');
-    const today = new Date().toDateString();
-    if (claimedDate === today) {
-      setHasClaimedToday(true);
-      setRewardClaimed(true);
-      const savedAmount = localStorage.getItem('lastRewardAmount');
-      if (savedAmount) {
-        setRewardAmount(Number(savedAmount));
-      }
-    }
+    
   }, []);
 
   // Cookie Acceptance State
@@ -1048,7 +992,7 @@ export default function Home() {
           <div className="text-center mb-12">
             <div className="flex items-center justify-center gap-3">
               <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-primary font-clash leading-tight mt-3">
-                Daily Wisdom & Rewards
+                Daily Wisdom
               </h2>
               <div className="w-20 h-20 md:w-28 md:h-28 shrink-0 mt-3">
                 <DotLottieReact
@@ -1059,7 +1003,7 @@ export default function Home() {
               </div>
             </div>
             <p className="text-[#64748B] text-sm leading-relaxed font-sans mt-3 max-w-xl mx-auto">
-              Get a new financial quote every 24 hours. Click the card below to turn it over and claim your daily FinPoints reward!
+              Get a new financial quote every 24 hours.
             </p>
           </div>
 
@@ -1137,16 +1081,6 @@ export default function Home() {
                       Helping retail and corporate investors optimize their mutual fund distribution portfolios, restructure tax impact, and execute active rebalancing.
                     </p>
                   </div>
-                </div>
-
-                <div className="w-full relative z-10 font-sans">
-                  <a
-                    href={isLoggedIn ? dashboardUrl : "/onboarding"}
-                    onClick={(e) => e.stopPropagation()}
-                    className="block w-full text-center py-3 bg-primary hover:bg-primary/95 text-white font-bold text-xs rounded-xl transition duration-200"
-                  >
-                    {isLoggedIn ? "Access Dashboard" : "Book Free Consultation"}
-                  </a>
                 </div>
               </div>
             </div>
@@ -1263,7 +1197,7 @@ export default function Home() {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Ashish Ranjan"
+                  placeholder="e.g. Your Name"
                   value={contactName}
                   onChange={(e) => setContactName(e.target.value)}
                   className="w-full bg-white/40 border border-border rounded-xl p-3 text-xs text-foreground placeholder-slate-400 focus:outline-none focus:border-primary font-sans transition duration-200"
@@ -1275,7 +1209,7 @@ export default function Home() {
                 <input
                   type="email"
                   required
-                  placeholder="e.g. ashish@example.com"
+                  placeholder="e.g. youremail@example.com"
                   value={contactEmail}
                   onChange={(e) => setContactEmail(e.target.value)}
                   className="w-full bg-white/40 border border-border rounded-xl p-3 text-xs text-foreground placeholder-slate-400 focus:outline-none focus:border-primary font-sans transition duration-200"

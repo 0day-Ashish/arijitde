@@ -163,9 +163,6 @@ router.get('/users', async (req: AuthenticatedRequest, res: Response, next) => {
         leads: {
           orderBy: { createdAt: 'desc' },
         },
-        payments: {
-          orderBy: { createdAt: 'desc' },
-        },
         client: true,
       },
       orderBy: { createdAt: 'desc' },
@@ -1152,6 +1149,57 @@ router.get('/aum-distribution', async (req: AuthenticatedRequest, res: Response,
         totalAUM,
         schemes: schemesWithPercentage,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 18. GET /api/admin/queries
+router.get('/queries', async (req: AuthenticatedRequest, res: Response, next) => {
+  try {
+    const queries = await prisma.supportQuery.findMany({
+      include: {
+        user: {
+          select: {
+            name: true,
+            email: true,
+            phone: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    res.json({
+      success: true,
+      data: queries,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 19. PATCH /api/admin/queries/:id
+router.patch('/queries/:id', async (req: AuthenticatedRequest, res: Response, next) => {
+  try {
+    const { id } = z.object({ id: z.string().uuid('Invalid query ID format') }).parse(req.params);
+    const bodySchema = z.object({
+      status: z.enum(['PENDING', 'RESOLVED']),
+    });
+    const parsedBody = bodySchema.parse(req.body);
+
+    const query = await prisma.supportQuery.update({
+      where: { id },
+      data: {
+        status: parsedBody.status,
+      },
+    });
+
+    res.json({
+      success: true,
+      message: `Query status updated to ${parsedBody.status}`,
+      data: query,
     });
   } catch (error) {
     next(error);

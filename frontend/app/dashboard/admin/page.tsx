@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import {
   Users,
   User,
@@ -30,7 +31,8 @@ import {
   Plus,
   Trash2,
   Save,
-  Eye
+  Eye,
+  HelpCircle
 } from 'lucide-react';
 
 // Goal Mapping helper
@@ -56,9 +58,19 @@ const DetailField = ({ label, value }: { label: string; value: any }) => (
   </div>
 );
 
+const CHART_COLORS = [
+  '#09090b', // Zinc 950 (Main Accent)
+  '#3b82f6', // Blue 500
+  '#10b981', // Emerald 500
+  '#f59e0b', // Amber 500
+  '#6366f1', // Indigo 500
+  '#8b5cf6', // Violet 500
+  '#ec4899', // Pink 500
+];
 
 export default function AdminDashboard() {
   const [isLoaded, setIsLoaded] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [adminUser, setAdminUser] = useState<any>(null);
 
@@ -76,7 +88,12 @@ export default function AdminDashboard() {
     totalAUM: 0,
   });
   const [usersList, setUsersList] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<'users' | 'existingClients' | 'consultations' | 'aum' | 'liveSessions'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'existingClients' | 'consultations' | 'aum' | 'liveSessions' | 'queries'>('users');
+
+  // Support queries states
+  const [supportQueries, setSupportQueries] = useState<any[]>([]);
+  const [fetchingQueries, setFetchingQueries] = useState(false);
+  const [resolvingQueryId, setResolvingQueryId] = useState<string | null>(null);
 
   // Live Portfolio Review Discussion Queue state variables
   const [advisorySessions, setAdvisorySessions] = useState<any[]>([]);
@@ -173,6 +190,7 @@ export default function AdminDashboard() {
 
   // 1. Auth Guard and token initialisation
   useEffect(() => {
+    setMounted(true);
     document.title = 'Admin Workspace | FinAnalysis';
     const savedToken = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');
@@ -349,6 +367,52 @@ export default function AdminDashboard() {
       fetchAumDistribution();
     }
   }, [activeTab]);
+
+  const fetchAllQueries = async () => {
+    if (!token) return;
+    try {
+      setFetchingQueries(true);
+      const headers = { 'Authorization': `Bearer ${token}` };
+      const res = await fetch(`${backendUrl}/api/admin/queries`, { headers });
+      if (!res.ok) throw new Error('Failed to retrieve client queries');
+      const resData = await res.json();
+      setSupportQueries(resData.data || []);
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'An unexpected error occurred while fetching support queries');
+    } finally {
+      setFetchingQueries(false);
+    }
+  };
+
+  const handleResolveQuery = async (queryId: string) => {
+    if (!token) return;
+    try {
+      setResolvingQueryId(queryId);
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      };
+      const res = await fetch(`${backendUrl}/api/admin/queries/${queryId}`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ status: 'RESOLVED' })
+      });
+      if (!res.ok) throw new Error('Failed to resolve query');
+      await fetchAllQueries();
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'Failed to resolve query');
+    } finally {
+      setResolvingQueryId(null);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'queries') {
+      fetchAllQueries();
+    }
+  }, [activeTab, token]);
 
 
   const handleExistingClientsFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -862,6 +926,36 @@ export default function AdminDashboard() {
     (scheme.schemeName || '').toLowerCase().includes(aumSearchQuery.toLowerCase())
   );
 
+  // Grouped data for the AUM allocation Pie Chart (top 5 + others)
+  const pieChartData = (() => {
+    const schemes = aumData?.schemes || [];
+    if (schemes.length === 0) return [];
+    const sorted = [...schemes].sort((a, b) => b.amount - a.amount);
+    if (sorted.length <= 6) {
+      return sorted.map(s => ({
+        name: s.schemeName || 'Unknown Scheme',
+        value: s.amount || 0,
+        percentage: s.percentage || 0
+      }));
+    }
+    const top5 = sorted.slice(0, 5);
+    const othersAmount = sorted.slice(5).reduce((acc, curr) => acc + (curr.amount || 0), 0);
+    const totalAmount = sorted.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+    const othersPercentage = totalAmount > 0 ? (othersAmount / totalAmount) * 100 : 0;
+    return [
+      ...top5.map(s => ({
+        name: s.schemeName || 'Unknown Scheme',
+        value: s.amount || 0,
+        percentage: s.percentage || 0
+      })),
+      {
+        name: 'Others',
+        value: othersAmount,
+        percentage: othersPercentage
+      }
+    ];
+  })();
+
 
   // Initialize Client edit profile inputs
   const selectUserForDetails = (user: any) => {
@@ -1077,6 +1171,19 @@ export default function AdminDashboard() {
               }`}
           >
             AUM Breakdown
+          </button>
+
+          <button
+            onClick={() => setActiveTab('queries')}
+            className={`py-3 text-sm font-bold font-clash tracking-wide border-b-2 cursor-pointer transition duration-200 flex items-center gap-2 whitespace-nowrap ${activeTab === 'queries' ? 'border-neutral-900 text-neutral-900' : 'border-transparent text-neutral-500 hover:text-neutral-900'
+              }`}
+          >
+            Queries
+            {supportQueries.filter(q => q.status === 'PENDING').length > 0 && (
+              <span className="px-2 py-0.5 text-[10px] bg-amber-500 text-white rounded-full font-bold">
+                {supportQueries.filter(q => q.status === 'PENDING').length}
+              </span>
+            )}
           </button>
         </div>
 
@@ -1339,18 +1446,6 @@ export default function AdminDashboard() {
                             <p className="text-xs text-neutral-500 font-mono mt-0.5">
                               Email: {session.user?.email || "N/A"} | Phone: {session.user?.phone || "N/A"}
                             </p>
-                          </div>
-
-                          <div className="flex gap-2 shrink-0">
-                            {session.status !== "REFUNDED" && session.status !== "COMPLETED" && (
-                              <button
-                                onClick={() => handleRefundSession(session.id)}
-                                disabled={updatingSession}
-                                className="px-4 py-2 border border-red-200 hover:border-red-500 bg-red-50/30 hover:bg-red-50 text-red-600 font-bold text-xs rounded-xl transition duration-200 cursor-pointer"
-                              >
-                                💸 Trigger Full Refund
-                              </button>
-                            )}
                           </div>
                         </div>
 
@@ -1752,17 +1847,95 @@ export default function AdminDashboard() {
 
           {activeTab === 'aum' && (
             <div className="space-y-6">
-              {/* Total AUM Card */}
-              <div className="bg-white border border-neutral-200 rounded-3xl p-6 md:p-8 shadow-sm flex flex-col justify-between relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-neutral-100 rounded-full blur-3xl opacity-50 -mr-20 -mt-20"></div>
-                <div className="relative z-10">
-                  <span className="text-[10px] md:text-xs font-mono uppercase tracking-widest text-neutral-400 block mb-2">Total Assets Under Management (AUM)</span>
-                  <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight font-clash text-neutral-900">
-                    ₹{aumData.totalAUM ? aumData.totalAUM.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : '0.00'}
-                  </h2>
-                  <p className="text-xs md:text-sm text-neutral-500 font-sans mt-2">
-                    Aggregated sum of all investments across imported mutual fund portfolios.
-                  </p>
+              {/* Top Cards row: Total AUM & Pie Chart */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                {/* Total AUM Card */}
+                <div className="lg:col-span-6 bg-white border border-neutral-200 rounded-3xl p-6 md:p-8 shadow-sm flex flex-col justify-center relative overflow-hidden min-h-[220px]">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-neutral-100 rounded-full blur-3xl opacity-50 -mr-20 -mt-20"></div>
+                  <div className="relative z-10">
+                    <span className="text-[10px] md:text-xs font-mono uppercase tracking-widest text-neutral-400 block mb-2">Total Assets Under Management (AUM)</span>
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight font-clash text-neutral-900 leading-none">
+                      ₹{aumData.totalAUM ? aumData.totalAUM.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : '0.00'}
+                    </h2>
+                    <p className="text-xs text-neutral-500 font-sans mt-2">
+                      Aggregated sum of all investments across imported mutual fund portfolios.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Pie Chart Card */}
+                <div className="lg:col-span-6 bg-white border border-neutral-200 rounded-3xl p-6 shadow-sm flex flex-col justify-between relative overflow-hidden min-h-[220px]">
+                  <div className="relative z-10 w-full h-full flex flex-col">
+                    <span className="text-[10px] md:text-xs font-mono uppercase tracking-widest text-neutral-400 block mb-4">AUM Allocation Breakdown</span>
+                    
+                    {fetchingAumData ? (
+                      <div className="flex-1 flex items-center justify-center text-xs text-neutral-400 font-mono">
+                        <span>Loading chart...</span>
+                      </div>
+                    ) : filteredSchemes.length === 0 ? (
+                      <div className="flex-1 flex items-center justify-center text-xs text-neutral-400 font-mono py-8">
+                        <span>No scheme data available to display chart.</span>
+                      </div>
+                    ) : !mounted ? (
+                      <div className="flex-1 flex items-center justify-center text-xs text-neutral-400 font-mono py-8">
+                        <span>Initializing chart...</span>
+                      </div>
+                    ) : (
+                      <div className="flex-1 flex flex-col sm:flex-row items-center justify-between gap-4">
+                        {/* Left: Recharts Pie Chart */}
+                        <div className="w-full sm:w-[180px] h-[130px] relative shrink-0">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Pie
+                                data={pieChartData}
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={35}
+                                outerRadius={55}
+                                paddingAngle={3}
+                                dataKey="value"
+                              >
+                                {pieChartData.map((entry, index) => (
+                                  <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                                ))}
+                              </Pie>
+                              <Tooltip
+                                formatter={(value: number) => [`₹${value.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`, 'Amount']}
+                                contentStyle={{
+                                  background: '#ffffff',
+                                  border: '1px solid #e5e5e5',
+                                  borderRadius: '12px',
+                                  fontSize: '11px',
+                                  fontFamily: 'monospace',
+                                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                                }}
+                              />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </div>
+
+                        {/* Right: Legend of top items */}
+                        <div className="flex-1 w-full space-y-1.5 max-h-[130px] overflow-y-auto pr-1">
+                          {pieChartData.map((item, index) => (
+                            <div key={index} className="flex items-center justify-between text-[11px] font-mono">
+                              <div className="flex items-center gap-1.5 truncate pr-2">
+                                <span
+                                  className="w-2 h-2 rounded-full shrink-0"
+                                  style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
+                                />
+                                <span className="text-neutral-700 truncate font-sans font-medium" title={item.name}>
+                                  {item.name}
+                                </span>
+                              </div>
+                              <span className="text-neutral-900 font-bold shrink-0">
+                                {item.percentage.toFixed(1)}%
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -1817,6 +1990,95 @@ export default function AdminDashboard() {
                       ))}
                     </div>
                   )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'queries' && (
+            <div className="space-y-6 animate-in fade-in duration-200">
+              <div>
+                <h2 className="text-xl font-bold tracking-tight font-clash text-neutral-900">Client Support Queries</h2>
+                <p className="text-[11px] md:text-xs text-neutral-500 font-mono mt-1">Manage and resolve inquiries submitted by premium clients</p>
+              </div>
+
+              <div className="border border-neutral-200 bg-white rounded-2xl overflow-hidden shadow-sm">
+                <div className="overflow-x-auto w-full">
+                  <table className="w-full text-left text-xs font-sans text-neutral-900">
+                    <thead>
+                      <tr className="border-b border-neutral-200 bg-neutral-50 uppercase tracking-widest text-[10px] font-bold text-neutral-500 select-none">
+                        <th className="px-6 py-4 w-[160px]">Submitted At</th>
+                        <th className="px-6 py-4 w-[200px]">Client</th>
+                        <th className="px-6 py-4 w-[220px]">Subject</th>
+                        <th className="px-6 py-4">Message</th>
+                        <th className="px-6 py-4 w-[120px]">Status</th>
+                        <th className="px-6 py-4 w-[140px] text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-neutral-100">
+                      {fetchingQueries ? (
+                        <tr>
+                          <td colSpan={6} className="px-6 py-16 text-center text-neutral-400 font-mono">
+                            <div className="flex flex-col items-center justify-center gap-2">
+                              <Loader2 className="w-5 h-5 text-neutral-900 animate-spin" />
+                              <span>Loading support queries...</span>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : supportQueries.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="px-6 py-16 text-center text-neutral-400 font-mono">
+                            No support queries found.
+                          </td>
+                        </tr>
+                      ) : (
+                        supportQueries.map((query) => (
+                          <tr key={query.id} className="hover:bg-neutral-50/50 transition-colors duration-150 items-start">
+                            <td className="px-6 py-4 whitespace-nowrap text-neutral-500 font-mono align-top">
+                              {new Date(query.createdAt).toLocaleString('en-IN', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </td>
+                            <td className="px-6 py-4 align-top">
+                              <div className="font-semibold text-neutral-900 leading-snug">{query.user?.name || 'Premium Client'}</div>
+                              <div className="text-[10px] text-neutral-500 font-mono mt-0.5">{query.user?.email}</div>
+                              {query.user?.phone && (
+                                <div className="text-[10px] text-neutral-400 font-mono mt-0.5">{query.user.phone}</div>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 font-bold text-neutral-800 align-top max-w-[220px] truncate" title={query.subject}>
+                              {query.subject}
+                            </td>
+                            <td className="px-6 py-4 text-neutral-600 align-top whitespace-pre-line leading-relaxed font-sans max-w-[400px]">
+                              {query.message}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap align-top">
+                              <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-[9px] font-bold font-mono uppercase tracking-wider bg-amber-500/10 text-amber-700 border border-amber-500/20" style={query.status === 'RESOLVED' ? {backgroundColor: 'rgba(16,185,129,0.1)', color: '#047857', borderColor: 'rgba(16,185,129,0.2)'} : {}}>
+                                {query.status}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap align-top text-right">
+                              {query.status === 'PENDING' ? (
+                                <button
+                                  onClick={() => handleResolveQuery(query.id)}
+                                  disabled={resolvingQueryId === query.id}
+                                  className="px-3.5 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white font-bold text-[10px] rounded-lg transition duration-200 disabled:opacity-50 cursor-pointer select-none"
+                                >
+                                  {resolvingQueryId === query.id ? 'Resolving...' : 'Resolve'}
+                                </button>
+                              ) : (
+                                <span className="text-[10px] text-neutral-400 font-mono font-medium">No actions</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
