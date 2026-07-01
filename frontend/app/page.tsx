@@ -148,7 +148,7 @@ export default function Home() {
       setContactError(null);
       setContactSuccess(false);
 
-      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://finanalysis-backend.onrender.com';
       const response = await fetch(`${backendUrl}/api/contact`, {
         method: "POST",
         headers: {

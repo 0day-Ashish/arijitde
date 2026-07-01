@@ -12,7 +12,7 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [dashboardUrl, setDashboardUrl] = useState('/onboarding');
   const [userRole, setUserRole] = useState<string | null>(null);
-  const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  const backendUrl = process.env.NEXT_PUBLIC_API_URL || "https://finanalysis-backend.onrender.com";
 
   useEffect(() => {
     const token = localStorage.getItem('token');

@@ -169,7 +169,7 @@ export default function UserDashboard() {
     { fundName: "", type: "SIP", startDate: "", sipAmount: 0, invested: 0, currentValue: 0 }
   ]);
 
-  const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  const backendUrl = process.env.NEXT_PUBLIC_API_URL || "https://finanalysis-backend.onrender.com";
 
   // Auth Guard & Initial Fetch
   useEffect(() => {
