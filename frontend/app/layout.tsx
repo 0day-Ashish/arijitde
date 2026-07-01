@@ -4,6 +4,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import SessionSync from "@/components/SessionSync";
 import CursorFollower from "@/components/CursorFollower";
+import { Analytics } from "@vercel/analytics/next"
 
 const chillax = localFont({
   src: "../public/fonts/Chillax-Regular.otf",
@@ -84,6 +85,7 @@ export default function RootLayout({
           }}
         />
         <SessionSync />
+        <Analytics />
         <CursorFollower />
         {children}
       </body>
