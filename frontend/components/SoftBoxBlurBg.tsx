@@ -4,57 +4,58 @@ import React, { useMemo, useState, useEffect } from 'react';
 
 export default function SoftBoxBlurBg() {
   const [mounted, setMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    
+    const checkDevice = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkDevice();
+    window.addEventListener('resize', checkDevice);
+    return () => window.removeEventListener('resize', checkDevice);
   }, []);
 
   // Generate 480 cells that will auto-flow into a very high-density grid
   const cellCount = 480;
 
   const cells = useMemo(() => {
+    if (isMobile) return []; // Don't compute cells if on mobile
+    
     const list = [];
     const maxCols = 36;
     const maxRows = 14;
 
     for (let i = 0; i < cellCount; i++) {
-      // Create a virtual column and row index for patterning
       const col = i % maxCols;
       const row = Math.floor(i / maxCols);
 
-      // Smooth vertical wave offset based on column index (rounded to 2 decimal places)
       const waveOffset = parseFloat((Math.sin(col * 0.9) * 6).toFixed(2));
-      
-      // Staggered animation delay based on row and column coordinates (rounded to 2 decimal places)
       const delay = parseFloat((row * 0.15 + col * 0.08).toFixed(2));
 
-      // Base opacity using a sine pattern (rounded to 4 decimal places)
       const rawOpacity = 0.2 + 0.45 * Math.sin((row / maxRows) * Math.PI) * Math.cos((col / maxCols) * Math.PI * 0.85);
       const opacity = parseFloat(Math.max(0.08, Math.min(0.8, rawOpacity)).toFixed(4));
 
-      // Assign rich white-and-blue glassmorphic colors
       const colorSeed = (row * 7 + col * 13) % 4;
       let cellBg = '';
       let cellBorder = '';
       let cellShadow = '';
 
       if (colorSeed === 0) {
-        // Deep glass blue
         cellBg = 'linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(147, 197, 253, 0.35) 50%, rgba(59, 130, 246, 0.25) 100%)';
         cellBorder = 'rgba(255, 255, 255, 0.35)';
         cellShadow = 'rgba(147, 197, 253, 0.2)';
       } else if (colorSeed === 1) {
-        // Crisp white glass
         cellBg = 'linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.35) 60%, rgba(219, 234, 254, 0.2) 100%)';
         cellBorder = 'rgba(255, 255, 255, 0.55)';
         cellShadow = 'rgba(219, 234, 254, 0.15)';
       } else if (colorSeed === 2) {
-        // Soft glowing cyan-blue
         cellBg = 'linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0%, rgba(186, 230, 253, 0.35) 45%, rgba(147, 197, 253, 0.25) 100%)';
         cellBorder = 'rgba(255, 255, 255, 0.4)';
         cellShadow = 'rgba(186, 230, 253, 0.15)';
       } else {
-        // Translucent ambient blue
         cellBg = 'linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0%, rgba(219, 234, 254, 0.2) 50%, rgba(147, 197, 253, 0.15) 100%)';
         cellBorder = 'rgba(255, 255, 255, 0.35)';
         cellShadow = 'rgba(147, 197, 253, 0.1)';
@@ -71,9 +72,9 @@ export default function SoftBoxBlurBg() {
       });
     }
     return list;
-  }, [cellCount]);
+  }, [cellCount, isMobile]);
 
-  if (!mounted) {
+  if (!mounted || isMobile) {
     return null;
   }
 
@@ -141,7 +142,6 @@ export default function SoftBoxBlurBg() {
               animation: 'pillow-float 8s ease-in-out infinite',
               animationDelay: `${cell.delay}s`,
               transform: `translateY(${cell.waveOffset}px)`,
-              // CSS variables for keyframe animations to consume dynamically
               ['--wave-offset' as any]: `${cell.waveOffset}px`,
               ['--shadow-color' as any]: cell.cellShadow,
             }}
