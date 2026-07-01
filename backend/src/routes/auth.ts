@@ -66,8 +66,10 @@ router.post('/otp/send', authLimiter, async (req, res, next) => {
     // Store in-memory
     saveOTP(formattedEmail, otp);
 
-    // Send email
-    await sendOTP(formattedEmail, otp);
+    // Send email in background to prevent blocking the response
+    sendOTP(formattedEmail, otp).catch((err) =>
+      console.error('Failed to send OTP in background:', err)
+    );
 
     res.json({
       success: true,
@@ -447,7 +449,10 @@ router.post('/password/reset/send-otp', authLimiter, async (req, res, next) => {
 
     const otp = generateOTP();
     saveOTP(formattedEmail, otp);
-    await sendOTP(formattedEmail, otp);
+    // Send email in background to prevent blocking the response
+    sendOTP(formattedEmail, otp).catch((err) =>
+      console.error('Failed to send OTP in background:', err)
+    );
 
     res.json({
       success: true,
@@ -568,7 +573,10 @@ router.post('/activation/send-otp', authLimiter, async (req, res, next) => {
     // 4. Send OTP
     const otp = generateOTP();
     saveOTP(formattedEmail, otp);
-    await sendOTP(formattedEmail, otp);
+    // Send email in background to prevent blocking the response
+    sendOTP(formattedEmail, otp).catch((err) =>
+      console.error('Failed to send OTP in background:', err)
+    );
 
     res.json({
       success: true,

@@ -78,7 +78,9 @@ router.post('/', authMiddleware, async (req: AuthenticatedRequest, res: Response
             </div>
           `,
         };
-        await transporter.sendMail(mailOptions);
+        transporter.sendMail(mailOptions).catch((err) =>
+          console.error('Failed to send advisory booking confirmation email in background:', err)
+        );
       }
     } catch (emailErr) {
       console.error('Failed to send advisory booking confirmation email:', emailErr);
@@ -377,7 +379,9 @@ router.post('/admin/sessions/:id/confirm', authMiddleware, adminMiddleware, asyn
             </div>
           `,
         };
-        await transporter.sendMail(mailOptions);
+        transporter.sendMail(mailOptions).catch((err) =>
+          console.error('Failed to send session confirmation email in background:', err)
+        );
       }
     } catch (emailErr) {
       console.error('Failed to send session confirmation email:', emailErr);
@@ -460,7 +464,9 @@ router.post('/admin/sessions/:id/refund', authMiddleware, adminMiddleware, async
             </div>
           `,
         };
-        await transporter.sendMail(mailOptions);
+        transporter.sendMail(mailOptions).catch((err) =>
+          console.error('Failed to send cancellation notification email in background:', err)
+        );
       }
     } catch (emailErr) {
       console.error('Failed to send cancellation notification email:', emailErr);
