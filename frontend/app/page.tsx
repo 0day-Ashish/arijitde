@@ -222,7 +222,7 @@ export default function Home() {
     const day = new Date().getDate();
     setDailyQuote(quotesList[day % quotesList.length] || quotesList[0]);
 
-    
+
   }, []);
 
   // Cookie Acceptance State
@@ -441,7 +441,6 @@ export default function Home() {
         screen1={
           <div className="flex flex-col items-center justify-center text-center px-6 max-w-5xl mx-auto space-y-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-white/20 backdrop-blur-md text-xs font-medium text-primary select-none">
-              <img src="/image.png" alt="Badge" className="h-4 w-4 object-contain" />
               <span>35+ Years of Certified Amfi-Registered Mutual Fund Distribution</span>
             </div>
             <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold text-primary font-chillax leading-tight tracking-tight uppercase">
@@ -480,9 +479,9 @@ export default function Home() {
                     <GoArrowDownRight className="inline-block ml-2 align-middle transition-transform duration-300 group-hover:translate-x-1 group-hover:translate-y-1" />
                   </span>
                 </button>
-                <div className={`grid transition-all duration-350 ease-in-out overflow-hidden text-lg md:text-xl text-foreground font-bold ${expandedOption === "about" ? "grid-rows-[1fr] mt-2.5 opacity-100" : "grid-rows-[0fr] opacity-0"
+                <div className={`grid transition-all duration-350 ease-in-out overflow-hidden text-sm md:text-base text-foreground font-bold ${expandedOption === "about" ? "grid-rows-[1fr] mt-2.5 opacity-100" : "grid-rows-[0fr] opacity-0"
                   }`}>
-                  <div className="overflow-hidden space-y-2.5 font-sans pr-4 leading-relaxed font-bold text-foreground text-lg md:text-xl">
+                  <div className="overflow-hidden space-y-2.5 font-sans pr-4 leading-relaxed font-bold text-foreground text-sm md:text-base">
                     <p>
                       FinAnalysis blends over 35 years of trusted AMFI-registered Mutual Fund distribution with modern technology and data science. Founded on a legacy started by <strong className="text-primary font-extrabold">Arindam De</strong> in 1989, we have transitioned across multiple market cycles to safeguard and grow client wealth. Today, <strong className="text-primary font-extrabold">Arijit De</strong> (SEBI-certified Mutual Fund Distributor ARN-273396 and SIF distributor) integrates computer science analytics, systematic portfolio optimization, and structured asset allocation, delivering a modern, data-backed approach to wealth management that prior generations never had access to.
                     </p>
@@ -502,9 +501,9 @@ export default function Home() {
                     <GoArrowDownRight className="inline-block ml-2 align-middle transition-transform duration-300 group-hover:translate-x-1 group-hover:translate-y-1" />
                   </span>
                 </button>
-                <div className={`grid transition-all duration-350 ease-in-out overflow-hidden text-lg md:text-xl text-foreground font-bold ${expandedOption === "services" ? "grid-rows-[1fr] mt-2.5 opacity-100" : "grid-rows-[0fr] opacity-0"
+                <div className={`grid transition-all duration-350 ease-in-out overflow-hidden text-sm md:text-base text-foreground font-bold ${expandedOption === "services" ? "grid-rows-[1fr] mt-2.5 opacity-100" : "grid-rows-[0fr] opacity-0"
                   }`}>
-                  <div className="overflow-hidden space-y-2.5 font-sans pr-4 leading-relaxed font-bold text-foreground text-lg md:text-xl">
+                  <div className="overflow-hidden space-y-2.5 font-sans pr-4 leading-relaxed font-bold text-foreground text-sm md:text-base">
                     <p>
                       We provide a comprehensive, fully regulated suite of financial and wealth creation solutions tailored to your unique lifecycle goals. This includes systematically managed <span className="font-extrabold text-primary">Mutual Funds & SIP planning</span> for long-term compound growth, high-yield <span className="font-extrabold text-primary">Fixed Deposits, Specialized Investment Funds (SIF)</span>, and <span className="font-extrabold text-primary">Portfolio Management Services (PMS)</span> for sophisticated asset allocation. Additionally, we protect your family's future with robust <span className="font-extrabold text-primary">Life Insurance (LIC), Mediclaim Health Insurance, Vehicle/Property Insurance</span>, and provide leverage options through <span className="font-extrabold text-primary">PNB Housing Finance</span> home loans.
                     </p>
@@ -524,9 +523,9 @@ export default function Home() {
                     <GoArrowDownRight className="inline-block ml-2 align-middle transition-transform duration-300 group-hover:translate-x-1 group-hover:translate-y-1" />
                   </span>
                 </button>
-                <div className={`grid transition-all duration-350 ease-in-out overflow-hidden text-lg md:text-xl text-foreground font-bold ${expandedOption === "why-us" ? "grid-rows-[1fr] mt-2.5 opacity-100" : "grid-rows-[0fr] opacity-0"
+                <div className={`grid transition-all duration-350 ease-in-out overflow-hidden text-sm md:text-base text-foreground font-bold ${expandedOption === "why-us" ? "grid-rows-[1fr] mt-2.5 opacity-100" : "grid-rows-[0fr] opacity-0"
                   }`}>
-                  <div className="overflow-hidden space-y-2.5 font-sans pr-4 leading-relaxed font-bold text-foreground text-lg md:text-xl">
+                  <div className="overflow-hidden space-y-2.5 font-sans pr-4 leading-relaxed font-bold text-foreground text-sm md:text-base">
                     <p>
                       In an era dominated by cold robo-distribution representatives and static investment apps, your hard-earned wealth deserves personalized, <span className="font-extrabold text-primary">relationship-driven human distribution</span>. We exist to bridge the gap between human empathy and data precision. By standing by our clients through decades of market turbulence, recessions, and regulatory shifts, we prioritize multi-generational trust and structured planning. We don't just measure relationships in transactions; we measure them in decades of successful outcomes and financial security.
                     </p>

@@ -19,7 +19,7 @@ export default function SvgScrollWipe({ screen1, screen2 }: SvgScrollWipeProps) 
   const overlayRef = useRef<HTMLDivElement>(null);
   const screen1Ref = useRef<HTMLDivElement>(null);
   const screen2Ref = useRef<HTMLDivElement>(null);
-  
+
   // 16 paths for full coverage of the top-left corner and fanned curved sweeps
   const path1Ref = useRef<SVGPathElement>(null);
   const path2Ref = useRef<SVGPathElement>(null);
@@ -68,8 +68,8 @@ export default function SvgScrollWipe({ screen1, screen2 }: SvgScrollWipeProps) 
 
     const ctx = gsap.context(() => {
       // 1. Initial State
-      gsap.set(overlay, { 
-        backdropFilter: 'blur(0px)', 
+      gsap.set(overlay, {
+        backdropFilter: 'blur(0px)',
         backgroundColor: 'rgba(250, 246, 240, 0)',
         visibility: 'hidden'
       });
@@ -89,7 +89,7 @@ export default function SvgScrollWipe({ screen1, screen2 }: SvgScrollWipeProps) 
       });
 
       // 2. Timeline Animation Steps
-      
+
       // Step A: Fade in backdrop blur overlay as strokes start drawing
       tl.to(overlay, {
         visibility: 'visible',
@@ -156,18 +156,18 @@ export default function SvgScrollWipe({ screen1, screen2 }: SvgScrollWipeProps) 
     <div ref={triggerRef} className="h-[600vh] w-full relative z-20">
       {/* Sticky view container */}
       <div ref={containerRef} className="relative h-screen w-full overflow-hidden flex items-center justify-center bg-transparent">
-        
+
         {/* Screen 1 wrapper */}
-        <div 
-          ref={screen1Ref} 
+        <div
+          ref={screen1Ref}
           className="absolute inset-0 w-full h-full flex items-center justify-center"
         >
           {screen1}
         </div>
 
         {/* Screen 2 wrapper */}
-        <div 
-          ref={screen2Ref} 
+        <div
+          ref={screen2Ref}
           className="absolute inset-0 w-full h-full flex items-center justify-center"
           style={{ opacity: 0 }}
         >
@@ -175,16 +175,16 @@ export default function SvgScrollWipe({ screen1, screen2 }: SvgScrollWipeProps) 
         </div>
 
         {/* Glassmorphic SVG Wipe Overlay Container */}
-        <div 
-          ref={overlayRef} 
+        <div
+          ref={overlayRef}
           className="absolute inset-0 w-full h-full pointer-events-none z-30 flex items-center justify-center transition-all duration-300"
           style={{ visibility: 'hidden' }}
         >
-          <svg 
+          <svg
             className="w-full h-full"
-            viewBox="0 0 100 100" 
+            viewBox="0 0 100 100"
             preserveAspectRatio="none"
-            fill="none" 
+            fill="none"
             xmlns="http://www.w3.org/2000/svg"
           >
             <defs>
@@ -198,165 +198,165 @@ export default function SvgScrollWipe({ screen1, screen2 }: SvgScrollWipeProps) 
             </defs>
 
             {/* 16 Staggered Bezier Curves crossing diagonally, fully covering top-left to bottom-right */}
-            <path 
-              ref={path1Ref} 
-              d="M -155,130 Q -35,80 5,-30" 
+            <path
+              ref={path1Ref}
+              d="M -155,130 Q -35,80 5,-30"
               pathLength="1000"
               strokeDasharray="1000 1000"
               strokeDashoffset="1000"
-              stroke="url(#wipe-gradient)" 
-              strokeWidth="18" 
-              strokeLinecap="round" 
+              stroke="url(#wipe-gradient)"
+              strokeWidth="18"
+              strokeLinecap="round"
             />
-            <path 
-              ref={path2Ref} 
-              d="M -139,130 Q -19,80 21,-30" 
+            <path
+              ref={path2Ref}
+              d="M -139,130 Q -19,80 21,-30"
               pathLength="1000"
               strokeDasharray="1000 1000"
               strokeDashoffset="1000"
-              stroke="url(#wipe-gradient)" 
-              strokeWidth="18" 
-              strokeLinecap="round" 
+              stroke="url(#wipe-gradient)"
+              strokeWidth="18"
+              strokeLinecap="round"
             />
-            <path 
-              ref={path3Ref} 
-              d="M -123,130 Q -3,80 37,-30" 
+            <path
+              ref={path3Ref}
+              d="M -123,130 Q -3,80 37,-30"
               pathLength="1000"
               strokeDasharray="1000 1000"
               strokeDashoffset="1000"
-              stroke="url(#wipe-gradient)" 
-              strokeWidth="18" 
-              strokeLinecap="round" 
+              stroke="url(#wipe-gradient)"
+              strokeWidth="18"
+              strokeLinecap="round"
             />
-            <path 
-              ref={path4Ref} 
-              d="M -107,130 Q 13,80 53,-30" 
+            <path
+              ref={path4Ref}
+              d="M -107,130 Q 13,80 53,-30"
               pathLength="1000"
               strokeDasharray="1000 1000"
               strokeDashoffset="1000"
-              stroke="url(#wipe-gradient)" 
-              strokeWidth="18" 
-              strokeLinecap="round" 
+              stroke="url(#wipe-gradient)"
+              strokeWidth="18"
+              strokeLinecap="round"
             />
-            <path 
-              ref={path5Ref} 
-              d="M -91,130 Q 29,80 69,-30" 
+            <path
+              ref={path5Ref}
+              d="M -91,130 Q 29,80 69,-30"
               pathLength="1000"
               strokeDasharray="1000 1000"
               strokeDashoffset="1000"
-              stroke="url(#wipe-gradient)" 
-              strokeWidth="18" 
-              strokeLinecap="round" 
+              stroke="url(#wipe-gradient)"
+              strokeWidth="18"
+              strokeLinecap="round"
             />
-            <path 
-              ref={path6Ref} 
-              d="M -75,130 Q 45,80 85,-30" 
+            <path
+              ref={path6Ref}
+              d="M -75,130 Q 45,80 85,-30"
               pathLength="1000"
               strokeDasharray="1000 1000"
               strokeDashoffset="1000"
-              stroke="url(#wipe-gradient)" 
-              strokeWidth="18" 
-              strokeLinecap="round" 
+              stroke="url(#wipe-gradient)"
+              strokeWidth="18"
+              strokeLinecap="round"
             />
-            <path 
-              ref={path7Ref} 
-              d="M -59,130 Q 61,80 101,-30" 
+            <path
+              ref={path7Ref}
+              d="M -59,130 Q 61,80 101,-30"
               pathLength="1000"
               strokeDasharray="1000 1000"
               strokeDashoffset="1000"
-              stroke="url(#wipe-gradient)" 
-              strokeWidth="18" 
-              strokeLinecap="round" 
+              stroke="url(#wipe-gradient)"
+              strokeWidth="18"
+              strokeLinecap="round"
             />
-            <path 
-              ref={path8Ref} 
-              d="M -43,130 Q 77,80 117,-30" 
+            <path
+              ref={path8Ref}
+              d="M -43,130 Q 77,80 117,-30"
               pathLength="1000"
               strokeDasharray="1000 1000"
               strokeDashoffset="1000"
-              stroke="url(#wipe-gradient)" 
-              strokeWidth="18" 
-              strokeLinecap="round" 
+              stroke="url(#wipe-gradient)"
+              strokeWidth="18"
+              strokeLinecap="round"
             />
-            <path 
-              ref={path9Ref} 
-              d="M -27,130 Q 93,80 133,-30" 
+            <path
+              ref={path9Ref}
+              d="M -27,130 Q 93,80 133,-30"
               pathLength="1000"
               strokeDasharray="1000 1000"
               strokeDashoffset="1000"
-              stroke="url(#wipe-gradient)" 
-              strokeWidth="18" 
-              strokeLinecap="round" 
+              stroke="url(#wipe-gradient)"
+              strokeWidth="18"
+              strokeLinecap="round"
             />
-            <path 
-              ref={path10Ref} 
-              d="M -11,130 Q 109,80 149,-30" 
+            <path
+              ref={path10Ref}
+              d="M -11,130 Q 109,80 149,-30"
               pathLength="1000"
               strokeDasharray="1000 1000"
               strokeDashoffset="1000"
-              stroke="url(#wipe-gradient)" 
-              strokeWidth="18" 
-              strokeLinecap="round" 
+              stroke="url(#wipe-gradient)"
+              strokeWidth="18"
+              strokeLinecap="round"
             />
-            <path 
-              ref={path11Ref} 
-              d="M 5,130 Q 125,80 165,-30" 
+            <path
+              ref={path11Ref}
+              d="M 5,130 Q 125,80 165,-30"
               pathLength="1000"
               strokeDasharray="1000 1000"
               strokeDashoffset="1000"
-              stroke="url(#wipe-gradient)" 
-              strokeWidth="18" 
-              strokeLinecap="round" 
+              stroke="url(#wipe-gradient)"
+              strokeWidth="18"
+              strokeLinecap="round"
             />
-            <path 
-              ref={path12Ref} 
-              d="M 21,130 Q 141,80 181,-30" 
+            <path
+              ref={path12Ref}
+              d="M 21,130 Q 141,80 181,-30"
               pathLength="1000"
               strokeDasharray="1000 1000"
               strokeDashoffset="1000"
-              stroke="url(#wipe-gradient)" 
-              strokeWidth="18" 
-              strokeLinecap="round" 
+              stroke="url(#wipe-gradient)"
+              strokeWidth="18"
+              strokeLinecap="round"
             />
-            <path 
-              ref={path13Ref} 
-              d="M 37,130 Q 157,80 197,-30" 
+            <path
+              ref={path13Ref}
+              d="M 37,130 Q 157,80 197,-30"
               pathLength="1000"
               strokeDasharray="1000 1000"
               strokeDashoffset="1000"
-              stroke="url(#wipe-gradient)" 
-              strokeWidth="18" 
-              strokeLinecap="round" 
+              stroke="url(#wipe-gradient)"
+              strokeWidth="18"
+              strokeLinecap="round"
             />
-            <path 
-              ref={path14Ref} 
-              d="M 53,130 Q 173,80 213,-30" 
+            <path
+              ref={path14Ref}
+              d="M 53,130 Q 173,80 213,-30"
               pathLength="1000"
               strokeDasharray="1000 1000"
               strokeDashoffset="1000"
-              stroke="url(#wipe-gradient)" 
-              strokeWidth="18" 
-              strokeLinecap="round" 
+              stroke="url(#wipe-gradient)"
+              strokeWidth="18"
+              strokeLinecap="round"
             />
-            <path 
-              ref={path15Ref} 
-              d="M 69,130 Q 189,80 229,-30" 
+            <path
+              ref={path15Ref}
+              d="M 69,130 Q 189,80 229,-30"
               pathLength="1000"
               strokeDasharray="1000 1000"
               strokeDashoffset="1000"
-              stroke="url(#wipe-gradient)" 
-              strokeWidth="18" 
-              strokeLinecap="round" 
+              stroke="url(#wipe-gradient)"
+              strokeWidth="18"
+              strokeLinecap="round"
             />
-            <path 
-              ref={path16Ref} 
-              d="M 85,130 Q 205,80 245,-30" 
+            <path
+              ref={path16Ref}
+              d="M 85,130 Q 205,80 245,-30"
               pathLength="1000"
               strokeDasharray="1000 1000"
               strokeDashoffset="1000"
-              stroke="url(#wipe-gradient)" 
-              strokeWidth="18" 
-              strokeLinecap="round" 
+              stroke="url(#wipe-gradient)"
+              strokeWidth="18"
+              strokeLinecap="round"
             />
           </svg>
         </div>
