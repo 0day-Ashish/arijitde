@@ -262,18 +262,7 @@ const GradualBlur: React.FC<GradualBlurProps> = props => {
     }
   }, [isVisible, animated, onAnimationComplete, duration]);
 
-  return (
-    <div
-      ref={containerRef}
-      className={`gradual-blur relative isolate ${config.target === 'page' ? 'gradual-blur-page' : 'gradual-blur-parent'} ${config.className}`}
-      style={containerStyle}
-      onMouseEnter={hoverIntensity ? () => setIsHovered(true) : undefined}
-      onMouseLeave={hoverIntensity ? () => setIsHovered(false) : undefined}
-    >
-      <div className="relative w-full h-full">{blurDivs}</div>
-      {props.children && <div className="relative">{props.children}</div>}
-    </div>
-  );
+  return null;
 };
 
 const GradualBlurMemo = React.memo(GradualBlur);

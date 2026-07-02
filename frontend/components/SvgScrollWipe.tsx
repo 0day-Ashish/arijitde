@@ -160,7 +160,7 @@ export default function SvgScrollWipe({ screen1, screen2 }: SvgScrollWipeProps) 
         {/* Screen 1 wrapper */}
         <div
           ref={screen1Ref}
-          className="absolute inset-0 w-full h-full flex items-center justify-center"
+          className="absolute inset-0 w-full h-full overflow-y-auto md:overflow-hidden pt-30 pb-0 md:py-0 flex items-start md:items-center justify-center"
         >
           {screen1}
         </div>
@@ -168,7 +168,7 @@ export default function SvgScrollWipe({ screen1, screen2 }: SvgScrollWipeProps) 
         {/* Screen 2 wrapper */}
         <div
           ref={screen2Ref}
-          className="absolute inset-0 w-full h-full flex items-center justify-center"
+          className="absolute inset-0 w-full h-full overflow-y-auto md:overflow-hidden pt-20 pb-0 md:py-0 flex items-start md:items-center justify-center"
           style={{ opacity: 0 }}
         >
           {screen2}
