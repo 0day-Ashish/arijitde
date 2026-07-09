@@ -51,8 +51,8 @@ router.post('/:portfolioId', authMiddleware, async (req: AuthenticatedRequest, r
       return;
     }
 
-    // Run scoring engine
-    const scoreResult = calculateScore(portfolio.rows, portfolio.assessment);
+    // Run scoring engine (async due to AMFI API calls in efficiency)
+    const scoreResult = await calculateScore(portfolio.rows, portfolio.assessment);
 
     // Save Score to DB (upsert since portfolioId is unique)
     const score = await prisma.score.upsert({

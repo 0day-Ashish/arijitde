@@ -148,7 +148,7 @@ export default function Home() {
       setContactError(null);
       setContactSuccess(false);
 
-      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://finanalysis-backend.onrender.com';
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
       const response = await fetch(`${backendUrl}/api/contact`, {
         method: "POST",
         headers: {
@@ -474,7 +474,7 @@ export default function Home() {
                   className="group flex items-baseline gap-3 focus:outline-none cursor-pointer text-left"
                 >
                   <span className={`text-xs md:text-sm font-mono transition duration-200 ${expandedOption === "about" ? "text-primary" : "text-muted-foreground group-hover:text-primary"}`}>01</span>
-                  <span className={`font-heading text-2xl md:text-4xl font-bold tracking-tight transition duration-200 ${expandedOption === "about" ? "text-primary" : "text-foreground group-hover:text-primary"}`}>
+                  <span className={`font-instrument-serif text-2xl md:text-4xl font-bold tracking-tight transition duration-200 ${expandedOption === "about" ? "text-primary" : "text-foreground group-hover:text-primary"}`}>
                     About Us
                     <GoArrowDownRight className="inline-block ml-2 align-middle transition-transform duration-300 group-hover:translate-x-1 group-hover:translate-y-1" />
                   </span>
@@ -496,7 +496,7 @@ export default function Home() {
                   className="group flex items-baseline gap-3 focus:outline-none cursor-pointer text-left"
                 >
                   <span className={`text-xs md:text-sm font-mono transition duration-200 ${expandedOption === "services" ? "text-primary" : "text-muted-foreground group-hover:text-primary"}`}>02</span>
-                  <span className={`font-heading text-2xl md:text-4xl font-bold tracking-tight transition duration-200 ${expandedOption === "services" ? "text-primary" : "text-foreground group-hover:text-primary"}`}>
+                  <span className={`font-instrument-serif text-2xl md:text-4xl font-bold tracking-tight transition duration-200 ${expandedOption === "services" ? "text-primary" : "text-foreground group-hover:text-primary"}`}>
                     What we provide
                     <GoArrowDownRight className="inline-block ml-2 align-middle transition-transform duration-300 group-hover:translate-x-1 group-hover:translate-y-1" />
                   </span>
@@ -518,7 +518,7 @@ export default function Home() {
                   className="group flex items-baseline gap-3 focus:outline-none cursor-pointer text-left"
                 >
                   <span className={`text-xs md:text-sm font-mono transition duration-200 ${expandedOption === "why-us" ? "text-primary" : "text-muted-foreground group-hover:text-primary"}`}>03</span>
-                  <span className={`font-heading text-2xl md:text-4xl font-bold tracking-tight transition duration-200 ${expandedOption === "why-us" ? "text-primary" : "text-foreground group-hover:text-primary"}`}>
+                  <span className={`font-instrument-serif text-2xl md:text-4xl font-bold tracking-tight transition duration-200 ${expandedOption === "why-us" ? "text-primary" : "text-foreground group-hover:text-primary"}`}>
                     Why we exist
                     <GoArrowDownRight className="inline-block ml-2 align-middle transition-transform duration-300 group-hover:translate-x-1 group-hover:translate-y-1" />
                   </span>
@@ -546,10 +546,10 @@ export default function Home() {
 
         <div className="w-full max-w-5xl mx-auto p-8 md:p-12 bg-white/20 backdrop-blur-2xl border border-border rounded-3xl shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-12 relative z-10">
           <div className="space-y-4 max-w-xl text-left">
-            <span className="text-[10px] font-mono text-primary border border-primary/25 bg-primary/5 px-3 py-1 rounded-full uppercase tracking-wider font-semibold">
+            <span className="text-[10px] text-primary border border-primary/25 bg-primary/5 px-3 py-1 rounded-full uppercase tracking-wider font-semibold">
               Instant Support
             </span>
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-primary font-clash">
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-primary font-instrument-serif">
               Meet Virtual Arijit : Real-Time Insights, Zero Waiting.
             </h2>
             <p className="text-[#64748B] text-sm leading-relaxed font-sans">
@@ -558,7 +558,7 @@ export default function Home() {
           </div>
 
           <div className="w-full md:w-auto shrink-0 flex flex-col items-center justify-center p-6 bg-white/45 backdrop-blur-2xl border border-border rounded-2xl md:min-w-[280px] shadow-sm text-center relative group">
-            <span className="text-lg font-semibold text-primary font-clash">Try Virtual Arijit Now</span>
+            <span className="text-lg font-semibold text-primary font-instrument-serif">Try Virtual Arijit Now</span>
 
             <button
               onClick={() => setIsChatOpen(true)}
@@ -597,10 +597,7 @@ export default function Home() {
             {/* Left Column: Details */}
             <div className="flex-1 flex flex-col justify-between space-y-8 relative z-10">
               <div className="space-y-4">
-                <span className="text-[10px] font-mono text-primary border border-primary/35 bg-primary/10 px-3 py-1 rounded-full uppercase tracking-wider font-bold">
-                  Investor Profiling
-                </span>
-                <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-foreground font-clash leading-tight">
+                <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-foreground font-instrument-serif leading-tight">
                   Know what kind of investor you are!
                 </h2>
                 <p className="text-foreground/80 text-sm md:text-base leading-relaxed font-sans max-w-md">
@@ -610,7 +607,7 @@ export default function Home() {
                 {/* Animal Badges */}
                 <div className="flex flex-wrap gap-2 pt-2">
                   {["🐅 Tiger", "🐘 Elephant", "🦌 Deer", "🦊 Fox", "🦁 Lion"].map((animal, idx) => (
-                    <span key={idx} className="text-xs font-semibold font-mono text-foreground bg-[#FAF6F0] border border-[#C4A484]/40 px-2.5 py-1 rounded-lg select-none hover:scale-105 hover:bg-[#EAE1D4] hover:border-[#8D6E63]/60 transition duration-200">
+                    <span key={idx} className="text-xs font-semibold font-instrument-serif text-foreground bg-[#FAF6F0] border border-[#C4A484]/40 px-2.5 py-1 rounded-lg select-none hover:scale-105 hover:bg-[#EAE1D4] hover:border-[#8D6E63]/60 transition duration-200">
                       {animal}
                     </span>
                   ))}
@@ -622,7 +619,7 @@ export default function Home() {
                   href="/quiz"
                   className="inline-flex items-center gap-2.5 px-8 py-4 bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-xs rounded-2xl transition duration-200 shadow-md uppercase tracking-wider group cursor-pointer"
                 >
-                  <span className="font-bold">Start Quiz</span>
+                  <span className="font-bold font-instrument-serif">Start Quiz</span>
                   <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-200 stroke-white" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                   </svg>
@@ -769,7 +766,7 @@ export default function Home() {
             {/* Left Column: Details */}
             <div className="flex-1 flex flex-col justify-between space-y-8 relative z-10">
               <div className="space-y-4">
-                <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-primary font-clash leading-tight">
+                <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-primary font-instrument-serif leading-tight">
                   Analyze your portfolio in real-time
                 </h2>
                 <p className="text-[#64748B] text-sm leading-relaxed font-sans max-w-md">
@@ -801,7 +798,7 @@ export default function Home() {
               <div className="pt-2">
                 <a
                   href="/onboarding"
-                  className="inline-flex items-center gap-2.5 px-8 py-4 bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-xs rounded-2xl transition duration-200 shadow-md uppercase tracking-wider group"
+                  className="inline-flex items-center gap-2.5 px-8 py-4 bg-primary hover:bg-primary/95 text-primary-foreground font-instrument-serif font-bold text-xs rounded-2xl transition duration-200 shadow-md uppercase tracking-wider group"
                 >
                   <span>Evaluate My Portfolio</span>
                   <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -872,14 +869,6 @@ export default function Home() {
                     ))}
                   </div>
                 </div>
-
-                {/* Footer advice */}
-                <div className="bg-primary/5 border border-primary/10 p-3.5 rounded-xl text-left">
-                  <span className="text-[10px] font-bold text-[#2E7D32] font-mono uppercase block mb-1">System Alert</span>
-                  <p className="text-[10px] text-muted-foreground leading-relaxed">
-                    High exposure in thematic mutual funds detected. Consider rebalancing into broad-market index options to increase fee efficiency and lower tracking variance.
-                  </p>
-                </div>
               </div>
             </div>
           </div>
@@ -890,7 +879,7 @@ export default function Home() {
       <div id="calculators" className="w-full relative z-10 py-16 px-6 bg-transparent">
         <ScrollBlurReveal className="w-full max-w-5xl mx-auto">
           <div className="text-left mb-12">
-            <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-primary font-clash leading-tight mt-3">
+            <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-primary font-instrument-serif leading-tight mt-3">
               Premium Financial Calculators
             </h2>
             <p className="text-[#64748B] text-sm leading-relaxed font-sans mt-3 max-w-2xl">
@@ -930,11 +919,6 @@ export default function Home() {
                 title: "SIF Calculator",
                 desc: "Model Specialized Investment Fund compounding returns using target hurdle rates and top-ups.",
                 href: "/sif-calculator"
-              },
-              {
-                title: "PMS Calculator",
-                desc: "Analyze Portfolio Management Services returns after factoring in management fees.",
-                href: "/pms-calculator"
               },
               {
                 title: "Fixed Deposit (FD)",
@@ -990,7 +974,7 @@ export default function Home() {
         <ScrollBlurReveal className="w-full max-w-5xl mx-auto">
           <div className="text-center mb-12">
             <div className="flex items-center justify-center gap-3">
-              <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-primary font-clash leading-tight mt-3">
+              <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-primary font-instrument-serif leading-tight mt-3">
                 Daily Wisdom
               </h2>
               <div className="w-20 h-20 md:w-28 md:h-28 shrink-0 mt-3">
@@ -1097,7 +1081,7 @@ export default function Home() {
               <span className="text-[10px] md:text-sm uppercase text-muted-foreground font-clash font-bold">
                 Common Inquiries
               </span>
-              <h2 className="text-3xl md:text-5xl font-normal leading-tight text-primary font-clash">
+              <h2 className="text-3xl md:text-5xl font-normal leading-tight text-primary font-instrument-serif">
                 Frequently Asked Questions
               </h2>
               <p className="text-muted-foreground text-sm font-sans mt-2">
@@ -1152,10 +1136,17 @@ export default function Home() {
 
       {/* Hello Text Section */}
       <div className="w-full relative z-10 py-16 px-6 bg-transparent select-none">
-        <ScrollBlurReveal className="w-full max-w-5xl mx-auto text-center">
+        <ScrollBlurReveal className="w-full max-w-5xl mx-auto text-center flex flex-col items-center justify-center space-y-6">
           <h2 className="font-chillax text-7xl sm:text-9xl md:text-[10rem] lg:text-[14rem] font-normal text-primary tracking-tight leading-none drop-shadow-sm">
             “Hello”
           </h2>
+          <div className="w-48 h-48 sm:w-64 sm:h-64 md:w-80 md:h-80 relative overflow-hidden flex items-center justify-center">
+            <img
+              src="/assets/telephone.png"
+              alt="Telephone"
+              className="w-full h-full object-contain select-none"
+            />
+          </div>
         </ScrollBlurReveal>
       </div>
 
@@ -1164,7 +1155,7 @@ export default function Home() {
         <ScrollBlurReveal className="w-full max-w-xl mx-auto px-6">
           <div className="relative text-left">
             <div className="text-center space-y-3 mb-8">
-              <h2 className="text-3xl lg:text-5xl  tracking-tight text-primary font-clash">
+              <h2 className="text-3xl lg:text-5xl tracking-tight text-primary font-instrument-serif">
                 Connect With Our Distribution Representatives
               </h2>
               <p className="text-muted-foreground text-xs leading-relaxed font-sans max-w-sm mx-auto">

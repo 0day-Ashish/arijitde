@@ -95,6 +95,7 @@ model Portfolio {
 enum UploadType {
   EXCEL
   MANUAL
+  FOLIO_IMPORT
 }
 
 model PortfolioRow {

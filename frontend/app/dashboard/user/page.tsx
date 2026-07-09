@@ -14,8 +14,7 @@ import {
   Compass,
   ShieldAlert,
   FileSpreadsheet,
-  Plus,
-  Trash2,
+
   CheckCircle2,
   Loader2,
   ArrowRight,
@@ -33,6 +32,25 @@ import SoftBoxBlurBg from "@/components/SoftBoxBlurBg";
 import GradualBlur from "@/components/GradualBlur";
 import ChatbotWidget from "@/components/ChatbotWidget";
 import Footer from "@/components/Footer";
+
+const calculateAge = (dobString: string | Date) => {
+  const birthDate = new Date(dobString);
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age;
+};
+
+const getAgeRangeFromAge = (age: number) => {
+  if (age < 25) return "BELOW_25";
+  if (age <= 35) return "25_35";
+  if (age <= 45) return "36_45";
+  if (age <= 60) return "46_60";
+  return "ABOVE_60";
+};
 
 // ──── Quiz Configuration ────
 const GOAL_OPTIONS = [
@@ -118,12 +136,11 @@ export default function UserDashboard() {
   const [apiLoading, setApiLoading] = useState(false);
   const [statusMsg, setStatusMsg] = useState("");
 
-  // Wallet, Session booking and Countdown states
+  // Wallet and Session booking states
   const [sessions, setSessions] = useState<any[]>([]);
   const [slot1, setSlot1] = useState("");
   const [slot2, setSlot2] = useState("");
   const [slot3, setSlot3] = useState("");
-  const [trialTimeLeft, setTrialTimeLeft] = useState("");
 
   // Phone Modal state
   const [showPhoneModal, setShowPhoneModal] = useState(false);
@@ -163,13 +180,13 @@ export default function UserDashboard() {
   const [bookingPhone, setBookingPhone] = useState('');
 
   // Analyze Section State
-  const [analyzeTab, setAnalyzeTab] = useState<"FILE" | "MANUAL">("FILE");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [manualRows, setManualRows] = useState<PortfolioRow[]>([
-    { fundName: "", type: "SIP", startDate: "", sipAmount: 0, invested: 0, currentValue: 0 }
-  ]);
 
-  const backendUrl = process.env.NEXT_PUBLIC_API_URL || "https://finanalysis-backend.onrender.com";
+  // Existing Client Detection
+  const [isExistingClient, setIsExistingClient] = useState(false);
+  const [existingClientData, setExistingClientData] = useState<any>(null);
+
+  const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
   // Auth Guard & Initial Fetch
   useEffect(() => {
@@ -184,7 +201,13 @@ export default function UserDashboard() {
 
     try {
       setToken(savedToken);
-      setUserData(JSON.parse(savedUser));
+      const userObj = JSON.parse(savedUser);
+      setUserData(userObj);
+      if (userObj.dob) {
+        const computedAge = calculateAge(userObj.dob);
+        setQuizAge(computedAge);
+        setQuizAgeRange(getAgeRangeFromAge(computedAge));
+      }
     } catch (err) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
@@ -280,6 +303,7 @@ export default function UserDashboard() {
 
   const fetchDashboardState = async () => {
     try {
+      setError(null);
       setDashboardStage("LOADING");
       const headers = { "Authorization": `Bearer ${token}` };
 
@@ -306,10 +330,17 @@ export default function UserDashboard() {
         uObj.phone = currentPhone;
         uObj.walletBalance = meData.data.walletBalance;
         uObj.referralCode = meData.data.referralCode;
+        uObj.dob = meData.data.dob;
         localStorage.setItem("user", JSON.stringify(uObj));
         setUserData(uObj);
       } else {
         setUserData(meData.data);
+      }
+
+      if (meData.data?.dob) {
+        const computedAge = calculateAge(meData.data.dob);
+        setQuizAge(computedAge);
+        setQuizAgeRange(getAgeRangeFromAge(computedAge));
       }
 
       if (!currentPhone) {
@@ -318,10 +349,8 @@ export default function UserDashboard() {
         setShowPhoneModal(false);
       }
 
-      // 2. Fetch payments
-      const payRes = await fetch(`${backendUrl}/api/payments/my-payments`, { headers });
-      const payData = await payRes.json();
-      const userPayments = payData.success ? payData.data : [];
+      // 2. Fetch payments (Mocked - payment router disabled)
+      const userPayments: any[] = [];
       setPayments(userPayments);
 
       // Fetch bookings
@@ -351,9 +380,15 @@ export default function UserDashboard() {
 
       const latestAssessment = userAssessments[0];
       setActiveAssessmentId(latestAssessment.id);
-      setQuizAge(latestAssessment.age);
+      if (meData.data?.dob) {
+        const computedAge = calculateAge(meData.data.dob);
+        setQuizAge(computedAge);
+        setQuizAgeRange(getAgeRangeFromAge(computedAge));
+      } else {
+        setQuizAge(latestAssessment.age);
+        if (latestAssessment.ageRange) setQuizAgeRange(latestAssessment.ageRange);
+      }
       setQuizGoal(latestAssessment.goal);
-      if (latestAssessment.ageRange) setQuizAgeRange(latestAssessment.ageRange);
       if (latestAssessment.lifeStage) setQuizLifeStage(latestAssessment.lifeStage);
       if (latestAssessment.investmentTenure) setQuizInvestmentTenure(latestAssessment.investmentTenure);
       if (latestAssessment.isCompletePortfolio !== null && latestAssessment.isCompletePortfolio !== undefined) setQuizIsCompletePortfolio(latestAssessment.isCompletePortfolio);
@@ -363,7 +398,23 @@ export default function UserDashboard() {
       if (latestAssessment.monthlyInvestment) setQuizMonthlyInvestment(latestAssessment.monthlyInvestment);
       if (latestAssessment.emergencyFund) setQuizEmergencyFund(latestAssessment.emergencyFund);
 
-      // 4. Fetch portfolios
+      // 4. Check if user is an existing client (has matching folio records)
+      try {
+        const ecRes = await fetch(`${backendUrl}/api/portfolio/client-data`, { headers });
+        const ecData = await ecRes.json();
+        if (ecData.success && ecData.data && ecData.data.folios && ecData.data.folios.length > 0) {
+          setIsExistingClient(true);
+          setExistingClientData(ecData.data);
+        } else {
+          setIsExistingClient(false);
+          setExistingClientData(null);
+        }
+      } catch (ecErr) {
+        console.error("Failed to check existing client status:", ecErr);
+        setIsExistingClient(false);
+      }
+
+      // 5. Fetch portfolios
       const portRes = await fetch(`${backendUrl}/api/portfolio`, { headers });
       const portData = await portRes.json();
       const userPortfolios = portData.success ? portData.data : [];
@@ -610,10 +661,12 @@ export default function UserDashboard() {
   // Download CSV Template
   const downloadCsvTemplate = () => {
     const csvContent = "data:text/csv;charset=utf-8,"
-      + "Fund Name,Investment Type,Start Date,Monthly SIP Amount,Total Invested,Current Value\n"
-      + "HDFC Top 100 Fund,SIP,15/01/2022,5000,240000,295000\n"
-      + "Parag Parikh Flexi Cap Fund,SIP,10/06/2021,10000,500000,680000\n"
-      + "SBI Bluechip Fund,Lumpsum,20/03/2020,0,100000,165000\n";
+      + "AMC,Category,Sub-category,Folio No.,Source,Units,Invested Value,Current Value,Returns,XIRR\n"
+      + "Sundaram Mutual Fund,Equity,Large & MidCap,6109253583,External,493.914,36998.03,44265.21,7267.18,8.93%\n"
+      + "Edelweiss Mutual Fund,Equity,Mid Cap,91017359632,External,454.598,36998.09,48889.29,11891.20,14.18%\n"
+      + "Tata Mutual Fund,Equity,Small Cap,9636436,External,956.721,33998.33,36557.46,2559.13,3.59%\n"
+      + "ICICI Prudential Mutual Fund,Equity,Flexi Cap,28698878,External,451.068,33998.30,43171.72,9173.41,12.25%\n"
+      + "Kotak Mahindra Mutual Fund,Equity,Multi Cap,13280860,External,2317.780,37998.07,46793.66,8795.59,10.38%\n";
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -668,111 +721,43 @@ export default function UserDashboard() {
     }
   };
 
-  // Manual Portfolio Entry management
-  const handleAddManualRow = () => {
-    if (manualRows.length >= 15) {
-      setError("Maximum of 15 rows allowed.");
-      return;
-    }
-    setManualRows([...manualRows, { fundName: "", type: "SIP", startDate: "", sipAmount: 0, invested: 0, currentValue: 0 }]);
-  };
-
-  const handleRemoveManualRow = (index: number) => {
-    if (manualRows.length === 1) return;
-    const newRows = [...manualRows];
-    newRows.splice(index, 1);
-    setManualRows(newRows);
-  };
-
-  const handleManualRowChange = (index: number, field: keyof PortfolioRow, value: any) => {
-    const newRows = [...manualRows];
-    const row = { ...newRows[index]! };
-
-    if (field === "type") {
-      row.type = value;
-      if (value === "LUMPSUM") {
-        row.sipAmount = 0;
-      }
-    } else if (field === "sipAmount" || field === "invested" || field === "currentValue") {
-      row[field] = Number(value);
-    } else {
-      row[field] = value;
-    }
-
-    newRows[index] = row;
-    setManualRows(newRows);
-  };
-
-  // Submit Manual Entry (Stage 2 Tab 2)
-  const handleManualSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Existing Client: Auto-import from Folios
+  const handleFolioImport = async () => {
     if (!activeAssessmentId) {
-      setError("Assessment context missing.");
+      setError("Assessment context missing. Please re-run assessment.");
       return;
-    }
-
-    // Validate rows
-    for (let i = 0; i < manualRows.length; i++) {
-      const row = manualRows[i]!;
-      if (!row.fundName.trim()) {
-        setError(`Row ${i + 1}: Fund name is required`);
-        return;
-      }
-      if (!row.startDate) {
-        setError(`Row ${i + 1}: Start date is required`);
-        return;
-      }
-      if (new Date(row.startDate).getTime() > Date.now()) {
-        setError(`Row ${i + 1}: Start date cannot be in the future`);
-        return;
-      }
-      if (row.type === "SIP" && row.sipAmount <= 0) {
-        setError(`Row ${i + 1}: SIP amount must be greater than 0`);
-        return;
-      }
-      if (row.invested <= 0 || row.currentValue <= 0) {
-        setError(`Row ${i + 1}: Invested and Current Value must be positive numbers`);
-        return;
-      }
     }
 
     setError(null);
     setApiLoading(true);
-    setStatusMsg("Saving manual investment details...");
+    setStatusMsg("Importing your existing fund records...");
 
     try {
-      const formattedRows = manualRows.map(r => ({
-        ...r,
-        startDate: new Date(r.startDate).toISOString()
-      }));
-
-      const res = await fetch(`${backendUrl}/api/portfolio/manual`, {
+      const res = await fetch(`${backendUrl}/api/portfolio/from-folios`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify({
-          assessmentId: activeAssessmentId,
-          rows: formattedRows
-        })
+        body: JSON.stringify({ assessmentId: activeAssessmentId })
       });
       const data = await res.json();
 
       if (data.success) {
         const pId = data.data.portfolioId;
         setActivePortfolioId(pId);
-        setStatusMsg("Calculating financial health scores...");
+        setStatusMsg("Running comprehensive portfolio scoring with AMFI benchmarks...");
         await calculatePortfolioScore(pId);
       } else {
-        setError(data.error || "Failed to submit manual portfolio");
+        setError(data.error || "Failed to import folio records.");
       }
     } catch (err) {
-      setError("Network error while submitting details.");
+      setError("Network error while importing records.");
     } finally {
       setApiLoading(false);
     }
   };
+
 
   // Run Score Engine API Call
   const calculatePortfolioScore = async (portfolioId: string) => {
@@ -861,13 +846,6 @@ export default function UserDashboard() {
         <div className="flex items-center gap-4">
           {userData && (
             <>
-
-              {/* Referral Code Pill */}
-              {userData.referralCode && (
-                <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs font-medium text-emerald-700 font-mono">
-                  <span>Code: {userData.referralCode}</span>
-                </div>
-              )}
               <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/40 border border-border text-xs font-medium text-neutral-800">
                 <User className="w-3.5 h-3.5 text-primary" />
                 <span>{userData.name || userData.email}</span>
@@ -899,37 +877,7 @@ export default function UserDashboard() {
           </div>
         )}
 
-        {/* Trial Countdown Banner */}
-        {userData?.createdAt && !payments.some((p: any) => p.status === "APPROVED") && (
-          (() => {
-            const createdTime = new Date(userData.createdAt).getTime();
-            const isFirstWeek = (Date.now() - createdTime) <= 7 * 24 * 60 * 60 * 1000;
-            if (!isFirstWeek) return null;
-            return (
-              <div className="w-full max-w-4xl mb-8 p-6 bg-gradient-to-r from-violet-500/10 via-primary/5 to-emerald-500/10 border border-primary/20 backdrop-blur-md rounded-3xl text-xs flex flex-col sm:flex-row justify-between items-center gap-4 text-left font-sans animate-in fade-in duration-300">
-                <div className="flex gap-3 items-start">
-                  <span className="p-2 bg-primary/10 rounded-xl text-primary animate-pulse shrink-0 mt-0.5">
-                    🎁
-                  </span>
-                  <div>
-                    <span className="font-semibold text-sm text-neutral-900 block mb-1">First-Week Special Offer Active!</span>
-                    <span className="text-neutral-600 leading-relaxed font-medium">
-                      As a new user (registered on {new Date(userData.createdAt).toLocaleDateString()}), you get exclusive discounted rates! 
-                      <strong className="text-emerald-700 ml-1">AI Portfolio Health Report is FREE</strong> (usually ₹299) and 
-                      <strong className="text-primary ml-1">Live 1-on-1 Portfolio Review Discussion is ₹300</strong> (usually ₹699).
-                    </span>
-                  </div>
-                </div>
-                {trialTimeLeft && (
-                  <div className="shrink-0 flex flex-col items-center justify-center p-3 bg-white/60 border border-primary/10 rounded-2xl min-w-[150px] shadow-sm">
-                    <span className="text-[10px] text-neutral-400 font-mono uppercase tracking-wider">Time Remaining</span>
-                    <span className="text-sm font-bold font-mono text-primary mt-0.5">{trialTimeLeft}</span>
-                  </div>
-                )}
-              </div>
-            );
-          })()
-        )}
+
 
         {/* ----------------- STAGE 0: LOADING SCREEN ----------------- */}
         {dashboardStage === "LOADING" && (
@@ -1461,242 +1409,177 @@ export default function UserDashboard() {
                   </div>
                 </div>
               </div>
+            ) : isExistingClient && existingClientData ? (
+              /* ── Existing Client: Auto-Import from Folios ── */
+              <>
+                {/* Analysis Header */}
+                <div className="text-center max-w-xl mx-auto space-y-2">
+                  <h1 className="text-3xl md:text-4xl font-semibold tracking-wide text-neutral-900">Portfolio Analysis</h1>
+                  <p className="text-neutral-500 text-xs font-sans leading-relaxed">
+                    We found your existing investment records. Start the analysis to get your comprehensive portfolio health score.
+                  </p>
+                </div>
+
+                {/* Existing Client Card */}
+                <div className="w-full border border-emerald-500/20 bg-white/30 backdrop-blur-xl rounded-3xl p-6 md:p-8 shadow-2xl flex flex-col gap-6">
+                  {/* Client Match Confirmation */}
+                  <div className="flex items-start gap-4 p-4 bg-emerald-500/5 border border-emerald-500/15 rounded-2xl">
+                    <span className="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-600 shrink-0">
+                      <CheckCircle2 className="w-5 h-5" />
+                    </span>
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-bold text-neutral-900">Existing Client Identified</h4>
+                      <p className="text-xs text-neutral-600 font-sans leading-relaxed">
+                        Your records match with client <strong className="text-neutral-900">{existingClientData.name || 'N/A'}</strong>.
+                        We have <strong className="text-emerald-700 font-mono">{existingClientData.folios?.length || 0}</strong> folio record(s) on file.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Fund Summary */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="bg-white/50 border border-neutral-200/40 rounded-2xl p-4 text-center">
+                      <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest block">Funds</span>
+                      <span className="text-2xl font-bold text-neutral-900 font-clash">
+                        {(() => {
+                          const schemes = new Set((existingClientData.folios || []).map((f: any) => f.schemeName).filter(Boolean));
+                          return schemes.size;
+                        })()}
+                      </span>
+                    </div>
+                    <div className="bg-white/50 border border-neutral-200/40 rounded-2xl p-4 text-center">
+                      <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest block">Folios</span>
+                      <span className="text-2xl font-bold text-neutral-900 font-clash">{existingClientData.folios?.length || 0}</span>
+                    </div>
+                    <div className="bg-white/50 border border-neutral-200/40 rounded-2xl p-4 text-center">
+                      <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest block">AUM</span>
+                      <span className="text-lg font-bold text-neutral-900 font-clash">
+                        ₹{((existingClientData.folios || []).reduce((sum: number, f: any) => sum + (f.aum || 0), 0) / 100000).toFixed(1)}L
+                      </span>
+                    </div>
+                    <div className="bg-white/50 border border-neutral-200/40 rounded-2xl p-4 text-center">
+                      <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest block">Invested</span>
+                      <span className="text-lg font-bold text-neutral-900 font-clash">
+                        ₹{((existingClientData.folios || []).reduce((sum: number, f: any) => sum + (f.purchaseValue || 0), 0) / 100000).toFixed(1)}L
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Start Analysis Button */}
+                  <button
+                    onClick={handleFolioImport}
+                    disabled={apiLoading}
+                    className="w-full py-4 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition duration-200 cursor-pointer disabled:opacity-40"
+                  >
+                    {apiLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>{statusMsg || "Importing and scoring..."}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4" />
+                        <span>Start Portfolio Analysis</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </>
             ) : (
+              /* ── New Client: CSV Upload Only ── */
               <>
                 {/* Analysis Header */}
                 <div className="text-center max-w-xl mx-auto space-y-2">
                   <h1 className="text-3xl md:text-4xl font-semibold tracking-wide text-neutral-900">Analyze Investments</h1>
                   <p className="text-neutral-500 text-xs font-sans leading-relaxed">
-                    Provide your current investment details. We'll run them through our scoring algorithm and flag any structural errors or anomalies.
+                    Upload your investment CSV or Excel file. We'll run them through our scoring algorithm with live AMFI benchmark comparison.
                   </p>
                 </div>
 
                 {/* Form Section */}
                 <div className="w-full border border-white/30 bg-white/30 backdrop-blur-xl rounded-3xl p-6 md:p-8 shadow-2xl flex flex-col">
-                  {/* Tab Selector */}
-                  <div className="flex border-b border-border mb-8">
-                    <button
-                      onClick={() => { setError(null); setAnalyzeTab("FILE"); }}
-                      className={`pb-4 px-6 text-xs font-semibold tracking-wider uppercase border-b-2 transition duration-200 cursor-pointer ${analyzeTab === "FILE"
-                          ? "border-primary text-neutral-900"
-                          : "border-transparent text-neutral-500 hover:text-neutral-800"
-                        }`}
-                    >
-                      Excel / CSV Upload
-                    </button>
-                    <button
-                      onClick={() => { setError(null); setAnalyzeTab("MANUAL"); }}
-                      className={`pb-4 px-6 text-xs font-semibold tracking-wider uppercase border-b-2 transition duration-200 cursor-pointer ${analyzeTab === "MANUAL"
-                          ? "border-primary text-neutral-900"
-                          : "border-transparent text-neutral-500 hover:text-neutral-800"
-                        }`}
-                    >
-                      Manual Entry
-                    </button>
+                  {/* Header */}
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="p-2 bg-primary/10 rounded-xl text-primary">
+                      <FileSpreadsheet className="w-5 h-5 stroke-[1.5]" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-neutral-900">Upload Portfolio CSV</h3>
+                      <p className="text-[10px] text-neutral-500 font-sans">Upload your investment details in CSV or Excel format</p>
+                    </div>
                   </div>
 
-                  {/* Tab 1: File Uploader */}
-                  {analyzeTab === "FILE" && (
-                    <form onSubmit={handleFileUploadSubmit} className="space-y-6">
-                      <div className="space-y-3 text-left">
-                        <div className="flex justify-between items-end">
-                          <label className="block text-[10px] font-mono uppercase tracking-wider text-neutral-500">Portfolio Data File</label>
-                          <button
-                            type="button"
-                            onClick={downloadCsvTemplate}
-                            className="text-[10px] font-mono text-primary hover:underline flex items-center gap-1 cursor-pointer bg-white/40 border border-border px-2.5 py-1 rounded-lg hover:bg-white/60 transition"
-                          >
-                            <Download className="w-3 h-3" />
-                            Download Template CSV
-                          </button>
-                        </div>
-
-                        {/* Drag & Drop uploader area */}
-                        <div
-                          className={`relative border-2 border-dashed rounded-2xl p-10 flex flex-col items-center justify-center text-center transition duration-200 bg-white/20 ${uploadedFile
-                              ? "border-primary bg-primary/[0.01]"
-                              : "border-border hover:border-neutral-300"
-                            }`}
-                        >
-                          <input
-                            type="file"
-                            accept=".xlsx,.csv"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) setUploadedFile(file);
-                            }}
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                          />
-                          <div className={`w-12 h-12 rounded-xl border flex items-center justify-center mb-4 transition ${uploadedFile ? "bg-primary/10 border-primary/20 text-primary" : "bg-white/40 border border-border text-neutral-500"
-                            }`}>
-                            {uploadedFile ? <CheckCircle2 className="w-5 h-5" /> : <FileSpreadsheet className="w-5 h-5 stroke-[1.5]" />}
-                          </div>
-
-                          {uploadedFile ? (
-                            <div className="space-y-1">
-                              <span className="text-xs font-semibold text-neutral-900 block">{uploadedFile.name}</span>
-                              <span className="text-[10px] text-neutral-500 font-mono block">{(uploadedFile.size / 1024).toFixed(1)} KB</span>
-                            </div>
-                          ) : (
-                            <div className="space-y-1">
-                              <span className="text-xs font-semibold text-neutral-700 block">Click or Drag Excel/CSV file to upload</span>
-                              <span className="text-[10px] text-neutral-500 block leading-relaxed font-sans mt-1">
-                                Supported: .xlsx, .csv (Must contain exactly 6 columns in matching template order)
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      <button
-                        type="submit"
-                        disabled={apiLoading || !uploadedFile}
-                        className="w-full py-4 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition duration-200 cursor-pointer disabled:opacity-40"
-                      >
-                        {apiLoading ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            <span>{statusMsg || "Processing file..."}</span>
-                          </>
-                        ) : (
-                          <>
-                            <span>Analyze Uploaded Portfolio</span>
-                            <ArrowRight className="w-4 h-4" />
-                          </>
-                        )}
-                      </button>
-                    </form>
-                  )}
-
-                  {/* Tab 2: Manual Entry Form */}
-                  {analyzeTab === "MANUAL" && (
-                    <form onSubmit={handleManualSubmit} className="space-y-6">
-                      <div className="overflow-x-auto select-text">
-                        <table className="w-full text-left border-collapse text-xs">
-                          <thead>
-                            <tr className="border-b border-border text-[9px] font-mono uppercase tracking-wider text-neutral-500">
-                              <th className="py-3 px-2 font-normal">Fund / Asset Name</th>
-                              <th className="py-3 px-2 font-normal w-[100px]">Type</th>
-                              <th className="py-3 px-2 font-normal w-[120px]">Start Date</th>
-                              <th className="py-3 px-2 font-normal w-[110px]">Monthly SIP</th>
-                              <th className="py-3 px-2 font-normal w-[110px]">Total Invested</th>
-                              <th className="py-3 px-2 font-normal w-[110px]">Current Value</th>
-                              <th className="py-3 px-1 font-normal w-[40px]"></th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {manualRows.map((row, idx) => (
-                              <tr key={idx} className="border-b border-border/40 hover:bg-white/20">
-                                <td className="py-2.5 px-2">
-                                  <input
-                                    type="text"
-                                    required
-                                    placeholder="e.g. Parag Parikh Flexi"
-                                    value={row.fundName}
-                                    onChange={(e) => handleManualRowChange(idx, "fundName", e.target.value)}
-                                    className="w-full bg-white/40 border border-border focus:border-primary focus:bg-white/60 rounded-lg p-2 text-neutral-900 font-sans text-xs focus:outline-none placeholder-neutral-400"
-                                  />
-                                </td>
-                                <td className="py-2.5 px-2">
-                                  <select
-                                    value={row.type}
-                                    onChange={(e) => handleManualRowChange(idx, "type", e.target.value)}
-                                    className="w-full bg-white/40 border border-border rounded-lg p-2 text-neutral-900 font-sans text-xs focus:outline-none"
-                                  >
-                                    <option className="bg-white text-neutral-900" value="SIP">SIP</option>
-                                    <option className="bg-white text-neutral-900" value="LUMPSUM">Lumpsum</option>
-                                  </select>
-                                </td>
-                                <td className="py-2.5 px-2">
-                                  <input
-                                    type="date"
-                                    required
-                                    value={row.startDate}
-                                    onChange={(e) => handleManualRowChange(idx, "startDate", e.target.value)}
-                                    className="w-full bg-white/40 border border-border rounded-lg p-1.5 text-neutral-900 font-sans text-xs focus:outline-none"
-                                  />
-                                </td>
-                                <td className="py-2.5 px-2">
-                                  <input
-                                    type="number"
-                                    required
-                                    min={0}
-                                    disabled={row.type === "LUMPSUM"}
-                                    value={row.sipAmount || ""}
-                                    onChange={(e) => handleManualRowChange(idx, "sipAmount", e.target.value)}
-                                    className="w-full bg-white/40 border border-border disabled:opacity-40 rounded-lg p-2 text-neutral-900 font-mono text-xs focus:outline-none text-right"
-                                  />
-                                </td>
-                                <td className="py-2.5 px-2">
-                                  <input
-                                    type="number"
-                                    required
-                                    min={1}
-                                    value={row.invested || ""}
-                                    onChange={(e) => handleManualRowChange(idx, "invested", e.target.value)}
-                                    className="w-full bg-white/40 border border-border rounded-lg p-2 text-neutral-900 font-mono text-xs focus:outline-none text-right"
-                                  />
-                                </td>
-                                <td className="py-2.5 px-2">
-                                  <input
-                                    type="number"
-                                    required
-                                    min={1}
-                                    value={row.currentValue || ""}
-                                    onChange={(e) => handleManualRowChange(idx, "currentValue", e.target.value)}
-                                    className="w-full bg-white/40 border border-border rounded-lg p-2 text-neutral-900 font-mono text-xs focus:outline-none text-right"
-                                  />
-                                </td>
-                                <td className="py-2.5 px-1 text-center">
-                                  {manualRows.length > 1 && (
-                                    <button
-                                      type="button"
-                                      onClick={() => handleRemoveManualRow(idx)}
-                                      className="text-neutral-400 hover:text-red-600 p-1 transition cursor-pointer"
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                    </button>
-                                  )}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-
-                      <div className="flex flex-col sm:flex-row justify-between gap-4 mt-2">
+                  {/* File Uploader */}
+                  <form onSubmit={handleFileUploadSubmit} className="space-y-6">
+                    <div className="space-y-3 text-left">
+                      <div className="flex justify-between items-end">
+                        <label className="block text-[10px] font-mono uppercase tracking-wider text-neutral-500">Portfolio Data File</label>
                         <button
                           type="button"
-                          onClick={handleAddManualRow}
-                          className="py-2.5 px-4 bg-white/40 border border-border hover:bg-white/60 text-neutral-700 text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 transition cursor-pointer self-start"
+                          onClick={downloadCsvTemplate}
+                          className="text-[10px] font-mono text-primary hover:underline flex items-center gap-1 cursor-pointer bg-white/40 border border-border px-2.5 py-1 rounded-lg hover:bg-white/60 transition"
                         >
-                          <Plus className="w-3.5 h-3.5" />
-                          Add Investment Row
+                          <Download className="w-3 h-3" />
+                          Download Template CSV
                         </button>
-                        <span className="text-[10px] text-neutral-500 font-mono self-end">
-                          {manualRows.length} of 15 Max Rows
-                        </span>
                       </div>
 
-                      <button
-                        type="submit"
-                        disabled={apiLoading}
-                        className="w-full py-4 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition duration-200 cursor-pointer disabled:opacity-40"
+                      {/* Drag & Drop uploader area */}
+                      <div
+                        className={`relative border-2 border-dashed rounded-2xl p-10 flex flex-col items-center justify-center text-center transition duration-200 bg-white/20 ${uploadedFile
+                            ? "border-primary bg-primary/[0.01]"
+                            : "border-border hover:border-neutral-300"
+                          }`}
                       >
-                        {apiLoading ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            <span>{statusMsg || "Creating analysis profile..."}</span>
-                          </>
+                        <input
+                          type="file"
+                          accept=".xlsx,.csv"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) setUploadedFile(file);
+                          }}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                        />
+                        <div className={`w-12 h-12 rounded-xl border flex items-center justify-center mb-4 transition ${uploadedFile ? "bg-primary/10 border-primary/20 text-primary" : "bg-white/40 border border-border text-neutral-500"
+                          }`}>
+                          {uploadedFile ? <CheckCircle2 className="w-5 h-5" /> : <FileSpreadsheet className="w-5 h-5 stroke-[1.5]" />}
+                        </div>
+
+                        {uploadedFile ? (
+                          <div className="space-y-1">
+                            <span className="text-xs font-semibold text-neutral-900 block">{uploadedFile.name}</span>
+                            <span className="text-[10px] text-neutral-500 font-mono block">{(uploadedFile.size / 1024).toFixed(1)} KB</span>
+                          </div>
                         ) : (
-                          <>
-                            <span>Validate & Analyze Investments</span>
-                            <ArrowRight className="w-4 h-4" />
-                          </>
+                          <div className="space-y-1">
+                            <span className="text-xs font-semibold text-neutral-700 block">Click or Drag Excel/CSV file to upload</span>
+                            <span className="text-[10px] text-neutral-500 block leading-relaxed font-sans mt-1">
+                              Supported: .xlsx, .csv (Must contain matching columns: AMC, Category, Sub-category, Folio No., Source, Units, Invested Value, Current Value, Returns, XIRR)
+                            </span>
+                          </div>
                         )}
-                      </button>
-                    </form>
-                  )}
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={apiLoading || !uploadedFile}
+                      className="w-full py-4 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition duration-200 cursor-pointer disabled:opacity-40"
+                    >
+                      {apiLoading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>{statusMsg || "Processing file..."}</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Analyze Uploaded Portfolio</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </>
+                      )}
+                    </button>
+                  </form>
                 </div>
               </>
             )}

@@ -19,6 +19,11 @@ export interface AssessmentContext {
   emergencyFund?: string | null;
 }
 
+export interface DimensionResult {
+  score: number;
+  insights: string[];
+}
+
 export interface ScoreResult {
   total: number;
   goalAlignment: number;
@@ -30,17 +35,28 @@ export interface ScoreResult {
   insights: string[];
 }
 
-export function calculateScore(
+/**
+ * Main scoring orchestrator.
+ * Each dimension scores 0–20. Total 0–100.
+ * Display clamped to 2–97.
+ */
+export async function calculateScore(
   rows: PortfolioRow[],
   assessment: AssessmentContext
-): ScoreResult {
-  const goalResult = scoreGoalAlignment(rows, assessment);
-  const assetResult = scoreAssetAllocation(rows, assessment);
-  const divResult = scoreDiversification(rows, assessment);
-  const discResult = scoreDiscipline(rows, assessment);
-  const effResult = scoreEfficiency(rows, assessment);
+): Promise<ScoreResult> {
+  // Run all dimensions (efficiency is async due to AMFI API calls)
+  const [goalResult, assetResult, divResult, discResult, effResult] = await Promise.all([
+    Promise.resolve(scoreGoalAlignment(rows, assessment)),
+    Promise.resolve(scoreAssetAllocation(rows, assessment)),
+    Promise.resolve(scoreDiversification(rows, assessment)),
+    Promise.resolve(scoreDiscipline(rows, assessment)),
+    scoreEfficiency(rows, assessment),
+  ]);
 
-  const total = goalResult.score + assetResult.score + divResult.score + discResult.score + effResult.score;
+  const rawTotal = goalResult.score + assetResult.score + divResult.score + discResult.score + effResult.score;
+
+  // Clamp display score: min 2, max 97
+  const total = Math.min(97, Math.max(2, rawTotal));
 
   // Determine Tag
   let tag: ScoreTag;
@@ -54,28 +70,28 @@ export function calculateScore(
     tag = ScoreTag.NEEDS_REVIEW;
   }
 
-  // Select insights based on the lowest-scoring dimensions
+  // Collect all insights from all dimensions, prioritize by dimension score (worst first)
   const dimensions = [
-    { name: 'Goal Alignment', score: goalResult.score, insights: goalResult.insights },
-    { name: 'Asset Allocation', score: assetResult.score, insights: assetResult.insights },
-    { name: 'Diversification', score: divResult.score, insights: divResult.insights },
-    { name: 'Discipline', score: discResult.score, insights: discResult.insights },
-    { name: 'Efficiency', score: effResult.score, insights: effResult.insights },
+    { name: 'Goal Alignment', score: goalResult.score, maxScore: 20, insights: goalResult.insights },
+    { name: 'Asset Allocation', score: assetResult.score, maxScore: 20, insights: assetResult.insights },
+    { name: 'Diversification', score: divResult.score, maxScore: 20, insights: divResult.insights },
+    { name: 'Discipline', score: discResult.score, maxScore: 20, insights: discResult.insights },
+    { name: 'Efficiency', score: effResult.score, maxScore: 20, insights: effResult.insights },
   ];
 
-  // Sort by score ascending (lowest score first)
+  // Sort by score ascending (worst-scoring dimensions first)
   dimensions.sort((a, b) => a.score - b.score);
 
   const selectedInsights: string[] = [];
   for (const dim of dimensions) {
     for (const insight of dim.insights) {
       selectedInsights.push(insight);
-      if (selectedInsights.length === 3) break;
+      if (selectedInsights.length === 5) break;
     }
-    if (selectedInsights.length === 3) break;
+    if (selectedInsights.length === 5) break;
   }
 
-  // Pad to exactly 3 if needed
+  // Pad to at least 3 insights
   const generalInsights = [
     "Portfolio: Review and rebalance your portfolio annually to maintain your target risk profile",
     "Portfolio: Maintain an emergency fund separate from your market-linked investments",

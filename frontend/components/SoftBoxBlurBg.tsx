@@ -33,7 +33,7 @@ export default function SoftBoxBlurBg() {
       const row = Math.floor(i / maxCols);
 
       const waveOffset = parseFloat((Math.sin(col * 0.9) * 6).toFixed(2));
-      const delay = parseFloat((row * 0.15 + col * 0.08).toFixed(2));
+      const delay = parseFloat((row * 0.08 + col * 0.04).toFixed(2));
 
       const rawOpacity = 0.2 + 0.45 * Math.sin((row / maxRows) * Math.PI) * Math.cos((col / maxCols) * Math.PI * 0.85);
       const opacity = parseFloat(Math.max(0.08, Math.min(0.8, rawOpacity)).toFixed(4));
@@ -139,7 +139,7 @@ export default function SoftBoxBlurBg() {
                 0 2px 3px -2px rgba(147, 197, 253, 0.1)
               `,
               opacity: cell.opacity,
-              animation: 'pillow-float 8s ease-in-out infinite',
+              animation: 'pillow-float 4.5s ease-in-out infinite',
               animationDelay: `${cell.delay}s`,
               transform: `translateY(${cell.waveOffset}px)`,
               ['--wave-offset' as any]: `${cell.waveOffset}px`,

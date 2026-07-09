@@ -11,7 +11,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/fd-calculator',
     '/loan-calculator',
     '/lumpsum-calculator',
-    '/pms-calculator',
     '/rd-calculator',
     '/sif-calculator',
     '/sip-calculator',

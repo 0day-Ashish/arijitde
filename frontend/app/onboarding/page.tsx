@@ -6,7 +6,6 @@ import Lenis from "lenis";
 import GradualBlur from "@/components/GradualBlur";
 import { ArrowLeft, UserPlus, ShieldAlert, Key, Mail, Lock, User, Sparkles, Eye, EyeOff } from "lucide-react";
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 
 type FlowState = "SELECT" | "NEW_USER" | "OTP_VERIFY" | "EXISTING_CLIENT";
 
@@ -1148,9 +1147,6 @@ export default function Onboarding() {
         )}
 
       </div>
-
-      {/* Footer Section */}
-      <Footer />
     </main>
   );
 }

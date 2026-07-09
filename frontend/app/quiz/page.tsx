@@ -6,7 +6,6 @@ import Navbar from "@/components/Navbar";
 import SoftBoxBlurBg from "@/components/SoftBoxBlurBg";
 import GradualBlur from "@/components/GradualBlur";
 import Lenis from "lenis";
-import Footer from "@/components/Footer";
 
 // ──── Types ────
 type Archetype = "Tiger" | "Elephant" | "Deer" | "Fox" | "Lion";
@@ -527,8 +526,8 @@ export default function Quiz() {
     const { archetype, confidence } = currentResult;
 
     const canvas = document.createElement("canvas");
-    canvas.width = 1200;
-    canvas.height = 630;
+    canvas.width = 480;
+    canvas.height = 720;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
@@ -540,102 +539,159 @@ export default function Quiz() {
     };
 
     // 1. Draw Background Base
-    ctx.fillStyle = "#F2F0EF";
-    ctx.fillRect(0, 0, 1200, 630);
+    ctx.fillStyle = "#FAF6F0";
+    ctx.fillRect(0, 0, 480, 720);
 
     // 2. Draw Soft Corner Gradients (Archetype accents)
-    const radGrad = ctx.createRadialGradient(950, 450, 20, 950, 450, 650);
-    radGrad.addColorStop(0, hexToRgba(currentTheme.accentHex, 0.45));
-    radGrad.addColorStop(0.5, hexToRgba(currentTheme.accentHex, 0.15));
-    radGrad.addColorStop(1, "rgba(242, 240, 239, 0)");
+    const radGrad = ctx.createRadialGradient(240, 360, 50, 240, 360, 400);
+    radGrad.addColorStop(0, hexToRgba(currentTheme.accentHex, 0.35));
+    radGrad.addColorStop(0.6, hexToRgba(currentTheme.accentHex, 0.1));
+    radGrad.addColorStop(1, "rgba(250, 246, 240, 0)");
     ctx.fillStyle = radGrad;
-    ctx.fillRect(0, 0, 1200, 630);
+    ctx.fillRect(0, 0, 480, 720);
 
-    // 3. Draw Inner Card container
+    // 3. Draw Inner Card container (ID card outline)
     ctx.save();
     ctx.shadowColor = "rgba(0, 0, 0, 0.08)";
-    ctx.shadowBlur = 40;
+    ctx.shadowBlur = 30;
     ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 15;
-    ctx.fillStyle = "rgba(255, 255, 255, 0.65)";
+    ctx.shadowOffsetY = 12;
+    ctx.fillStyle = "rgba(255, 255, 255, 0.75)";
     ctx.beginPath();
-    roundRect(ctx, 80, 80, 1040, 470, 32);
+    roundRect(ctx, 40, 40, 400, 640, 28);
     ctx.fill();
     ctx.restore();
 
-    // 4. Draw Inner border outline
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.7)";
-    ctx.lineWidth = 2.5;
+    // 4. Draw Inner Card border outline
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    roundRect(ctx, 80, 80, 1040, 470, 32);
+    roundRect(ctx, 40, 40, 400, 640, 28);
     ctx.stroke();
 
-    // 5. Draw Header Branding
+    // 5. Draw Header Branding (Clean centered layout)
     ctx.fillStyle = "#000000";
-    ctx.font = "bold 28px sans-serif";
+    ctx.font = "bold 20px sans-serif";
+    ctx.textAlign = "center";
     ctx.textBaseline = "top";
-    ctx.fillText("FINANALYSIS", 130, 135);
+    ctx.fillText("FINANALYSIS", 240, 80);
 
     ctx.fillStyle = "#64748B";
-    ctx.font = "bold 13px sans-serif";
-    ctx.fillText("INVESTOR PERSONALITY DIAGNOSTIC", 130, 175);
+    ctx.font = "bold 9px sans-serif";
+    ctx.fillText("INVESTOR PERSONALITY DIAGNOSTIC", 240, 110);
+
+    // Subtle Divider Line
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.05)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(80, 135);
+    ctx.lineTo(400, 135);
+    ctx.stroke();
 
     // 6. Draw Emoji (System native font)
-    ctx.font = "140px sans-serif";
+    ctx.font = "110px sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(currentDetails.emoji, 260, 335);
+    ctx.fillText(currentDetails.emoji, 240, 200);
 
-    // 7. Draw Archetype Title
-    ctx.textAlign = "left";
+    // 7. Draw Archetype Title & Subtitle (Centered)
     ctx.fillStyle = "#0F172A";
-    ctx.font = "bold 56px sans-serif";
-    ctx.fillText(`${archetype.toUpperCase()} INVESTOR`, 420, 255);
+    ctx.font = "bold 26px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(`${archetype.toUpperCase()} INVESTOR`, 240, 285);
+
+    ctx.fillStyle = "#64748B";
+    ctx.font = "600 10px sans-serif";
+    ctx.fillText("INVESTOR ARCHETYPE", 240, 315);
 
     // 8. Draw Confidence Badge
-    const pillText = `CONFIDENCE: ${confidence}%`;
-    ctx.font = "bold 13px sans-serif";
-    const textWidth = ctx.measureText(pillText).width;
-    const pillWidth = textWidth + 30;
+    const confidenceText = `CONFIDENCE: ${confidence}%`;
+    ctx.font = "bold 11px sans-serif";
+    const textWidth = ctx.measureText(confidenceText).width;
+    const pillWidth = textWidth + 24;
 
     ctx.fillStyle = currentTheme.accentHex;
     ctx.beginPath();
-    roundRect(ctx, 420, 285, pillWidth, 32, 16);
+    roundRect(ctx, 240 - pillWidth / 2, 340, pillWidth, 26, 13);
     ctx.fill();
 
     ctx.fillStyle = "#FFFFFF";
-    ctx.fillText(pillText, 435, 306);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(confidenceText, 240, 353);
 
     // 9. Draw Headline
     ctx.fillStyle = "#475569";
-    ctx.font = "italic 22px sans-serif";
-    ctx.fillText(`"${currentDetails.headline}"`, 420, 360);
+    ctx.font = "italic 16px sans-serif";
+    ctx.fillText(`"${currentDetails.headline}"`, 240, 400);
 
-    // 10. Draw Traits List
-    let currentX = 420;
-    ctx.font = "600 13px sans-serif";
-    currentDetails.traits.forEach(trait => {
-      const traitWidth = ctx.measureText(trait).width;
-      ctx.strokeStyle = "rgba(0, 0, 0, 0.12)";
-      ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+    // Divider Line above traits
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.05)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(80, 425);
+    ctx.lineTo(400, 425);
+    ctx.stroke();
+
+    // 10. Draw Traits List (Stacked Vertically to avoid horizontal boundaries overlap)
+    ctx.font = "600 11px sans-serif";
+    const traitHeights = 26;
+    const traitGap = 9;
+    
+    let currentY = 445;
+    currentDetails.traits.forEach((trait) => {
+      const w = ctx.measureText(trait).width + 24;
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.08)";
+      ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
       ctx.lineWidth = 1;
       ctx.beginPath();
-      roundRect(ctx, currentX, 405, traitWidth + 24, 30, 15);
+      roundRect(ctx, 240 - w / 2, currentY, w, traitHeights, 13);
       ctx.fill();
       ctx.stroke();
 
       ctx.fillStyle = "#334155";
-      ctx.fillText(trait, currentX + 12, 424);
-      currentX += traitWidth + 36;
+      ctx.font = "600 11px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(trait, 240, currentY + traitHeights / 2);
+      currentY += traitHeights + traitGap;
     });
 
-    // 11. Draw Footer Label
-    ctx.fillStyle = "#94A3B8";
-    ctx.font = "600 13px sans-serif";
-    ctx.textAlign = "right";
-    ctx.fillText("TAKE THE QUIZ AT FINANALYSIS.IN", 1020, 505);
+    // Divider Line above barcode
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.05)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(80, 552);
+    ctx.lineTo(400, 552);
+    ctx.stroke();
 
-    // 12. Save File download
+    // 11. Draw Barcode at the bottom
+    ctx.fillStyle = "#000000";
+    let barX = 240 - 59; // Center barcode (actual width is ~118px)
+    const barY = 565;
+    const barHeight = 25;
+    const barcodePattern = [2, 1, 3, 1, 1, 2, 4, 1, 1, 3, 2, 2, 1, 1, 3, 1, 2, 1, 4, 1, 2, 2, 1, 3, 1, 1, 2];
+    barcodePattern.forEach((w, index) => {
+      if (index % 2 === 0) {
+        ctx.fillRect(barX, barY, w * 1.5, barHeight);
+      }
+      barX += w * 1.5 + (index % 3 === 0 ? 1 : 2);
+    });
+
+    // Serial number label under barcode
+    ctx.fillStyle = "#64748B";
+    ctx.font = "bold 8px monospace";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.fillText(`FA-${archetype.substring(0, 3).toUpperCase()}-${confidence}-${Math.floor(1000 + Math.random() * 9000)}`, 240, 595);
+
+    // 12. Draw Footer Label
+    ctx.fillStyle = "#94A3B8";
+    ctx.font = "bold 9px sans-serif";
+    ctx.fillText("TAKE THE QUIZ AT FINANALYSIS.IN", 240, 610);
+
+    // 13. Save File download
     const dataUrl = canvas.toDataURL("image/png");
     const link = document.createElement("a");
     link.download = `finanalysis-${archetype.toLowerCase()}-investor.png`;
@@ -680,10 +736,7 @@ export default function Quiz() {
               isLoaded ? "opacity-100 scale-100" : "opacity-0 scale-95"
             }`}
           >
-            <span className="text-[10px] font-mono text-primary border border-primary/25 bg-primary/5 px-4 py-1.5 rounded-full uppercase tracking-widest font-bold mb-6">
-              Diagnostic Quiz
-            </span>
-            <h1 className="text-4xl md:text-6xl font-bold leading-tight text-foreground mb-4 font-clash max-w-3xl">
+            <h1 className="text-4xl md:text-6xl font-bold leading-tight text-foreground mb-4 font-instrument-serif max-w-3xl">
               Discover Your Investor Personality
             </h1>
             <p className="text-muted-foreground text-sm md:text-base max-w-xl mb-12 font-sans leading-relaxed">
@@ -978,9 +1031,6 @@ export default function Quiz() {
         )}
 
       </div>
-
-      {/* Footer Section */}
-      <Footer />
     </main>
   );
 }

@@ -186,7 +186,7 @@ export default function AdminDashboard() {
     danger: false
   });
 
-  const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://finanalysis-backend.onrender.com';
+  const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
   // 1. Auth Guard and token initialisation
   useEffect(() => {

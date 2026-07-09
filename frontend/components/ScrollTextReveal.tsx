@@ -53,7 +53,7 @@ export default function ScrollTextReveal() {
   }, []);
 
   return (
-    <div ref={triggerRef} className="h-[300vh] w-full relative z-10">
+    <div ref={triggerRef} className="h-[200vh] w-full relative z-10">
       {/* Pinned View Container */}
       <div 
         ref={containerRef} 

@@ -8,6 +8,26 @@ interface FooterProps {
 
 export default function Footer({ footerRef }: FooterProps) {
   const [currentTime, setCurrentTime] = useState('');
+  const [isVisible, setIsVisible] = useState(false);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+        }
+      },
+      { threshold: 0.05 }
+    );
+    const el = containerRef.current;
+    if (el) {
+      observer.observe(el);
+    }
+    return () => {
+      if (el) observer.unobserve(el);
+    };
+  }, []);
 
   useEffect(() => {
     const updateTime = () => {
@@ -27,11 +47,11 @@ export default function Footer({ footerRef }: FooterProps) {
   }, []);
 
   return (
-    <footer ref={footerRef as any} className="w-full bg-transparent relative z-10 pt-24 pb-0 overflow-hidden text-foreground">
+    <footer ref={footerRef as any} className="w-full bg-transparent relative z-10 pt-24 pb-16 overflow-hidden text-foreground">
       {/* Top Columns Grid */}
       <div className="w-full max-w-5xl mx-auto px-6 mb-20 flex flex-col items-center gap-12 text-center">
         {/* Big "Good buy." title */}
-        <h2 className="font-clash text-7xl sm:text-7xl md:text-[8rem] lg:text-[12rem] font-normal text-primary tracking-tight leading-none drop-shadow-sm select-none">
+        <h2 className="font-instrument-serif text-7xl sm:text-7xl md:text-[8rem] lg:text-[12rem] font-normal text-primary tracking-tight leading-none drop-shadow-sm select-none">
           Good buy.
         </h2>
         
@@ -58,7 +78,7 @@ export default function Footer({ footerRef }: FooterProps) {
           {/* Visit us */}
           <div className="flex flex-col items-center gap-2 text-muted-foreground">
             <span className="text-primary font-bold text-base md:text-lg mb-0.5">Visit us</span>
-            <span className="font-normal">Salt Lake Sector V</span>
+            <span className="font-normal">Baguiati, Jardabagan</span>
             <span className="font-normal">Kolkata, West Bengal</span>
             <span className="font-normal">India</span>
           </div>
@@ -66,17 +86,11 @@ export default function Footer({ footerRef }: FooterProps) {
           {/* Quick Links */}
           <div className="flex flex-col items-center gap-2.5">
             <span className="text-primary font-bold text-base md:text-lg">Quick Links</span>
-            <a href="/#about" className="text-muted-foreground hover:text-primary transition duration-200 underline decoration-primary/30 underline-offset-4 font-normal">
-              About
+            <a href="https://www.linkedin.com/in/arijit-de-ba1594358" className="text-muted-foreground hover:text-primary transition duration-200 underline decoration-primary/30 underline-offset-4 font-normal">
+              LinkedIn
             </a>
-            <a href="/#calculators" className="text-muted-foreground hover:text-primary transition duration-200 underline decoration-primary/30 underline-offset-4 font-normal">
-              Calculators
-            </a>
-            <a href="/quiz" className="text-muted-foreground hover:text-primary transition duration-200 underline decoration-primary/30 underline-offset-4 font-normal">
-              Investor Quiz
-            </a>
-            <a href="/#faq" className="text-muted-foreground hover:text-primary transition duration-200 underline decoration-primary/30 underline-offset-4 font-normal">
-              FAQ
+            <a href="https://www.instagram.com/arijit_.04" className="text-muted-foreground hover:text-primary transition duration-200 underline decoration-primary/30 underline-offset-4 font-normal">
+              Instagram
             </a>
           </div>
         </div>
@@ -93,7 +107,7 @@ export default function Footer({ footerRef }: FooterProps) {
             className="w-24 h-24 md:w-36 md:h-36 rounded-2xl object-cover shrink-0 border border-amber-500/15 shadow-md animate-fade-in relative z-10"
           />
           <div className="flex-1 flex flex-col gap-2.5 relative z-10">
-            <h3 className="font-clash text-xl sm:text-3xl font-bold text-amber-800">New investment?</h3>
+            <h3 className="font-instrument-serif text-xl sm:text-3xl font-bold text-amber-800">New investment?</h3>
             <p className="font-chillax text-base sm:text-xl text-neutral-800 leading-relaxed">
               Reach out today to our CEO for new financial enquiries at{" "}
               <a href="mailto:contact@finanalysis.in" className="text-amber-700 hover:text-amber-900 hover:underline font-semibold font-chillax">
@@ -126,15 +140,20 @@ export default function Footer({ footerRef }: FooterProps) {
       </div>
 
       {/* Big Brand Logo Text */}
-      <div className="w-full overflow-hidden flex justify-center items-end relative h-[15vw] min-h-[110px] mt-10">
+      <div 
+        ref={containerRef}
+        className={`w-full overflow-hidden flex flex-col justify-end items-center relative min-h-[140px] mt-10 transition-all duration-[1500ms] ease-out ${
+          isVisible ? "opacity-100 blur-0 translate-y-0" : "opacity-0 blur-xl translate-y-8"
+        }`}
+      >
         <div className="absolute bottom-[-10vw] left-1/2 -translate-x-1/2 w-[60vw] h-[20vw] rounded-full bg-[radial-gradient(circle,rgba(0,0,0,0.03)_0%,transparent_70%)] pointer-events-none select-none" />
 
         {/* Thank You Note */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 text-[12px] sm:text-[14px] font-mono uppercase tracking-widest text-black select-none z-10 text-center animate-pulse">
+        <div className="text-[12px] sm:text-[14px] font-mono uppercase tracking-widest text-black select-none z-10 text-center animate-pulse mb-6">
           Thank you for choosing us!
         </div>
 
-        <h1 className="font-chillax text-[18vw] font-bold text-black tracking-tighter leading-none select-none translate-y-[20%] text-center uppercase transition-all duration-700 ease-out hover:text-primary hover:tracking-normal hover:translate-y-[10%] cursor-pointer">
+        <h1 style={{ fontSize: "15vw" }} className="font-chillax font-bold text-black tracking-tighter leading-none select-none translate-y-[20%] text-center uppercase">
           FinAnalysis
         </h1>
       </div>

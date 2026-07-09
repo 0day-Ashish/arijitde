@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import SessionSync from "@/components/SessionSync";
@@ -14,6 +15,12 @@ const chillax = localFont({
 const clash = localFont({
   src: "../public/fonts/ClashDisplay-Regular.otf",
   variable: "--font-clash",
+});
+
+const instrumentSerif = Instrument_Serif({
+  variable: "--font-instrument-serif",
+  subsets: ["latin"],
+  weight: "400",
 });
 
 export const metadata: Metadata = {
@@ -68,6 +75,7 @@ export default function RootLayout({
         "antialiased",
         chillax.variable,
         clash.variable,
+        instrumentSerif.variable,
         "font-clash"
       )}
     >

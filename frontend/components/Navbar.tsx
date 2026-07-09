@@ -12,7 +12,7 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [dashboardUrl, setDashboardUrl] = useState('/onboarding');
   const [userRole, setUserRole] = useState<string | null>(null);
-  const backendUrl = process.env.NEXT_PUBLIC_API_URL || "https://finanalysis-backend.onrender.com";
+  const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -70,7 +70,7 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
           <div className="w-full px-6 py-3.5 flex items-center justify-between">
             {/* Left: Brand Name & Logo */}
             <div className="flex items-center gap-3">
-              <a href="/" className="flex items-center gap-2.5 text-xl font-bold tracking-wider text-primary font-chillax select-none hover:opacity-90">
+              <a href="/" className="flex items-center gap-2.5 text-xl font-bold tracking-wider text-primary font-instrument-serif select-none hover:opacity-90">
                 <img
                   src="/image.png"
                   alt="FinAnalysis Logo"
