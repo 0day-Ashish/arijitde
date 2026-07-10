@@ -55,7 +55,7 @@ router.post('/otp/send', authLimiter, async (req, res, next) => {
       if (existingUser) {
         res.status(400).json({
           success: false,
-          error: 'User already exists. Try login.',
+          error: 'Unable to complete registration. Please try logging in or contact support.',
         });
         return;
       }
@@ -351,7 +351,10 @@ router.post('/phone', authMiddleware, async (req: AuthenticatedRequest, res: Res
 
 // 7. POST /api/auth/pan/login
 const panLoginSchema = z.object({
-  pan: z.string().min(1, 'PAN is required'),
+  pan: z.string()
+    .min(1, 'PAN is required')
+    .transform((val) => val.trim().toUpperCase())
+    .pipe(z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, 'Invalid PAN format')),
   password: z.string().min(1, 'Password is required'),
 });
 
@@ -366,26 +369,26 @@ router.post('/pan/login', authLimiter, async (req, res, next) => {
     });
 
     if (!user) {
-      res.status(404).json({
+      res.status(401).json({
         success: false,
-        error: 'No client profile found matching this PAN number.',
+        error: 'Invalid PAN or password. Please check your credentials.',
       });
       return;
     }
 
     if (user.role !== 'CLIENT') {
-      res.status(403).json({
+      res.status(401).json({
         success: false,
-        error: 'Only approved clients can log in using PAN.',
+        error: 'Invalid PAN or password. Please check your credentials.',
       });
       return;
     }
 
     // Verify password
     if (!user.password) {
-      res.status(400).json({
+      res.status(401).json({
         success: false,
-        error: 'No password set on this account. Please reset your password using email OTP.',
+        error: 'Invalid PAN or password. Please check your credentials.',
       });
       return;
     }
@@ -394,7 +397,7 @@ router.post('/pan/login', authLimiter, async (req, res, next) => {
     if (!isMatch) {
       res.status(401).json({
         success: false,
-        error: 'Invalid password. Please try again.',
+        error: 'Invalid PAN or password. Please check your credentials.',
       });
       return;
     }
@@ -442,7 +445,7 @@ router.post('/password/reset/send-otp', authLimiter, async (req, res, next) => {
     if (!user) {
       res.status(404).json({
         success: false,
-        error: 'No user account found matching this email address.',
+        error: 'Unable to process your request. Please verify your email or contact support.',
       });
       return;
     }
@@ -505,7 +508,10 @@ router.post('/password/reset/confirm', authLimiter, async (req, res, next) => {
 
 // 10. POST /api/auth/activation/send-otp
 const sendActivationOtpSchema = z.object({
-  pan: z.string().min(1, 'PAN is required'),
+  pan: z.string()
+    .min(1, 'PAN is required')
+    .transform((val) => val.trim().toUpperCase())
+    .pipe(z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, 'Invalid PAN format')),
   email: z.string().email('Invalid email address'),
 });
 
@@ -589,7 +595,10 @@ router.post('/activation/send-otp', authLimiter, async (req, res, next) => {
 
 // 11. POST /api/auth/activation/verify-otp
 const verifyActivationOtpSchema = z.object({
-  pan: z.string().min(1, 'PAN is required'),
+  pan: z.string()
+    .min(1, 'PAN is required')
+    .transform((val) => val.trim().toUpperCase())
+    .pipe(z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, 'Invalid PAN format')),
   email: z.string().email('Invalid email address'),
   otp: z.string().length(6, 'OTP must be 6 digits'),
   password: z.string()

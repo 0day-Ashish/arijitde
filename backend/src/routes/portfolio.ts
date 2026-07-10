@@ -10,11 +10,24 @@ import { UploadType, FundType } from '@prisma/client';
 
 const router = Router();
 
-// Setup Multer memory storage
+// Setup Multer memory storage with file type validation
+const ALLOWED_MIMETYPES = [
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+  'application/vnd.ms-excel', // .xls
+  'text/csv',
+];
+
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+  fileFilter: (_req, file, cb) => {
+    if (ALLOWED_MIMETYPES.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only Excel (.xlsx/.xls) and CSV files are accepted'));
+    }
   },
 });
 
@@ -139,12 +152,81 @@ router.post('/upload', authMiddleware, upload.single('file'), async (req: Authen
     // Read sheet as a 2D array of raw values to retain column order
     const rawRows = XLSX.utils.sheet_to_json<unknown[]>(worksheet!, { header: 1 });
 
+    if (rawRows.length === 0) {
+      res.status(400).json({ success: false, error: 'Excel sheet is empty' });
+      return;
+    }
+
+    // Holdings Statement format detection
+    let isHoldingsStatement = false;
+    let headerRowIndex = -1;
+
+    for (let r = 0; r < rawRows.length; r++) {
+      const row = rawRows[r];
+      if (Array.isArray(row) && row[0] === 'Scheme Name' && (row.includes('Invested Value') || row.includes('Current Value'))) {
+        isHoldingsStatement = true;
+        headerRowIndex = r;
+        break;
+      }
+    }
+
+    if (isHoldingsStatement) {
+      const parsedFunds: Array<{ fundName: string; invested: number; currentValue: number }> = [];
+      const dataRows = rawRows.slice(headerRowIndex + 1);
+
+      // Inspect header row indices for Invested Value and Current Value to make it robust
+      const headerRow = rawRows[headerRowIndex] as any[];
+      const investedIdx = headerRow.indexOf('Invested Value');
+      const currentIdx = headerRow.indexOf('Current Value');
+
+      for (let i = 0; i < dataRows.length; i++) {
+        const row = dataRows[i];
+        if (!row || !Array.isArray(row)) continue;
+
+        // Skip completely empty rows
+        const isEmpty = row.every((val) => val === undefined || val === null || val === '');
+        if (isEmpty) continue;
+
+        const fundName = typeof row[0] === 'string' ? row[0].trim() : String(row[0] || '').trim();
+        // Skip total / summary rows
+        if (!fundName || fundName.includes('Total') || fundName.includes('HOLDING SUMMARY') || fundName.includes('HOLDINGS AS ON')) continue;
+
+        const rawInvested = investedIdx !== -1 ? row[investedIdx] : row[7];
+        const rawCurrentValue = currentIdx !== -1 ? row[currentIdx] : row[8];
+
+        const invested = parseExcelNumber(rawInvested);
+        const currentValue = parseExcelNumber(rawCurrentValue);
+
+        if (invested !== null && currentValue !== null) {
+          parsedFunds.push({
+            fundName,
+            invested,
+            currentValue,
+          });
+        }
+      }
+
+      if (parsedFunds.length === 0) {
+        res.status(400).json({ success: false, error: 'No holdings found in the statement' });
+        return;
+      }
+
+      res.status(200).json({
+        success: true,
+        data: {
+          requiresDates: true,
+          funds: parsedFunds,
+        }
+      });
+      return;
+    }
+
+    // Default 6-column sheet validation
     if (rawRows.length <= 1) {
       res.status(400).json({ success: false, error: 'Excel sheet must contain a header and at least 1 data row' });
       return;
     }
 
-    // Validate headers size (exactly 6 columns)
     const headerRow = rawRows[0];
     if (!headerRow || headerRow.length < 6) {
       res.status(400).json({ success: false, error: 'Excel sheet must contain exactly 6 columns' });

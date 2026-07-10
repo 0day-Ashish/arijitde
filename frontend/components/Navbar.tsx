@@ -120,9 +120,14 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
                   Dashboard
                 </a>
               ) : (
-                <a href="/onboarding" className="px-5 py-2.5 bg-primary text-primary-foreground font-bold text-xs rounded-xl hover:bg-primary/90 transition duration-200 shadow-sm text-center whitespace-nowrap">
-                  Book a Call
-                </a>
+                <>
+                  <a href="/onboarding" className="px-5 py-2.5 border border-primary/20 hover:border-primary/40 text-primary font-bold text-xs rounded-xl hover:bg-primary/5 transition duration-200 text-center whitespace-nowrap">
+                    Login
+                  </a>
+                  <a href="https://wa.me/919831093297" target="_blank" rel="noopener noreferrer" className="px-5 py-2.5 bg-primary text-primary-foreground font-bold text-xs rounded-xl hover:bg-primary/90 transition duration-200 shadow-sm text-center whitespace-nowrap">
+                    Book a Call
+                  </a>
+                </>
               )}
             </div>
 
@@ -196,9 +201,14 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
                     Dashboard
                   </a>
                 ) : (
-                  <a href="/onboarding" className="flex-1 text-center py-2.5 text-sm font-bold text-white bg-primary rounded-xl hover:bg-primary/90 transition duration-200">
-                    Book a Call
-                  </a>
+                  <>
+                    <a href="/onboarding" className="flex-1 text-center py-2.5 text-sm font-bold text-primary border border-primary/25 rounded-xl hover:bg-primary/5 transition duration-200">
+                      Login
+                    </a>
+                    <a href="https://wa.me/919831093297" target="_blank" rel="noopener noreferrer" className="flex-1 text-center py-2.5 text-sm font-bold text-white bg-primary rounded-xl hover:bg-primary/90 transition duration-200">
+                      Book a Call
+                    </a>
+                  </>
                 )}
               </div>
             </nav>

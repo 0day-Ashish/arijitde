@@ -162,7 +162,7 @@ interface ScoreData {
   discipline: number;
   efficiency: number;
   tag: "ALIGNED" | "MODERATE" | "NEEDS_REVIEW" | "NEEDS_STRUCTURING";
-  insights: string[];
+  insights: any;
 }
 
 const PLAN_LABELS: Record<string, string> = {
@@ -275,6 +275,7 @@ export default function ClientDashboard() {
 
   // Quiz States (if needed to update lifecycle)
   const [showQuiz, setShowQuiz] = useState(false);
+  const [shouldAnalyzeAfterQuiz, setShouldAnalyzeAfterQuiz] = useState(false);
   const [quizStep, setQuizStep] = useState(1);
   const [quizAgeRange, setQuizAgeRange] = useState<string>("25-35");
   const [quizAge, setQuizAge] = useState<number>(30);
@@ -298,19 +299,11 @@ export default function ClientDashboard() {
   const [showLogoutWarning, setShowLogoutWarning] = useState(false);
 
   // Client specifics
-  const [activeTab, setActiveTab] = useState<"home" | "portfolio" | "analyze" | "top-mf" | "book" | "query">("home");
   const [clientBookings, setClientBookings] = useState<string[]>([]);
   const [showBookingSuccess, setShowBookingSuccess] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<string>("");
 
-  // Top MF States
-  const [navCache, setNavCache] = useState<Record<string, { latestNav: number, navDate: string, return1Y: number, return3Y: number, fullData: any }>>({});
-  const [topMfLoading, setTopMfLoading] = useState(false);
-  const [topMfSearch, setTopMfSearch] = useState("");
-  const [topMfCategoryFilter, setTopMfCategoryFilter] = useState("All");
-  const [topMfPage, setTopMfPage] = useState(1);
-  const [topMfSortBy, setTopMfSortBy] = useState<"1Y" | "3Y" | "name">("3Y");
-  const [allNavsLoaded, setAllNavsLoaded] = useState(false);
+
 
   // Booking / Scheduling States
   const [payments, setPayments] = useState<any[]>([]);
@@ -442,95 +435,7 @@ export default function ClientDashboard() {
     }
   }, [token]);
 
-  // Fetch all 50 top mutual fund details in the background/parallel on top-mf load
-  useEffect(() => {
-    if (activeTab !== "top-mf" || allNavsLoaded) return;
 
-    const fetchAllNavs = async () => {
-      setTopMfLoading(true);
-      const newCache = { ...navCache };
-      let updated = false;
-
-      // Batching fetches to prevent rate limiting (10 at a time)
-      const batches = [];
-      const batchSize = 10;
-      for (let i = 0; i < TOP_50_SCHEMES.length; i += batchSize) {
-        batches.push(TOP_50_SCHEMES.slice(i, i + batchSize));
-      }
-
-      for (const batch of batches) {
-        try {
-          await Promise.all(
-            batch.map(async (scheme) => {
-              if (newCache[scheme.code]) return;
-              try {
-                const res = await fetch(`https://api.mfapi.in/mf/${scheme.code}`);
-                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-                const data = await res.json();
-                if (data && data.data && data.data.length > 0) {
-                  const history = data.data; // Sorted from latest to oldest
-                  const latestNav = parseFloat(history[0].nav);
-                  const navDate = history[0].date;
-
-                  let return1Y = 0;
-                  const idx1Y = Math.min(250, history.length - 1);
-                  if (idx1Y > 0) {
-                    const pastNav = parseFloat(history[idx1Y].nav);
-                    return1Y = pastNav > 0 ? ((latestNav - pastNav) / pastNav) * 100 : 0;
-                  }
-
-                  let return3Y = 0;
-                  const idx3Y = Math.min(750, history.length - 1);
-                  if (idx3Y > 0) {
-                    const pastNav = parseFloat(history[idx3Y].nav);
-                    return3Y = pastNav > 0 ? (Math.pow(latestNav / pastNav, 1 / 3) - 1) * 100 : 0;
-                  }
-
-                  newCache[scheme.code] = {
-                    latestNav,
-                    navDate,
-                    return1Y,
-                    return3Y,
-                    fullData: history
-                  };
-                  updated = true;
-                } else {
-                  throw new Error("Empty details from API");
-                }
-              } catch (err) {
-                console.warn(`Failed to fetch NAV for ${scheme.name}, using mock fallback:`, err);
-                
-                // Fallback static data based on scheme code hash for consistent values
-                const hash = scheme.name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
-                const mockNav = 50 + (hash % 450); // mock nav between 50 and 500
-                const mock1Y = 12 + (hash % 18);   // mock 1Y return between 12% and 30%
-                const mock3Y = 10 + (hash % 12);   // mock 3Y return between 10% and 22%
-                
-                newCache[scheme.code] = {
-                  latestNav: mockNav,
-                  navDate: new Date().toLocaleDateString('en-GB'),
-                  return1Y: mock1Y,
-                  return3Y: mock3Y,
-                  fullData: []
-                };
-                updated = true;
-              }
-            })
-          );
-        } catch (err) {
-          console.warn("Batch fetch warning:", err);
-        }
-      }
-
-      if (updated) {
-        setNavCache(newCache);
-      }
-      setAllNavsLoaded(true);
-      setTopMfLoading(false);
-    };
-
-    fetchAllNavs();
-  }, [activeTab, allNavsLoaded]);
 
   const fetchMyQueries = async () => {
     if (!token) return;
@@ -591,10 +496,10 @@ export default function ClientDashboard() {
   };
 
   useEffect(() => {
-    if (activeTab === 'query') {
+    if (token) {
       fetchMyQueries();
     }
-  }, [activeTab, token]);
+  }, [token]);
 
   const fetchClientData = async () => {
     try {
@@ -792,6 +697,65 @@ export default function ClientDashboard() {
     }
   };
 
+  const handleAnalyzeCertifiedPortfolio = async (assessmentIdParam?: any) => {
+    const targetAssessmentId = (typeof assessmentIdParam === "string") ? assessmentIdParam : activeAssessmentId;
+    
+    if (!targetAssessmentId) {
+      setError(null);
+      setShouldAnalyzeAfterQuiz(true);
+      setQuizStep(1);
+      setShowQuiz(true);
+      return;
+    }
+
+    if (!existingClientData || !existingClientData.folios || existingClientData.folios.length === 0) {
+      setError("No certified holdings found to analyze.");
+      return;
+    }
+
+    setError(null);
+    setApiLoading(true);
+    setStatusMsg("Analyzing certified portfolio...");
+
+    try {
+      const rows = existingClientData.folios.map((f: any) => ({
+        fundName: f.schemeName || "Unknown Fund",
+        type: "LUMPSUM", // Defaulting to LUMPSUM for holdings
+        startDate: new Date().toISOString(),
+        sipAmount: 0,
+        invested: f.purchaseValue || 0,
+        currentValue: f.aum || 0
+      }));
+
+      const res = await fetch(`${backendUrl}/api/portfolio/manual`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          assessmentId: targetAssessmentId,
+          rows
+        })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        const pId = data.data.portfolioId;
+        setActivePortfolioId(pId);
+        setStatusMsg("Calculating financial health scores...");
+        await calculatePortfolioScore(pId);
+        await fetchClientData();
+      } else {
+        setError(data.error || "Failed to analyze certified portfolio");
+      }
+    } catch (err) {
+      setError("Network error while submitting details.");
+    } finally {
+      setApiLoading(false);
+    }
+  };
+
   // Upload portfolio file submit
   const handleFileUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -969,11 +933,18 @@ export default function ClientDashboard() {
       const resData = await res.json();
 
       if (resData.success) {
-        setActiveAssessmentId(resData.data.assessmentId);
+        const newAssessmentId = resData.data.assessmentId;
+        setActiveAssessmentId(newAssessmentId);
         setShowQuiz(false);
-        // Refresh scoring logic
-        if (activePortfolioId) {
-          await calculatePortfolioScore(activePortfolioId);
+        
+        if (shouldAnalyzeAfterQuiz) {
+          setShouldAnalyzeAfterQuiz(false);
+          await handleAnalyzeCertifiedPortfolio(newAssessmentId);
+        } else {
+          if (activePortfolioId) {
+            await calculatePortfolioScore(activePortfolioId);
+          }
+          await fetchClientData();
         }
       } else {
         setError(resData.error || "Failed to submit assessment target");
@@ -1213,67 +1184,7 @@ export default function ClientDashboard() {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 w-full max-w-full px-4 md:px-8 py-12 flex flex-col lg:flex-row gap-8 relative z-10">
-        
-        {/* Sticky Sidebar */}
-        {token && userData && (
-          <aside className="lg:w-64 shrink-0 lg:sticky lg:top-28 h-fit space-y-6 relative z-30 animate-in fade-in duration-300">
-            <div className="bg-white/35 backdrop-blur-xl border border-border shadow-md rounded-3xl p-6 flex flex-col gap-4 text-left">
-              <div className="flex items-center gap-2.5 pb-2 border-b border-border/50">
-                <LayoutGrid className="w-5 h-5 text-primary" />
-                <span className="font-chillax font-bold tracking-wider text-xs uppercase text-neutral-500">Navigation</span>
-              </div>
-              <nav className="flex flex-col gap-2">
-                <button
-                  onClick={() => setActiveTab("home")}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-primary/5 transition duration-150 font-semibold text-xs cursor-pointer text-left w-full ${activeTab === 'home' ? 'bg-primary/10 text-primary font-bold' : 'text-neutral-600 hover:text-primary'}`}
-                >
-                  <Home className="w-4 h-4" />
-                  <span>Home</span>
-                </button>
-                <button
-                  onClick={() => setActiveTab("portfolio")}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-primary/5 transition duration-150 font-semibold text-xs cursor-pointer text-left w-full ${activeTab === 'portfolio' ? 'bg-primary/10 text-primary font-bold' : 'text-neutral-600 hover:text-primary'}`}
-                >
-                  <Briefcase className="w-4 h-4" />
-                  <span>Portfolio</span>
-                </button>
-                <button
-                  onClick={() => setActiveTab("analyze")}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-primary/5 transition duration-150 font-semibold text-xs cursor-pointer text-left w-full ${activeTab === 'analyze' ? 'bg-primary/10 text-primary font-bold' : 'text-neutral-600 hover:text-primary'}`}
-                >
-                  <Sparkles className="w-4 h-4" />
-                  <span>Analyze</span>
-                </button>
-                <button
-                  onClick={() => setActiveTab("top-mf")}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-primary/5 transition duration-150 font-semibold text-xs cursor-pointer text-left w-full ${activeTab === 'top-mf' ? 'bg-primary/10 text-primary font-bold' : 'text-neutral-600 hover:text-primary'}`}
-                >
-                  <TrendingUp className="w-4 h-4" />
-                  <span>Top MF Schemes</span>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab("book")}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-primary/5 transition duration-150 font-semibold text-xs cursor-pointer text-left w-full ${activeTab === 'book' ? 'bg-primary/10 text-primary font-bold' : 'text-neutral-600 hover:text-primary'}`}
-                >
-                  <Calendar className="w-4 h-4" />
-                  <span>Book</span>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab("query")}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-primary/5 transition duration-150 font-semibold text-xs cursor-pointer text-left w-full ${activeTab === 'query' ? 'bg-primary/10 text-primary font-bold' : 'text-neutral-600 hover:text-primary'}`}
-                >
-                  <HelpCircle className="w-4 h-4" />
-                  <span>Raise Query</span>
-                </button>
-              </nav>
-            </div>
-          </aside>
-        )}
-
-        <div className="flex-1 flex flex-col gap-8 w-full min-w-0">
+      <div className="flex-1 w-full max-w-5xl px-4 md:px-8 py-12 flex flex-col gap-8 relative z-10 mx-auto">
         {/* Global Error Banner */}
         {error && (
           <div className="w-full max-w-md mx-auto mb-8 p-4 bg-red-500/10 border border-red-500/20 text-red-600 rounded-2xl text-xs flex gap-3 items-start text-left font-sans animate-in fade-in slide-in-from-top-4">
@@ -1296,7 +1207,7 @@ export default function ClientDashboard() {
 
         {/* Quiz reassessment modal */}
         {(!token || !userData) ? (
-          <div className="w-full max-w-md mx-auto bg-white/40 border border-white/30 rounded-3xl p-8 shadow-2xl backdrop-blur-xl animate-in zoom-in-95 duration-300">
+          <div data-lenis-prevent className="w-full max-w-md mx-auto bg-white/40 border border-white/30 rounded-3xl p-8 shadow-2xl backdrop-blur-xl animate-in zoom-in-95 duration-300 max-h-[85vh] overflow-y-auto custom-scrollbar">
             <div className="space-y-6 text-center">
               <div className="space-y-2">
                 <div className="mx-auto w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-3">
@@ -1540,7 +1451,7 @@ export default function ClientDashboard() {
             </div>
           </div>
         ) : showQuiz ? (
-          <div className="w-full max-w-md mx-auto bg-white/30 border border-white/30 rounded-3xl p-8 shadow-2xl backdrop-blur-xl animate-in zoom-in-95 duration-300">
+          <div data-lenis-prevent className="w-full max-w-md mx-auto bg-white/30 border border-white/30 rounded-3xl p-8 shadow-2xl backdrop-blur-xl animate-in zoom-in-95 duration-300 max-h-[85vh] overflow-y-auto custom-scrollbar">
             <div className="flex justify-between items-center text-[10px] font-mono text-neutral-500 mb-6 uppercase tracking-widest">
               <span>Client Targets Quiz</span>
               <span>Step {quizStep} of 5</span>
@@ -1577,7 +1488,7 @@ export default function ClientDashboard() {
                   <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">What is the primary reason you&apos;re investing?</h2>
                   <p className="text-neutral-500 text-xs font-sans leading-relaxed">Goal alignment score.</p>
                 </div>
-                <div className="grid grid-cols-1 gap-2 text-left max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
+                <div data-lenis-prevent className="grid grid-cols-1 gap-2 text-left max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
                   {GOAL_OPTIONS.map((goal) => {
                     const isSelected = quizGoal === goal.value;
                     const IconComponent = goal.icon;
@@ -1689,8 +1600,7 @@ export default function ClientDashboard() {
           <div className="w-full select-text text-left space-y-8">
             
             {/* Member profile details */}
-            {activeTab === "home" && (
-              <div className="bg-gradient-to-br from-white/50 via-white/35 to-amber-500/5 backdrop-blur-2xl border border-amber-500/20 shadow-[0_20px_50px_rgba(245,158,11,0.08)] rounded-3xl p-6 space-y-4 relative overflow-hidden animate-in fade-in duration-300">
+            <div className="bg-gradient-to-br from-white/50 via-white/35 to-amber-500/5 backdrop-blur-2xl border border-amber-500/20 shadow-[0_20px_50px_rgba(245,158,11,0.08)] rounded-3xl p-6 space-y-4 relative overflow-hidden animate-in fade-in duration-300">
                 {/* Decorative glowing background gradients */}
                 <div className="absolute top-0 right-0 w-24 h-24 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
                 <div className="absolute bottom-0 left-0 w-24 h-24 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
@@ -1740,280 +1650,13 @@ export default function ClientDashboard() {
                   </div>
                 </div>
               </div>
-            )}
 
-            {/* 1-Click Booking Widget */}
-            {activeTab === "book" && (
-              <div className="bg-white/50 backdrop-blur-xl border border-white/40 shadow-xl rounded-3xl p-6 space-y-4 max-w-2xl mx-auto animate-in fade-in duration-300">
-                <div className="flex justify-between items-center border-b border-border/20 pb-2">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-800 flex items-center gap-1.5">
-                    <Calendar className="w-4 h-4 text-primary" />
-                    Book Portfolio Review
-                  </h3>
-                  <span className="text-[9px] font-mono text-neutral-400">1-CLICK</span>
-                </div>
 
-                <p className="text-[11px] text-neutral-500 font-sans leading-relaxed">
-                  Book a priority 1-on-1 strategy session with our distribution representatives. Free of charge for active clients.
-                </p>
-
-                <div className="space-y-1">
-                  <label htmlFor="booking-time-slot" className="text-[10px] uppercase font-bold text-neutral-500 block font-mono">
-                    Select Date & Time
-                  </label>
-                  <input
-                    type="datetime-local"
-                    id="booking-time-slot"
-                    value={selectedSlot}
-                    onChange={(e) => setSelectedSlot(e.target.value)}
-                    className="w-full p-2.5 text-xs border border-border/40 rounded-xl bg-white/50 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-neutral-900 font-sans cursor-pointer"
-                  />
-                </div>
-
-                <div className="p-3 bg-neutral-900/5 rounded-2xl flex justify-between items-center text-xs">
-                  <span className="text-neutral-500 font-semibold">Total Price</span>
-                  <span className="text-emerald-600 font-bold text-sm">
-                    Free
-                  </span>
-                </div>
-
-                <button
-                  onClick={handleClientBookCall}
-                  disabled={apiLoading}
-                  className="w-full py-3 bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition duration-200 cursor-pointer shadow-lg disabled:opacity-40"
-                >
-                  {apiLoading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Booking...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Book Call Instantly</span>
-                      <ChevronRight className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
-
-                {clientBookings.length > 0 && (
-                  <div className="space-y-2 pt-2 border-t border-border/20">
-                    <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-widest block">Active Bookings</span>
-                    <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
-                      {clientBookings.map((b, idx) => (
-                        <div key={idx} className="p-2.5 bg-emerald-50 border border-emerald-500/10 text-emerald-800 text-[10px] rounded-xl flex items-start gap-2 leading-relaxed">
-                          <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-600 mt-0.5" />
-                          <span className="font-sans">{b}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Top MF Schemes Explorer */}
-            {activeTab === "top-mf" && (
-              <div className="bg-white/50 backdrop-blur-xl border border-white/40 shadow-xl rounded-3xl p-6 space-y-6 animate-in fade-in duration-300 text-left">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-border/20 pb-4 gap-3">
-                  <div className="space-y-0.5 text-left">
-                    <h3 className="text-base font-bold text-neutral-900 font-clash">
-                      Top Mutual Fund Schemes (AMFI)
-                    </h3>
-                    <p className="text-neutral-500 text-xs font-sans">
-                      Explore live NAV performance telemetry of top mutual funds directly from AMFI API.
-                    </p>
-                  </div>
-                  {topMfLoading && (
-                    <span className="text-[10px] text-primary font-bold flex items-center gap-1 bg-primary/10 px-2.5 py-1 rounded border border-primary/20 animate-pulse">
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                      UPDATING NAV TELEMETRY...
-                    </span>
-                  )}
-                </div>
-
-                {/* Filters Row */}
-                <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-white/40 border border-white/20 p-4 rounded-2xl">
-                  {/* Search Bar */}
-                  <input
-                    type="text"
-                    placeholder="Search by name or AMFI code..."
-                    value={topMfSearch}
-                    onChange={(e) => { setTopMfSearch(e.target.value); setTopMfPage(1); }}
-                    className="w-full md:w-72 bg-white/50 border border-neutral-200 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-primary text-neutral-900 font-sans shadow-sm"
-                  />
-
-                  {/* Category Filter */}
-                  <div className="flex flex-wrap gap-1.5 justify-end w-full md:w-auto">
-                    {["All", "Large Cap", "Mid Cap", "Small Cap", "Flexi Cap", "ELSS (Tax Saver)", "Debt", "Hybrid"].map((cat) => (
-                      <button
-                        key={cat}
-                        onClick={() => { setTopMfCategoryFilter(cat); setTopMfPage(1); }}
-                        className={`px-3 py-1.5 rounded-xl border text-[10px] font-bold cursor-pointer transition ${topMfCategoryFilter === cat ? "bg-primary border-primary text-white" : "bg-white/50 border-neutral-200 text-neutral-600 hover:text-neutral-900"}`}
-                      >
-                        {cat}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Sorting dropdown */}
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono text-neutral-400 uppercase font-bold">Sort By</span>
-                    <select
-                      value={topMfSortBy}
-                      onChange={(e) => setTopMfSortBy(e.target.value as any)}
-                      className="bg-white/50 border border-neutral-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-primary text-neutral-900 shadow-sm"
-                    >
-                      <option value="3Y">3Y Return (CAGR)</option>
-                      <option value="1Y">1Y Return</option>
-                      <option value="name">Name</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Schemes Table */}
-                <div className="border border-border/30 bg-white/40 rounded-2xl overflow-hidden font-sans text-xs flex flex-col w-full shadow-sm">
-                  <div className="overflow-x-auto w-full">
-                    <table className="w-full text-left text-neutral-900">
-                      <thead>
-                        <tr className="bg-white/60 border-b border-border/20 text-neutral-500 font-bold font-mono text-[9px] uppercase tracking-wider">
-                          <th className="px-4 py-3.5">AMFI Code</th>
-                          <th className="px-4 py-3.5">Scheme Name</th>
-                          <th className="px-4 py-3.5">Category</th>
-                          <th className="px-4 py-3.5 text-right">Latest NAV</th>
-                          <th className="px-4 py-3.5 text-right">1Y Return</th>
-                          <th className="px-4 py-3.5 text-right">3Y CAGR</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border/10 font-sans">
-                        {(() => {
-                          const filtered = TOP_50_SCHEMES.filter((s) => {
-                            const matchesSearch = s.name.toLowerCase().includes(topMfSearch.toLowerCase()) || s.code.includes(topMfSearch);
-                            const matchesCategory = topMfCategoryFilter === "All" || s.category === topMfCategoryFilter;
-                            return matchesSearch && matchesCategory;
-                          });
-
-                          const sorted = [...filtered].sort((a, b) => {
-                            const aData = navCache[a.code];
-                            const bData = navCache[b.code];
-                            if (topMfSortBy === "1Y") {
-                              return (bData?.return1Y || -999) - (aData?.return1Y || -999);
-                            }
-                            if (topMfSortBy === "3Y") {
-                              return (bData?.return3Y || -999) - (aData?.return3Y || -999);
-                            }
-                            return a.name.localeCompare(b.name);
-                          });
-
-                          const PAGE_SIZE = 10;
-                          const total = sorted.length;
-                          const totalPages = Math.ceil(total / PAGE_SIZE);
-                          const pageSubset = sorted.slice((topMfPage - 1) * PAGE_SIZE, topMfPage * PAGE_SIZE);
-
-                          if (pageSubset.length === 0) {
-                            return (
-                              <tr>
-                                <td colSpan={6} className="px-4 py-8 text-center text-neutral-400">
-                                  No matching mutual fund schemes found.
-                                </td>
-                              </tr>
-                            );
-                          }
-
-                          return (
-                            <>
-                              {pageSubset.map((scheme) => {
-                                const cache = navCache[scheme.code];
-                                return (
-                                  <tr key={scheme.code} className="hover:bg-white/20 transition duration-150">
-                                    <td className="px-4 py-3.5 font-mono text-[10px] text-neutral-400 font-bold">
-                                      {scheme.code}
-                                    </td>
-                                    <td className="px-4 py-3.5 font-semibold text-neutral-900 truncate max-w-[320px]" title={scheme.name}>
-                                      {scheme.name}
-                                    </td>
-                                    <td className="px-4 py-3.5">
-                                      <span className="px-2 py-0.5 bg-neutral-100 border border-neutral-200/50 rounded-lg text-[9px] font-bold text-neutral-600 whitespace-nowrap">
-                                        {scheme.category}
-                                      </span>
-                                    </td>
-                                    <td className="px-4 py-3.5 text-right font-semibold font-mono text-neutral-900">
-                                      {cache ? `₹${cache.latestNav.toFixed(4)}` : (
-                                        <span className="text-[10px] text-neutral-300 animate-pulse">Loading...</span>
-                                      )}
-                                    </td>
-                                    <td className="px-4 py-3.5 text-right font-bold font-mono">
-                                      {cache ? (
-                                        <span className={cache.return1Y >= 0 ? "text-emerald-600" : "text-rose-600"}>
-                                          {cache.return1Y >= 0 ? "+" : ""}{cache.return1Y.toFixed(2)}%
-                                        </span>
-                                      ) : (
-                                        <span className="text-[10px] text-neutral-300 animate-pulse">Loading...</span>
-                                      )}
-                                    </td>
-                                    <td className="px-4 py-3.5 text-right font-bold font-mono">
-                                      {cache ? (
-                                        <span className={cache.return3Y >= 0 ? "text-emerald-600" : "text-rose-600"}>
-                                          {cache.return3Y >= 0 ? "+" : ""}{cache.return3Y.toFixed(2)}%
-                                        </span>
-                                      ) : (
-                                        <span className="text-[10px] text-neutral-300 animate-pulse">Loading...</span>
-                                      )}
-                                    </td>
-                                  </tr>
-                                );
-                              })}
-                            </>
-                          );
-                        })()}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* Pagination Controls */}
-                  {(() => {
-                    const filtered = TOP_50_SCHEMES.filter((s) => {
-                      const matchesSearch = s.name.toLowerCase().includes(topMfSearch.toLowerCase()) || s.code.includes(topMfSearch);
-                      const matchesCategory = topMfCategoryFilter === "All" || s.category === topMfCategoryFilter;
-                      return matchesSearch && matchesCategory;
-                    });
-                    const PAGE_SIZE = 10;
-                    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-
-                    if (totalPages <= 1) return null;
-
-                    return (
-                      <div className="bg-white/60 px-4 py-3 border-t border-border/20 flex justify-between items-center text-xs text-neutral-500 font-sans">
-                        <span>
-                          Showing page <strong className="text-neutral-800">{topMfPage}</strong> of <strong className="text-neutral-800">{totalPages}</strong> ({filtered.length} total schemes)
-                        </span>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => setTopMfPage((p) => Math.max(1, p - 1))}
-                            disabled={topMfPage === 1}
-                            className="px-3 py-1.5 bg-white border border-neutral-200 rounded-lg font-bold text-neutral-600 hover:text-neutral-900 disabled:opacity-40 hover:bg-neutral-50 transition cursor-pointer"
-                          >
-                            Prev
-                          </button>
-                          <button
-                            onClick={() => setTopMfPage((p) => Math.min(totalPages, p + 1))}
-                            disabled={topMfPage === totalPages}
-                            className="px-3 py-1.5 bg-white border border-neutral-200 rounded-lg font-bold text-neutral-600 hover:text-neutral-900 disabled:opacity-40 hover:bg-neutral-50 transition cursor-pointer"
-                          >
-                            Next
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </div>
-              </div>
-            )}
 
 
 
             {/* Daily Wisdom card */}
-            {activeTab === "home" && (
-              <div className="w-full p-8 rounded-3xl bg-gradient-to-br from-amber-100/40 via-white/30 to-amber-500/10 backdrop-blur-2xl border border-amber-500/30 shadow-[0_20px_50px_rgba(245,158,11,0.12)] flex flex-col justify-between items-center text-center overflow-hidden relative min-h-[220px] animate-in fade-in duration-300">
+            <div className="w-full p-8 rounded-3xl bg-gradient-to-br from-amber-100/40 via-white/30 to-amber-500/10 backdrop-blur-2xl border border-amber-500/30 shadow-[0_20px_50px_rgba(245,158,11,0.12)] flex flex-col justify-between items-center text-center overflow-hidden relative min-h-[220px] animate-in fade-in duration-300">
                 {/* Decorative glowing background gradients */}
                 <div className="absolute top-0 right-0 w-24 h-24 bg-amber-400/20 rounded-full blur-2xl pointer-events-none" />
                 <div className="absolute bottom-0 left-0 w-24 h-24 bg-amber-400/20 rounded-full blur-2xl pointer-events-none" />
@@ -2039,10 +1682,9 @@ export default function ClientDashboard() {
                   </span>
                 </div>
               </div>
-            )}
 
             {/* Official Portfolio Valuation (Admin Certified) */}
-            {activeTab === "portfolio" && existingClientData && (
+            {existingClientData && (
               <div className="bg-gradient-to-br from-white/50 via-white/35 to-amber-500/5 backdrop-blur-2xl border border-amber-500/20 shadow-[0_20px_50px_rgba(245,158,11,0.08)] rounded-3xl p-6 space-y-6 animate-in fade-in duration-300 relative overflow-hidden">
                   {/* Decorative glowing background gradients */}
                   <div className="absolute top-0 right-0 w-32 h-32 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
@@ -2051,10 +1693,6 @@ export default function ClientDashboard() {
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-amber-500/10 pb-4 gap-3 relative z-10">
                     <div className="space-y-0.5">
                       <div className="flex items-center gap-2">
-                        <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 font-mono text-[9px] font-bold tracking-wider uppercase flex items-center gap-1">
-                          <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                          Certified Portfolio
-                        </span>
                         {existingClientData.pan && (
                           <span className="text-[10px] font-mono text-neutral-400">
                             PAN Match: {existingClientData.pan}
@@ -2068,6 +1706,23 @@ export default function ClientDashboard() {
                         Certified valuation metrics synchronized from official distributor records.
                       </p>
                     </div>
+                    <button
+                      onClick={handleAnalyzeCertifiedPortfolio}
+                      disabled={apiLoading}
+                      className="flex items-center gap-1.5 px-4 py-2 bg-[#3A8293] hover:bg-[#3A8293]/90 text-white font-bold text-xs rounded-xl shadow-md transition duration-200 cursor-pointer disabled:opacity-50 select-none font-sans shrink-0"
+                    >
+                      {apiLoading ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span>Analyzing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-3.5 h-3.5 text-white" />
+                          <span>Analyze Portfolio</span>
+                        </>
+                      )}
+                    </button>
                   </div>
 
                   {/* Summary Cards */}
@@ -2315,8 +1970,75 @@ export default function ClientDashboard() {
                 </div>
               )}
 
+            {/* 1-Click Booking Widget */}
+            <div className="bg-white/50 backdrop-blur-xl border border-white/40 shadow-xl rounded-3xl p-6 space-y-4 max-w-none animate-in fade-in duration-300">
+                <div className="flex justify-between items-center border-b border-border/20 pb-2">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-800 flex items-center gap-1.5">
+                    <Calendar className="w-4 h-4 text-primary" />
+                    Book Portfolio Review
+                  </h3>
+                  <span className="text-[9px] font-mono text-neutral-400">1-CLICK</span>
+                </div>
+
+                <p className="text-[11px] text-neutral-500 font-sans leading-relaxed">
+                  Book a priority 1-on-1 strategy session with our distribution representatives. Free of charge for active clients.
+                </p>
+
+                <div className="space-y-1">
+                  <label htmlFor="booking-time-slot" className="text-[10px] uppercase font-bold text-neutral-500 block font-mono">
+                    Select Date & Time
+                  </label>
+                  <input
+                    type="datetime-local"
+                    id="booking-time-slot"
+                    value={selectedSlot}
+                    onChange={(e) => setSelectedSlot(e.target.value)}
+                    className="w-full p-2.5 text-xs border border-border/40 rounded-xl bg-white/50 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-neutral-900 font-sans cursor-pointer"
+                  />
+                </div>
+
+                <div className="p-3 bg-neutral-900/5 rounded-2xl flex justify-between items-center text-xs">
+                  <span className="text-neutral-500 font-semibold">Total Price</span>
+                  <span className="text-emerald-600 font-bold text-sm">
+                    Free
+                  </span>
+                </div>
+
+                <button
+                  onClick={handleClientBookCall}
+                  disabled={apiLoading}
+                  className="w-full py-3 bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition duration-200 cursor-pointer shadow-lg disabled:opacity-40"
+                >
+                  {apiLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Booking...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Book Call Instantly</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+
+                {clientBookings.length > 0 && (
+                  <div className="space-y-2 pt-2 border-t border-border/20">
+                    <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-widest block">Active Bookings</span>
+                    <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                      {clientBookings.map((b, idx) => (
+                        <div key={idx} className="p-2.5 bg-emerald-50 border border-emerald-500/10 text-emerald-800 text-[10px] rounded-xl flex items-start gap-2 leading-relaxed">
+                          <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-600 mt-0.5" />
+                          <span className="font-sans">{b}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
             {/* Portfolio Diagnostics Board */}
-            {activeTab === "analyze" && (
+            {scoreReport && (
               <div className="bg-white/50 backdrop-blur-xl border border-white/40 shadow-xl rounded-3xl p-6 space-y-6 animate-in fade-in duration-300">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-border/20 pb-4 gap-3">
                   <div className="space-y-0.5">
@@ -2392,269 +2114,140 @@ export default function ClientDashboard() {
                     </div>
 
                     {/* Insights list */}
-                    {scoreReport.insights.length > 0 && (
-                      <div className="space-y-2 pt-2 border-t border-border/20 text-left">
-                        <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-widest block">Anomalies Detected</span>
-                        <div className="space-y-1.5">
-                          {scoreReport.insights.map((insight, idx) => (
-                            <div key={idx} className="p-2.5 bg-white border border-border/50 rounded-xl flex items-start gap-2 text-neutral-700 leading-normal text-[11px]">
-                              <span className="w-4 h-4 rounded bg-neutral-100 flex items-center justify-center font-mono text-[9px] text-neutral-500 shrink-0 mt-0.5">
-                                0{idx + 1}
-                              </span>
-                              <span>{insight}</span>
-                            </div>
-                          ))}
+                    {(() => {
+                      const textInsights = Array.isArray(scoreReport.insights)
+                        ? scoreReport.insights
+                        : scoreReport.insights?.textInsights || [];
+                      
+                      if (textInsights.length === 0) return null;
+
+                      return (
+                        <div className="space-y-2 pt-2 border-t border-border/20 text-left">
+                          <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-widest block">Anomalies Detected</span>
+                          <div className="space-y-1.5">
+                            {textInsights.map((insight: string, idx: number) => (
+                              <div key={idx} className="p-2.5 bg-white border border-border/50 rounded-xl flex items-start gap-2 text-neutral-700 leading-normal text-[11px]">
+                                <span className="w-4 h-4 rounded bg-neutral-100 flex items-center justify-center font-mono text-[9px] text-neutral-500 shrink-0 mt-0.5">
+                                  0{idx + 1}
+                                </span>
+                                <span>{insight}</span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      );
+                    })()}
+
+                    {/* Fund Comparison / Gap Analysis Telemetry */}
+                    {(() => {
+                      const comparison = !Array.isArray(scoreReport.insights)
+                        ? scoreReport.insights?.comparison
+                        : null;
+                      
+                      if (!comparison) return null;
+
+                      return (
+                        <div className="space-y-4 pt-4 border-t border-border/20 text-left animate-in fade-in duration-300">
+                          <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-widest block font-bold text-neutral-800">Growth Gap & Achievable Performance</span>
+                          
+                          {/* Metrics summary cards */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="p-4 rounded-2xl border border-primary/10 bg-white/40 shadow-sm flex flex-col gap-2 relative overflow-hidden">
+                              <span className="text-[9px] text-neutral-500 uppercase font-mono tracking-wider">Weighted Annual Return (XIRR)</span>
+                              <div className="flex justify-between items-baseline">
+                                <span className="text-xl font-bold text-neutral-900 font-clash">
+                                  {comparison.currentXirr.toFixed(1)}%
+                                </span>
+                                <span className="text-xs text-neutral-500 font-medium font-sans">Current Avg</span>
+                              </div>
+                              <div className="w-full h-1.5 bg-neutral-100 rounded-full overflow-hidden relative">
+                                <div className="h-full bg-amber-500 rounded-full absolute left-0 top-0" style={{ width: `${Math.min(100, (comparison.currentXirr / 30) * 100)}%` }} />
+                                <div className="h-full bg-emerald-500 rounded-full absolute left-0 top-0 opacity-40" style={{ width: `${Math.min(100, (comparison.achievableXirr / 30) * 100)}%` }} />
+                              </div>
+                              <div className="flex justify-between items-baseline mt-1 font-sans">
+                                <span className="text-xs text-emerald-600 font-bold font-mono">
+                                  {comparison.achievableXirr.toFixed(1)}% Achievable
+                                </span>
+                                <span className="text-[10px] text-emerald-600 font-medium">
+                                  +{(comparison.achievableXirr - comparison.currentXirr).toFixed(1)}% gap
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="p-4 rounded-2xl border border-primary/10 bg-white/40 shadow-sm flex flex-col gap-2 relative overflow-hidden">
+                              <span className="text-[9px] text-neutral-500 uppercase font-mono tracking-wider">Annual Profit Opportunity Gap</span>
+                              <div className="flex justify-between items-baseline">
+                                <span className="text-xl font-bold text-amber-700 font-clash">
+                                  ₹{Math.round(comparison.totalGap).toLocaleString('en-IN')}
+                                </span>
+                                <span className="text-xs text-amber-700 font-medium font-sans font-semibold">Underperforming Value</span>
+                              </div>
+                              <div className="text-[10px] text-neutral-500 leading-normal font-sans">
+                                By switching underperforming assets to category leaders, your estimated 1-year profits could increase from <span className="font-semibold text-neutral-800">₹{Math.round(comparison.totalCurrentProfit).toLocaleString('en-IN')}</span> to <span className="font-semibold text-emerald-600">₹{Math.round(comparison.totalAchievableProfit).toLocaleString('en-IN')}</span>.
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Detail Table */}
+                          <div className="border border-border/30 bg-white/40 rounded-2xl overflow-hidden font-sans text-[11px] mt-4">
+                            {comparison.funds.length === 0 ? (
+                              <div className="p-8 text-center space-y-2 bg-emerald-50/20">
+                                <div className="text-2xl text-emerald-600 font-bold">🏆</div>
+                                <span className="font-semibold block text-neutral-900 text-xs">Optimal Performance Achieved!</span>
+                                <p className="text-[10px] text-neutral-500 max-w-sm mx-auto leading-relaxed">
+                                  Your current selection of mutual funds is fully outperforming or matching the historical 1-year returns of top-tier active category leaders. You have no growth gap!
+                                </p>
+                              </div>
+                            ) : (
+                              <div className="overflow-x-auto w-full">
+                                <table className="w-full text-left border-collapse">
+                                  <thead>
+                                    <tr className="bg-neutral-50 border-b border-border/20 text-neutral-500 font-mono text-[9px] uppercase tracking-wider">
+                                      <th className="py-2.5 px-4 font-semibold">Allocation Category</th>
+                                      <th className="py-2.5 px-4 font-semibold text-right">Invested</th>
+                                      <th className="py-2.5 px-4 font-semibold text-center">1Y Return (Cur vs Best)</th>
+                                      <th className="py-2.5 px-4 font-semibold text-center">1Y Est. Profit (Cur vs Best)</th>
+                                      <th className="py-2.5 px-4 font-semibold text-right">Growth Gap</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-border/10 text-neutral-700">
+                                    {comparison.funds.map((f: any, idx: number) => {
+                                      const categoryLabel = f.category.replace('_', ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+                                      return (
+                                        <tr key={idx} className="hover:bg-white/10 transition-colors">
+                                          <td className="py-3 px-4 font-semibold text-neutral-900">{categoryLabel} Fund</td>
+                                          <td className="py-3 px-4 text-right font-mono">₹{f.invested.toLocaleString('en-IN')}</td>
+                                          <td className="py-3 px-4 text-center font-mono font-medium">
+                                            <span className="text-red-500">{f.currentReturn.toFixed(1)}%</span>
+                                            <span className="text-neutral-400 mx-1.5">&rarr;</span>
+                                            <span className="text-emerald-600 font-bold">{f.bestReturn.toFixed(1)}%</span>
+                                          </td>
+                                          <td className="py-3 px-4 text-center font-mono">
+                                            <span>₹{Math.round(f.currentProfit).toLocaleString('en-IN')}</span>
+                                            <span className="text-neutral-400 mx-1.5">&rarr;</span>
+                                            <span className="text-emerald-600 font-semibold">₹{Math.round(f.achievableProfit).toLocaleString('en-IN')}</span>
+                                          </td>
+                                          <td className="py-3 px-4 text-right font-mono font-bold text-amber-700">
+                                            + ₹{Math.round(f.gap).toLocaleString('en-IN')}
+                                          </td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
-                )}
-
-                {/* Inline Tab Selectors */}
-                <div className="flex border-b border-border/50">
-                  <button
-                    onClick={() => { setError(null); setAnalyzeTab("FILE"); }}
-                    className={`pb-3 px-4 text-xs font-semibold tracking-wider uppercase border-b-2 transition duration-200 cursor-pointer ${
-                      analyzeTab === "FILE" 
-                        ? "border-primary text-neutral-900" 
-                        : "border-transparent text-neutral-500 hover:text-neutral-800"
-                    }`}
-                  >
-                    Excel / CSV Upload
-                  </button>
-                  <button
-                    onClick={() => { setError(null); setAnalyzeTab("MANUAL"); }}
-                    className={`pb-3 px-4 text-xs font-semibold tracking-wider uppercase border-b-2 transition duration-200 cursor-pointer ${
-                      analyzeTab === "MANUAL" 
-                        ? "border-primary text-neutral-900" 
-                        : "border-transparent text-neutral-500 hover:text-neutral-800"
-                    }`}
-                  >
-                    Manual Entry
-                  </button>
-                </div>
-
-                {/* Tab Content: Upload File */}
-                {analyzeTab === "FILE" && (
-                  <form onSubmit={handleFileUploadSubmit} className="space-y-4 pt-2">
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-[10px] font-mono uppercase tracking-wider text-neutral-500">Telemetry File</span>
-                        <button
-                          type="button"
-                          onClick={downloadCsvTemplate}
-                          className="text-[10px] font-mono text-primary hover:underline flex items-center gap-1 cursor-pointer bg-white/40 border border-border px-2.5 py-1 rounded-lg hover:bg-white/60 transition font-sans"
-                        >
-                          <Download className="w-3 h-3" />
-                          Download Template
-                        </button>
-                      </div>
-
-                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border hover:border-neutral-400 bg-white/30 hover:bg-white/50 rounded-2xl transition cursor-pointer p-4 text-center">
-                        <input
-                          type="file"
-                          accept=".csv,.xlsx,.xls"
-                          onChange={(e) => {
-                            setError(null);
-                            if (e.target.files && e.target.files[0]) {
-                              setUploadedFile(e.target.files[0]);
-                            }
-                          }}
-                          className="hidden"
-                        />
-                        {uploadedFile ? (
-                          <div className="space-y-1">
-                            <CheckCircle2 className="w-6 h-6 text-primary mx-auto animate-bounce" />
-                            <span className="text-xs font-semibold text-neutral-900 block truncate max-w-[250px]">
-                              {uploadedFile.name}
-                            </span>
-                            <span className="text-[10px] text-neutral-500 font-mono block">
-                              {(uploadedFile.size / 1024).toFixed(1)} KB
-                            </span>
-                          </div>
-                        ) : (
-                          <div className="space-y-1.5 text-neutral-500">
-                            <FileSpreadsheet className="w-6 h-6 mx-auto stroke-[1.5]" />
-                            <span className="text-xs font-semibold block">Click to select CSV/Excel</span>
-                            <span className="text-[9px] font-mono block uppercase">xlsx, xls, csv (max 5MB)</span>
-                          </div>
-                        )}
-                      </label>
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={apiLoading || !uploadedFile}
-                      className="w-full py-3 bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition duration-200 cursor-pointer disabled:opacity-40"
-                    >
-                      {apiLoading ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          <span>{statusMsg || "Scoring..."}</span>
-                        </>
-                      ) : (
-                        <>
-                          <span>Analyze Portfolio</span>
-                          <RefreshCw className="w-4 h-4" />
-                        </>
-                      )}
-                    </button>
-                  </form>
-                )}
-
-                {/* Tab Content: Manual Entry */}
-                {analyzeTab === "MANUAL" && (
-                  <form onSubmit={handleManualSubmit} className="space-y-4 pt-2">
-                    <div className="overflow-x-auto border border-border/50 rounded-2xl bg-white/30 max-h-64 overflow-y-auto">
-                      <table className="w-full text-left font-sans text-xs border-collapse">
-                        <thead>
-                          <tr className="bg-neutral-100/50 border-b border-border/50 text-[10px] uppercase font-mono tracking-wider text-neutral-500">
-                            <th className="p-3">Fund / Asset Name</th>
-                            <th className="p-3 font-sans">Type</th>
-                            <th className="p-3 font-sans">Start Date</th>
-                            <th className="p-3 font-sans">SIP Amt (₹)</th>
-                            <th className="p-3 font-sans">Invested (₹)</th>
-                            <th className="p-3 font-sans">Current (₹)</th>
-                            <th className="p-3 text-center">Action</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {manualRows.map((row, idx) => (
-                            <tr key={idx} className="border-b border-border/30 hover:bg-white/40">
-                              <td className="p-2">
-                                <input
-                                  type="text"
-                                  placeholder="e.g. Mutual Fund"
-                                  required
-                                  value={row.fundName}
-                                  onChange={(e) => {
-                                    const updated = [...manualRows];
-                                    updated[idx]!.fundName = e.target.value;
-                                    setManualRows(updated);
-                                  }}
-                                  className="w-full bg-white/60 border border-border rounded-lg p-1.5 text-xs focus:outline-none focus:border-primary"
-                                />
-                              </td>
-                              <td className="p-2">
-                                <select
-                                  value={row.type}
-                                  onChange={(e) => {
-                                    const updated = [...manualRows];
-                                    updated[idx]!.type = e.target.value as "SIP" | "LUMPSUM";
-                                    setManualRows(updated);
-                                  }}
-                                  className="bg-white/60 border border-border rounded-lg p-1.5 text-xs focus:outline-none focus:border-primary"
-                                >
-                                  <option value="SIP">SIP</option>
-                                  <option value="LUMPSUM font-sans">Lumpsum</option>
-                                </select>
-                              </td>
-                              <td className="p-2">
-                                <input
-                                  type="date"
-                                  required
-                                  value={row.startDate}
-                                  onChange={(e) => {
-                                    const updated = [...manualRows];
-                                    updated[idx]!.startDate = e.target.value;
-                                    setManualRows(updated);
-                                  }}
-                                  className="bg-white/60 border border-border rounded-lg p-1 text-xs focus:outline-none focus:border-primary font-mono"
-                                />
-                              </td>
-                              <td className="p-2">
-                                <input
-                                  type="number"
-                                  min="0"
-                                  required
-                                  disabled={row.type === "LUMPSUM"}
-                                  value={row.sipAmount}
-                                  onChange={(e) => {
-                                    const updated = [...manualRows];
-                                    updated[idx]!.sipAmount = Number(e.target.value);
-                                    setManualRows(updated);
-                                  }}
-                                  className="w-16 bg-white/60 border border-border rounded-lg p-1.5 text-xs focus:outline-none focus:border-primary font-mono"
-                                />
-                              </td>
-                              <td className="p-2">
-                                <input
-                                  type="number"
-                                  min="1"
-                                  required
-                                  value={row.invested}
-                                  onChange={(e) => {
-                                    const updated = [...manualRows];
-                                    updated[idx]!.invested = Number(e.target.value);
-                                    setManualRows(updated);
-                                  }}
-                                  className="w-20 bg-white/60 border border-border rounded-lg p-1.5 text-xs focus:outline-none focus:border-primary font-mono"
-                                />
-                              </td>
-                              <td className="p-2">
-                                <input
-                                  type="number"
-                                  min="1"
-                                  required
-                                  value={row.currentValue}
-                                  onChange={(e) => {
-                                    const updated = [...manualRows];
-                                    updated[idx]!.currentValue = Number(e.target.value);
-                                    setManualRows(updated);
-                                  }}
-                                  className="w-20 bg-white/60 border border-border rounded-lg p-1.5 text-xs focus:outline-none focus:border-primary font-mono"
-                                />
-                              </td>
-                              <td className="p-2 text-center font-sans">
-                                <button
-                                  type="button"
-                                  onClick={() => handleRemoveManualRow(idx)}
-                                  disabled={manualRows.length === 1}
-                                  className="text-red-500 hover:text-red-700 disabled:opacity-30 cursor-pointer"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    <div className="flex gap-3">
-                      <button
-                        type="button"
-                        onClick={handleAddManualRow}
-                        className="py-2.5 px-4 bg-white/40 border border-border hover:bg-white/60 text-neutral-700 text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 transition cursor-pointer font-sans"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>Add Row</span>
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={apiLoading}
-                        className="flex-1 py-2.5 bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition duration-200 cursor-pointer disabled:opacity-40"
-                      >
-                        {apiLoading ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            <span>{statusMsg || "Scoring..."}</span>
-                          </>
-                        ) : (
-                          <>
-                            <span>Finish & Score</span>
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </form>
                 )}
               </div>
             )}
 
             {/* Current Investments / Holdings Card */}
-            {activeTab === "analyze" && activePortfolio && activePortfolio.rows && activePortfolio.rows.length > 0 && (
+            {activePortfolio && activePortfolio.rows && activePortfolio.rows.length > 0 && (
               <div className="bg-white/50 backdrop-blur-xl border border-white/40 shadow-xl rounded-3xl p-6 space-y-4 animate-in fade-in duration-300">
                   <div className="flex justify-between items-center border-b border-border/20 pb-2">
                     <h3 className="text-sm font-bold font-clash text-neutral-800 flex items-center gap-1.5">
@@ -2699,8 +2292,8 @@ export default function ClientDashboard() {
                 </div>
               )}
 
-            {activeTab === "query" && (
-              <div className="space-y-8 animate-in fade-in duration-300">
+            {/* Support Workspace */}
+            <div className="space-y-8 animate-in fade-in duration-300">
                 {/* Header info */}
                 <div>
                   <h2 className="text-2xl font-bold tracking-tight text-neutral-900 font-clash">Support Workspace</h2>
@@ -2819,10 +2412,8 @@ export default function ClientDashboard() {
                   </div>
                 </div>
               </div>
-            )}
           </div>
         )}
-        </div>
       </div>
 
       {/* Booking Success Modal Overlay */}

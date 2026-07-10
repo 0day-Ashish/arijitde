@@ -70,7 +70,7 @@ export default function Footer({ footerRef }: FooterProps) {
             <a href="mailto:contact@finanalysis.in" className="text-muted-foreground hover:text-primary transition duration-200 underline decoration-primary/30 underline-offset-4 font-normal">
               contact@finanalysis.in
             </a>
-            <a href="/onboarding" className="text-muted-foreground hover:text-primary transition duration-200 underline decoration-primary/30 underline-offset-4 font-normal">
+            <a href="https://wa.me/919831093297" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition duration-200 underline decoration-primary/30 underline-offset-4 font-normal">
               Book a call
             </a>
           </div>

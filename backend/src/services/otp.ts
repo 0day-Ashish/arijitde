@@ -38,7 +38,11 @@ export async function sendOTP(email: string, otp: string): Promise<void> {
     console.log(`[OTP] Email sent successfully to ${email}`);
   } catch (error) {
     console.error(`[OTP] Failed to send email to ${email} via SMTP:`, error);
-    console.warn(`\n[OTP] BYPASSING SMTP ERROR. THE VERIFICATION CODE FOR ${email} IS: ${otp}\n`);
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn(`[OTP] DEV FALLBACK. Code for ${email}: ${otp}`);
+    } else {
+      console.error(`[OTP] SMTP delivery failed for ${email}. User will need to retry.`);
+    }
   }
 }
 
@@ -57,8 +61,8 @@ export function saveOTP(email: string, otp: string): void {
 const MAX_OTP_ATTEMPTS = 5;
 
 export function verifyOTP(email: string, otp: string): boolean {
-  // Development/Testing bypass
-  if (otp === '123456' || otp === '999999') {
+  // Development/Testing bypass — NEVER allow in production
+  if (process.env.NODE_ENV !== 'production' && (otp === '123456' || otp === '999999')) {
     return true;
   }
 
@@ -91,3 +95,13 @@ export function verifyOTP(email: string, otp: string): boolean {
   otpStore.delete(key);
   return true;
 }
+
+// Periodic cleanup of expired OTPs to prevent memory leaks
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, record] of otpStore) {
+    if (record.expiresAt.getTime() < now) {
+      otpStore.delete(key);
+    }
+  }
+}, 60_000); // Every 60 seconds

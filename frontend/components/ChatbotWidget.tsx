@@ -17,6 +17,34 @@ interface ChatbotWidgetProps {
   onOpenChange?: (open: boolean) => void;
 }
 
+function formatMessageText(text: string) {
+  if (!text) return "";
+  
+  // Split by bold (**text** or __text__)
+  const parts = text.split(/(\*\*.*?\*\*|__.*?__)/g);
+  
+  return parts.map((part, index) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={index} className="font-extrabold text-primary">{part.slice(2, -2)}</strong>;
+    }
+    if (part.startsWith("__") && part.endsWith("__")) {
+      return <strong key={index} className="font-extrabold text-primary">{part.slice(2, -2)}</strong>;
+    }
+    
+    // Split the remaining parts by italics (*text* or _text_)
+    const subParts = part.split(/(\*.*?\*|_.*?_)/g);
+    return subParts.map((subPart, subIndex) => {
+      if (subPart.startsWith("*") && subPart.endsWith("*")) {
+        return <em key={`${index}-${subIndex}`} className="italic">{subPart.slice(1, -1)}</em>;
+      }
+      if (subPart.startsWith("_") && subPart.endsWith("_")) {
+        return <em key={`${index}-${subIndex}`} className="italic">{subPart.slice(1, -1)}</em>;
+      }
+      return subPart;
+    });
+  });
+}
+
 export default function ChatbotWidget({
   isFooterIntersecting = false,
   isOpen,
@@ -171,7 +199,7 @@ export default function ChatbotWidget({
                       : "bg-neutral-100 border-neutral-200 text-neutral-800 rounded-bl-none"
                   )}
                 >
-                  {msg.text}
+                  {formatMessageText(msg.text)}
                 </div>
                 {msg.options && (
                   <div className="flex flex-wrap gap-2 mt-0.5 justify-start">

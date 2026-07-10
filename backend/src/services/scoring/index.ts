@@ -32,7 +32,7 @@ export interface ScoreResult {
   discipline: number;
   efficiency: number;
   tag: ScoreTag;
-  insights: string[];
+  insights: any;
 }
 
 /**
@@ -110,6 +110,9 @@ export async function calculateScore(
     discipline: discResult.score,
     efficiency: effResult.score,
     tag,
-    insights: selectedInsights,
+    insights: {
+      textInsights: selectedInsights,
+      comparison: (effResult as any).comparison || null
+    },
   };
 }

@@ -13,11 +13,24 @@ import { Role, Prisma, LeadStatus } from '@prisma/client';
 
 const router = Router();
 
-// Setup Multer memory storage
+// Setup Multer memory storage with file type validation
+const ALLOWED_MIMETYPES = [
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+  'application/vnd.ms-excel', // .xls
+  'text/csv',
+];
+
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB limit for bulk CSV
+  },
+  fileFilter: (_req, file, cb) => {
+    if (ALLOWED_MIMETYPES.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only Excel (.xlsx/.xls) and CSV files are accepted'));
+    }
   },
 });
 
@@ -186,6 +199,15 @@ router.post('/users/:id/role', async (req: AuthenticatedRequest, res: Response, 
   try {
     const { id } = z.object({ id: z.string().uuid('Invalid user ID format') }).parse(req.params);
     const { role } = updateRoleSchema.parse(req.body);
+
+    // Prevent admin from modifying their own role
+    if (id === req.user!.id) {
+      res.status(400).json({
+        success: false,
+        error: 'You cannot modify your own role.',
+      });
+      return;
+    }
 
     const userExists = await prisma.user.findUnique({
       where: { id },

@@ -2,6 +2,8 @@ import { Router } from 'express';
 import type { Response, Request } from 'express';
 import { z } from 'zod';
 import rateLimit from 'express-rate-limit';
+import { authMiddleware } from '../middleware/auth';
+import type { AuthenticatedRequest } from '../middleware/auth';
 
 const router = Router();
 
@@ -65,7 +67,7 @@ const chatRequestSchema = z.object({
   ),
 });
 
-router.post('/', chatLimiter, async (req: Request, res: Response, next) => {
+router.post('/', chatLimiter, authMiddleware, async (req: AuthenticatedRequest, res: Response, next) => {
   try {
     const apiKey = process.env.GROK_API_KEY;
     if (!apiKey) {

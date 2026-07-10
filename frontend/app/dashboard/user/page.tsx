@@ -26,7 +26,9 @@ import {
   HelpCircle,
   ShieldCheck,
   FileText,
-  Coins
+  Coins,
+  ChevronDown,
+  CalendarRange
 } from "lucide-react";
 import SoftBoxBlurBg from "@/components/SoftBoxBlurBg";
 import GradualBlur from "@/components/GradualBlur";
@@ -181,6 +183,16 @@ export default function UserDashboard() {
 
   // Analyze Section State
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [showDateForm, setShowDateForm] = useState(false);
+  const [pendingFunds, setPendingFunds] = useState<Array<{
+    fundName: string;
+    invested: number;
+    currentValue: number;
+    startDate: string;
+    type: "LUMPSUM" | "SIP";
+    sipAmount: number;
+  }>>([]);
+  const [showGrowwGuide, setShowGrowwGuide] = useState(false);
 
   // Existing Client Detection
   const [isExistingClient, setIsExistingClient] = useState(false);
@@ -707,15 +719,89 @@ export default function UserDashboard() {
       const data = await res.json();
 
       if (data.success) {
-        const pId = data.data.portfolioId;
-        setActivePortfolioId(pId);
-        setStatusMsg("Analyzing asset allocation and discipline...");
-        await calculatePortfolioScore(pId);
+        if (data.data.requiresDates) {
+          const todayStr = new Date().toISOString().substring(0, 10);
+          const initialFunds = data.data.funds.map((f: any) => ({
+            fundName: f.fundName,
+            invested: f.invested,
+            currentValue: f.currentValue,
+            startDate: todayStr,
+            type: "LUMPSUM",
+            sipAmount: 0,
+          }));
+          setPendingFunds(initialFunds);
+          setShowDateForm(true);
+          setStatusMsg("");
+        } else {
+          const pId = data.data.portfolioId;
+          setActivePortfolioId(pId);
+          setStatusMsg("Analyzing asset allocation and discipline...");
+          await calculatePortfolioScore(pId);
+        }
       } else {
         setError(data.error || "Failed to process Excel upload.");
       }
     } catch (err) {
       setError("Network error while uploading file.");
+    } finally {
+      setApiLoading(false);
+    }
+  };
+
+  // Submit Interactive Date-Entry Form
+  const handleDateFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeAssessmentId) {
+      setError("Assessment context missing. Please re-run assessment.");
+      return;
+    }
+
+    for (const f of pendingFunds) {
+      if (!f.startDate) {
+        setError(`Please enter a start date for ${f.fundName}`);
+        return;
+      }
+      if (f.type === "SIP" && f.sipAmount <= 0) {
+        setError(`Please enter a monthly SIP amount for ${f.fundName}`);
+        return;
+      }
+    }
+
+    setError(null);
+    setApiLoading(true);
+    setStatusMsg("Analyzing asset allocation and portfolio score...");
+
+    try {
+      const res = await fetch(`${backendUrl}/api/portfolio/manual`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          assessmentId: activeAssessmentId,
+          rows: pendingFunds.map(f => ({
+            fundName: f.fundName,
+            type: f.type,
+            startDate: new Date(f.startDate).toISOString(),
+            sipAmount: Number(f.sipAmount),
+            invested: Number(f.invested),
+            currentValue: Number(f.currentValue)
+          }))
+        })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        const pId = data.data.portfolioId;
+        setActivePortfolioId(pId);
+        setShowDateForm(false);
+        await calculatePortfolioScore(pId);
+      } else {
+        setError(data.error || "Failed to submit portfolio.");
+      }
+    } catch (err) {
+      setError("Network error while submitting portfolio.");
     } finally {
       setApiLoading(false);
     }
@@ -1486,27 +1572,181 @@ export default function UserDashboard() {
                   </button>
                 </div>
               </>
+            ) : showDateForm ? (
+              /* ── New Client: Date entry form for statement holdings ── */
+              <>
+                <div className="text-center max-w-xl mx-auto space-y-2 animate-in fade-in duration-300">
+                  <h1 className="text-3xl md:text-4xl font-semibold tracking-wide text-neutral-900 font-clash">Enter Purchase Dates</h1>
+                  <p className="text-neutral-500 text-xs font-sans leading-relaxed">
+                    We found {pendingFunds.length} investments in your Groww statement. Please enter their approximate starting dates to compute XIRR and score your portfolio.
+                  </p>
+                </div>
+
+                <div className="w-full border border-white/30 bg-white/30 backdrop-blur-xl rounded-3xl p-6 md:p-8 shadow-2xl flex flex-col gap-6 animate-in fade-in duration-300">
+                  {/* Header */}
+                  <div className="flex justify-between items-center border-b border-border/20 pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-primary/10 rounded-xl text-primary">
+                        <CalendarRange className="w-5 h-5 stroke-[1.5]" />
+                      </div>
+                      <div className="text-left">
+                        <h3 className="text-sm font-bold text-neutral-900">Portfolio Start Dates</h3>
+                        <p className="text-[10px] text-neutral-500 font-sans">Required to compute performance benchmarks</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowDateForm(false)}
+                      className="text-[10px] font-mono text-neutral-500 hover:text-neutral-800 border border-neutral-300 bg-white/40 px-2.5 py-1 rounded-lg hover:bg-white/60 transition cursor-pointer"
+                    >
+                      Back to Upload
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleDateFormSubmit} className="space-y-6">
+                    <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2" data-lenis-prevent="true">
+                      {pendingFunds.map((fund, idx) => (
+                        <div key={idx} className="p-4 bg-white/40 border border-border/20 rounded-2xl space-y-3 text-left">
+                          <div className="flex justify-between items-start gap-2">
+                            <span className="text-xs font-semibold text-neutral-900 block truncate max-w-[200px] md:max-w-md" title={fund.fundName}>
+                              {fund.fundName}
+                            </span>
+                            <span className="text-[10px] font-mono font-bold text-neutral-500 shrink-0">
+                              Value: ₹{fund.currentValue.toLocaleString('en-IN')}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            {/* Start Date */}
+                            <div className="space-y-1">
+                              <label className="block text-[9px] font-mono uppercase tracking-wider text-neutral-500">Purchase / Start Date</label>
+                              <input
+                                type="date"
+                                required
+                                value={fund.startDate}
+                                onChange={(e) => {
+                                  const updated = [...pendingFunds];
+                                  updated[idx].startDate = e.target.value;
+                                  setPendingFunds(updated);
+                                }}
+                                className="w-full bg-white/50 border border-border/30 rounded-xl px-3 py-2 text-xs font-mono focus:outline-none focus:border-primary"
+                              />
+                            </div>
+
+                            {/* Investment Type */}
+                            <div className="space-y-1">
+                              <label className="block text-[9px] font-mono uppercase tracking-wider text-neutral-500">Investment Type</label>
+                              <select
+                                value={fund.type}
+                                onChange={(e) => {
+                                  const updated = [...pendingFunds];
+                                  updated[idx].type = e.target.value as "LUMPSUM" | "SIP";
+                                  if (e.target.value === "LUMPSUM") {
+                                    updated[idx].sipAmount = 0;
+                                  }
+                                  setPendingFunds(updated);
+                                }}
+                                className="w-full bg-white/50 border border-border/30 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-primary"
+                              >
+                                <option value="LUMPSUM">Lumpsum</option>
+                                <option value="SIP">Systematic SIP</option>
+                              </select>
+                            </div>
+
+                            {/* Monthly SIP Amount */}
+                            <div className="space-y-1">
+                              <label className="block text-[9px] font-mono uppercase tracking-wider text-neutral-500">
+                                Monthly SIP Amount (₹)
+                              </label>
+                              <input
+                                type="number"
+                                required={fund.type === "SIP"}
+                                disabled={fund.type === "LUMPSUM"}
+                                value={fund.sipAmount || ''}
+                                placeholder={fund.type === "LUMPSUM" ? "0" : "Enter amount"}
+                                onChange={(e) => {
+                                  const updated = [...pendingFunds];
+                                  updated[idx].sipAmount = Number(e.target.value);
+                                  setPendingFunds(updated);
+                                }}
+                                className="w-full bg-white/50 border border-border/30 rounded-xl px-3 py-2 text-xs font-mono focus:outline-none focus:border-primary disabled:opacity-40"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={apiLoading}
+                      className="w-full py-4 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition duration-200 cursor-pointer disabled:opacity-40"
+                    >
+                      {apiLoading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>{statusMsg || "Scoring Portfolio..."}</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Score & Analyze Portfolio</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </>
+                      )}
+                    </button>
+                  </form>
+                </div>
+              </>
             ) : (
               /* ── New Client: CSV Upload Only ── */
               <>
                 {/* Analysis Header */}
-                <div className="text-center max-w-xl mx-auto space-y-2">
-                  <h1 className="text-3xl md:text-4xl font-semibold tracking-wide text-neutral-900">Analyze Investments</h1>
+                <div className="text-center max-w-xl mx-auto space-y-2 animate-in fade-in duration-300">
+                  <h1 className="text-3xl md:text-4xl font-semibold tracking-wide text-neutral-900 font-clash">Analyze Investments</h1>
                   <p className="text-neutral-500 text-xs font-sans leading-relaxed">
-                    Upload your investment CSV or Excel file. We'll run them through our scoring algorithm with live AMFI benchmark comparison.
+                    Upload your Groww portfolio statement. We'll run them through our scoring algorithm with live AMFI benchmark comparison.
                   </p>
                 </div>
 
                 {/* Form Section */}
-                <div className="w-full border border-white/30 bg-white/30 backdrop-blur-xl rounded-3xl p-6 md:p-8 shadow-2xl flex flex-col">
+                <div className="w-full border border-white/30 bg-white/30 backdrop-blur-xl rounded-3xl p-6 md:p-8 shadow-2xl flex flex-col animate-in fade-in duration-300">
+                  {/* Groww Statement Guide Accordion */}
+                  <div className="mb-6 border border-amber-500/25 bg-amber-500/5 rounded-2xl overflow-hidden transition-all duration-300">
+                    <button
+                      type="button"
+                      onClick={() => setShowGrowwGuide(!showGrowwGuide)}
+                      className="w-full px-5 py-4 flex justify-between items-center text-left hover:bg-amber-500/10 transition cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
+                        <span className="text-xs font-bold text-neutral-900">How to get your Portfolio Statement from the Groww app?</span>
+                      </div>
+                      <ChevronDown className={`w-4 h-4 text-neutral-500 transition-transform duration-300 ${showGrowwGuide ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {showGrowwGuide && (
+                      <div className="px-5 pb-5 pt-1 text-[11px] text-neutral-700 space-y-2 border-t border-amber-500/10 font-sans leading-relaxed text-left" data-lenis-prevent="true">
+                        <ol className="list-decimal list-inside space-y-2 pl-1">
+                          <li>Open the <strong className="text-neutral-900">Groww app</strong> on your mobile device (or log in on their web portal).</li>
+                          <li>Go to the <strong className="text-neutral-900">Mutual Funds</strong> tab at the bottom and click on your <strong className="text-neutral-900">Dashboard</strong>.</li>
+                          <li>Tap your <strong className="text-neutral-900">Profile Icon</strong> in the top right corner.</li>
+                          <li>Select <strong className="text-neutral-900">Reports</strong> or <strong className="text-neutral-900">Reports & Statements</strong>.</li>
+                          <li>Choose <strong className="text-neutral-900">Mutual Fund Holdings</strong>.</li>
+                          <li>Select <strong className="text-neutral-900">Excel (.xlsx)</strong> as the format and click <strong className="text-neutral-900">Download / Email Report</strong>.</li>
+                          <li>Upload that exact downloaded sheet below to run your scoring analysis.</li>
+                        </ol>
+                      </div>
+                    )}
+                  </div>
+
                   {/* Header */}
                   <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 bg-primary/10 rounded-xl text-primary">
                       <FileSpreadsheet className="w-5 h-5 stroke-[1.5]" />
                     </div>
-                    <div>
-                      <h3 className="text-sm font-bold text-neutral-900">Upload Portfolio CSV</h3>
-                      <p className="text-[10px] text-neutral-500 font-sans">Upload your investment details in CSV or Excel format</p>
+                    <div className="text-left">
+                      <h3 className="text-sm font-bold text-neutral-900">Upload Portfolio File</h3>
+                      <p className="text-[10px] text-neutral-500 font-sans">Upload your Groww holding statement spreadsheet</p>
                     </div>
                   </div>
 
@@ -1515,14 +1755,6 @@ export default function UserDashboard() {
                     <div className="space-y-3 text-left">
                       <div className="flex justify-between items-end">
                         <label className="block text-[10px] font-mono uppercase tracking-wider text-neutral-500">Portfolio Data File</label>
-                        <button
-                          type="button"
-                          onClick={downloadCsvTemplate}
-                          className="text-[10px] font-mono text-primary hover:underline flex items-center gap-1 cursor-pointer bg-white/40 border border-border px-2.5 py-1 rounded-lg hover:bg-white/60 transition"
-                        >
-                          <Download className="w-3 h-3" />
-                          Download Template CSV
-                        </button>
                       </div>
 
                       {/* Drag & Drop uploader area */}
@@ -1555,7 +1787,7 @@ export default function UserDashboard() {
                           <div className="space-y-1">
                             <span className="text-xs font-semibold text-neutral-700 block">Click or Drag Excel/CSV file to upload</span>
                             <span className="text-[10px] text-neutral-500 block leading-relaxed font-sans mt-1">
-                              Supported: .xlsx, .csv (Must contain matching columns: AMC, Category, Sub-category, Folio No., Source, Units, Invested Value, Current Value, Returns, XIRR)
+                              Supported: Groww Holdings Statement Excel (.xlsx) or Standard Template (.csv)
                             </span>
                           </div>
                         )}

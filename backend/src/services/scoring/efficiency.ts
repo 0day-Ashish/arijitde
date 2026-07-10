@@ -4,6 +4,8 @@ import {
   detectFundCategory,
   getFundReturn,
   getCategoryBenchmarkReturn,
+  CATEGORY_TOP_PERFORMERS,
+  calculate1YReturn,
 } from '../amfiService';
 
 /**
@@ -18,7 +20,7 @@ import {
 export async function scoreDimension(
   rows: PortfolioRow[],
   assessment: AssessmentContext
-): Promise<DimensionResult> {
+): Promise<DimensionResult & { comparison?: any }> {
   let score = 0;
   const insights: string[] = [];
 
@@ -57,22 +59,29 @@ export async function scoreDimension(
     insights.push(`Efficiency: Portfolio annualized return is only ${annualizedReturn.toFixed(1)}% — significantly below market benchmarks`);
   }
 
-  // ── 2. Fund vs Benchmark Comparison (+6) ──
+  // ── 2. Fund vs Benchmark & Category Top Performers Comparison (+6) ──
   // Fetch returns from AMFI API (parallel, with error tolerance)
   let benchmarkComparisonScore = 0;
+  let comparisonData: any = null;
+
   try {
     // Get returns for each fund (parallel with timeout)
     const fundReturnPromises = rows.map(async (row) => {
       const category = detectFundCategory(row.fundName);
-      const [fundResult, benchmarkReturn] = await Promise.all([
+      const topPerformer = CATEGORY_TOP_PERFORMERS[category] || CATEGORY_TOP_PERFORMERS['default']!;
+      
+      const [fundResult, benchmarkReturn, bestReturn] = await Promise.all([
         getFundReturn(row.fundName),
         getCategoryBenchmarkReturn(category),
+        calculate1YReturn(topPerformer.code),
       ]);
       return {
         fundName: row.fundName,
         category,
         fundReturn: fundResult.returnPct,
         benchmarkReturn,
+        bestReturn,
+        invested: row.invested,
       };
     });
 
@@ -91,7 +100,45 @@ export async function scoreDimension(
       let underperformingFunds: string[] = [];
       let comparableFunds = 0;
 
+      let totalCurrentEstProfit = 0;
+      let totalAchievableEstProfit = 0;
+      let fundComparisons: any[] = [];
+      let totalWeightedCurrentReturn = 0;
+      let totalWeightedBestReturn = 0;
+
       for (const fr of fundReturns) {
+        // Fallback returns if API didn't return
+        const currentReturn = fr.fundReturn !== null ? fr.fundReturn : 12; // default fallback 12%
+        let bestReturn = fr.bestReturn !== null ? fr.bestReturn : 18; // default fallback 18%
+        
+        // Clamp bestReturn to at least currentReturn if the client is already outperforming
+        if (bestReturn < currentReturn) {
+          bestReturn = currentReturn;
+        }
+
+        // Calculate estimated 1-year profits
+        const currentProfit = fr.invested * (currentReturn / 100);
+        const achievableProfit = fr.invested * (bestReturn / 100);
+        const gap = Math.max(0, achievableProfit - currentProfit);
+
+        totalCurrentEstProfit += currentProfit;
+        totalAchievableEstProfit += achievableProfit;
+        totalWeightedCurrentReturn += currentReturn * fr.invested;
+        totalWeightedBestReturn += bestReturn * fr.invested;
+
+        // Only include in the opportunity gap list if there's actual positive headroom
+        if (bestReturn > currentReturn && gap > 0.01) {
+          fundComparisons.push({
+            category: fr.category,
+            invested: fr.invested,
+            currentReturn,
+            bestReturn,
+            currentProfit,
+            achievableProfit,
+            gap,
+          });
+        }
+
         if (fr.fundReturn !== null && fr.benchmarkReturn !== null) {
           comparableFunds++;
           const diff = fr.fundReturn - fr.benchmarkReturn;
@@ -103,6 +150,20 @@ export async function scoreDimension(
           }
         }
       }
+
+      const totalInvestedAmount = rows.reduce((sum, r) => sum + r.invested, 0);
+      const currentXirr = totalInvestedAmount > 0 ? totalWeightedCurrentReturn / totalInvestedAmount : 12;
+      const achievableXirr = totalInvestedAmount > 0 ? totalWeightedBestReturn / totalInvestedAmount : 18;
+      const totalGap = Math.max(0, totalAchievableEstProfit - totalCurrentEstProfit);
+
+      comparisonData = {
+        achievableXirr,
+        currentXirr,
+        totalCurrentProfit: totalCurrentEstProfit,
+        totalAchievableProfit: totalAchievableEstProfit,
+        totalGap,
+        funds: fundComparisons,
+      };
 
       if (comparableFunds > 0) {
         const beatRatio = beatingBenchmark / comparableFunds;
@@ -169,5 +230,5 @@ export async function scoreDimension(
     insights.push(`Efficiency: Portfolio is in net loss (${portfolioGainPct.toFixed(1)}%) — immediate review recommended`);
   }
 
-  return { score: Math.min(20, Math.max(0, score)), insights };
+  return { score: Math.min(20, Math.max(0, score)), insights, comparison: comparisonData };
 }

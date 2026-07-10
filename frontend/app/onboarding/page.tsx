@@ -70,9 +70,21 @@ export default function Onboarding() {
     };
   }, []);
 
-  // Mount animation
+  // Mount animation & query param parsing
   useEffect(() => {
     document.title = "Book a Call | FinAnalysis - Arijit De";
+    
+    // Parse query parameters to direct the user flow
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const urlFlow = params.get("flow");
+      if (urlFlow === "login" || urlFlow === "existing") {
+        setFlow("EXISTING_CLIENT");
+      } else if (urlFlow === "new" || urlFlow === "signup") {
+        setFlow("NEW_USER");
+      }
+    }
+
     const timer = setTimeout(() => {
       setIsLoaded(true);
     }, 100);

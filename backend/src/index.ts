@@ -54,8 +54,14 @@ const allowedOrigins = process.env.FRONTEND_URL
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps, postman, or curl requests)
-      if (!origin) return callback(null, true);
+      // Allow requests with no origin in development (Postman, curl).
+      // In production, require an explicit origin.
+      if (!origin) {
+        if (process.env.NODE_ENV === 'production') {
+          return callback(null, false);
+        }
+        return callback(null, true);
+      }
       
       const normalizedOrigin = origin.trim().replace(/\/$/, '');
       const isAllowed = allowedOrigins.some(
