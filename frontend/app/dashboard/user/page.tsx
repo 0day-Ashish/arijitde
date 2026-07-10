@@ -1952,18 +1952,28 @@ export default function UserDashboard() {
                 AI Generated Anomaly Insights
               </span>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {scoreReport.insights.map((insight, idx) => (
-                  <div key={idx} className="p-5 bg-white/40 border border-white/30 rounded-2xl flex items-start gap-4">
-                    <div className="w-6 h-6 rounded-lg border border-border bg-white/60 flex items-center justify-center text-xs font-mono text-neutral-500 mt-0.5 shrink-0">
-                      0{idx + 1}
-                    </div>
-                    <p className="text-neutral-800 text-xs leading-relaxed font-sans text-left">
-                      {insight}
-                    </p>
+              {(() => {
+                const insightsList = Array.isArray(scoreReport.insights)
+                  ? scoreReport.insights
+                  : (scoreReport.insights as any)?.textInsights || [];
+                if (insightsList.length === 0) return (
+                  <p className="text-neutral-500 text-xs font-mono py-4">No AI generated insights available.</p>
+                );
+                return (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {insightsList.map((insight: string, idx: number) => (
+                      <div key={idx} className="p-5 bg-white/40 border border-white/30 rounded-2xl flex items-start gap-4">
+                        <div className="w-6 h-6 rounded-lg border border-border bg-white/60 flex items-center justify-center text-xs font-mono text-neutral-500 mt-0.5 shrink-0">
+                          0{idx + 1}
+                        </div>
+                        <p className="text-neutral-800 text-xs leading-relaxed font-sans text-left">
+                          {insight}
+                        </p>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                );
+              })()}
             </div>
 
             {/* CTA Box: Book Call */}

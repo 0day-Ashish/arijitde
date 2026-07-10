@@ -2517,18 +2517,26 @@ export default function AdminDashboard() {
                           </div>
 
                           {/* Score Insights */}
-                          {p.score.insights && Array.isArray(p.score.insights) && p.score.insights.length > 0 && (
-                            <div className="border-t border-neutral-200 pt-2 text-xs font-sans text-neutral-500 space-y-1">
-                              <span className="text-[10px] text-neutral-900 uppercase font-bold tracking-wide font-clash block mb-1">
-                                Distribution Insights
-                              </span>
-                              {p.score.insights.map((insight: string, idx: number) => (
-                                <div key={idx} className="flex items-start gap-1.5">
-                                  <ChevronRight className="w-3.5 h-3.5 mt-0.5 text-neutral-900 flex-shrink-0" />
-                                  <span>{insight}</span>
+                          {p.score.insights && (
+                            (() => {
+                              const list = Array.isArray(p.score.insights)
+                                ? p.score.insights
+                                : (p.score.insights as any)?.textInsights || [];
+                              if (list.length === 0) return null;
+                              return (
+                                <div className="border-t border-neutral-200 pt-2 text-xs font-sans text-neutral-500 space-y-1">
+                                  <span className="text-[10px] text-neutral-900 uppercase font-bold tracking-wide font-clash block mb-1">
+                                    Distribution Insights
+                                  </span>
+                                  {list.map((insight: string, idx: number) => (
+                                    <div key={idx} className="flex items-start gap-1.5">
+                                      <ChevronRight className="w-3.5 h-3.5 mt-0.5 text-neutral-900 flex-shrink-0" />
+                                      <span>{insight}</span>
+                                    </div>
+                                  ))}
                                 </div>
-                              ))}
-                            </div>
+                              );
+                            })()
                           )}
                         </div>
                       ) : (
