@@ -2190,10 +2190,6 @@ export default function AdminDashboard() {
                 </h3>
                 <div className="grid grid-cols-2 gap-4 text-xs font-mono text-neutral-900">
                   <div>
-                    <span className="text-neutral-500 block text-[10px] uppercase">User ID</span>
-                    <span className="text-neutral-900 text-[10.5px] select-all">{selectedUser.id}</span>
-                  </div>
-                  <div>
                     <span className="text-neutral-500 block text-[10px] uppercase">Registered Date</span>
                     <span className="text-neutral-900">
                       {new Date(selectedUser.createdAt).toLocaleString()}
