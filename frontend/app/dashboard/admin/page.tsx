@@ -68,6 +68,37 @@ const CHART_COLORS = [
   '#ec4899', // Pink 500
 ];
 
+function formatDob(val: string | null | undefined): string {
+  if (!val) return 'Not provided';
+  const trimmed = val.trim();
+  if (/^\d+$/.test(trimmed)) {
+    const serial = parseInt(trimmed, 10);
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const d = new Date((serial - 25569) * msPerDay);
+    if (!isNaN(d.getTime())) {
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      return `${day}/${month}/${year}`;
+    }
+  }
+  
+  // If it matches DD/MM/YYYY already, return it
+  if (/^\d{1,2}[-/]\d{1,2}[-/]\d{4}$/.test(trimmed)) {
+    return trimmed.replace(/-/g, '/');
+  }
+
+  // Parse generic ISO or date format
+  const dateObj = new Date(trimmed);
+  if (!isNaN(dateObj.getTime())) {
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const year = dateObj.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
+  return trimmed;
+}
+
 export default function AdminDashboard() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -2190,12 +2221,6 @@ export default function AdminDashboard() {
                 </h3>
                 <div className="grid grid-cols-2 gap-4 text-xs font-mono text-neutral-900">
                   <div>
-                    <span className="text-neutral-500 block text-[10px] uppercase">Registered Date</span>
-                    <span className="text-neutral-900">
-                      {new Date(selectedUser.createdAt).toLocaleString()}
-                    </span>
-                  </div>
-                  <div>
                     <span className="text-neutral-500 block text-[10px] uppercase">Email Address</span>
                     <span className="text-neutral-900 select-all">{selectedUser.email}</span>
                   </div>
@@ -2712,14 +2737,11 @@ export default function AdminDashboard() {
                   <DetailField label="Name" value={selectedExistingClient.name} />
                   <DetailField label="PAN" value={selectedExistingClient.pan} />
                   <DetailField label="Aadhaar" value={selectedExistingClient.aadhaar} />
-                  <DetailField label="Date of Birth" value={selectedExistingClient.dob} />
+                  <DetailField label="Date of Birth" value={formatDob(selectedExistingClient.dob)} />
                   <DetailField label="Birthday Wish" value={selectedExistingClient.birthdayWish} />
                   <DetailField label="Anniversary" value={selectedExistingClient.anniversary} />
-                  <DetailField label="Date of Death" value={selectedExistingClient.dateOfDeath} />
                   <DetailField label="Profession" value={selectedExistingClient.profession} />
-                  <DetailField label="Annual Income" value={selectedExistingClient.annualIncome} />
-                  <DetailField label="Client Rating" value={selectedExistingClient.clientRating} />
-                  <DetailField label="Username" value={selectedExistingClient.username} />
+                  <DetailField label="Bank Details" value={selectedExistingClient.bankDetails} />
                 </div>
               </div>
 
