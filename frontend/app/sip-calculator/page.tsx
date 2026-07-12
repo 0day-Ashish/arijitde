@@ -143,9 +143,16 @@ export default function SIPCalculator() {
                 Monthly Investment
               </span>
               <div className="flex items-center gap-2">
-                <span className="text-foreground font-mono font-bold text-base bg-[#F2F0EF]/80 border border-border px-3 py-1 rounded-xl">
-                  {formatCurrency(monthlyInvestment)}
-                </span>
+                <div className="flex items-center gap-1 bg-[#F2F0EF]/80 border border-border px-3 py-1 rounded-xl font-mono font-bold text-base text-foreground">
+                  <span>₹</span>
+                  <input
+                    type="number"
+                    value={monthlyInvestment}
+                    onChange={(e) => setMonthlyInvestment(Math.max(0, Number(e.target.value)))}
+                    className="bg-transparent border-none outline-none text-foreground font-mono font-bold text-base text-right p-0 focus:ring-0 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    style={{ width: `${Math.max(3, String(monthlyInvestment).length) * 9 + 5}px` }}
+                  />
+                </div>
               </div>
             </div>
             <input
@@ -153,7 +160,7 @@ export default function SIPCalculator() {
               min={500}
               max={100000}
               step={500}
-              value={monthlyInvestment}
+              value={Math.min(100000, Math.max(500, monthlyInvestment))}
               onChange={(e) => setMonthlyInvestment(Number(e.target.value))}
               className="w-full accent-primary h-1 bg-border rounded-lg appearance-none cursor-pointer"
             />
@@ -171,16 +178,24 @@ export default function SIPCalculator() {
                 <TrendingUp className="w-4 h-4 text-primary" />
                 Expected Return Rate (p.a)
               </span>
-              <span className="text-foreground font-mono font-bold text-base bg-[#F2F0EF]/80 border border-border px-3 py-1 rounded-xl">
-                {expectedReturn}%
-              </span>
+              <div className="flex items-center gap-1 bg-[#F2F0EF]/80 border border-border px-3 py-1 rounded-xl font-mono font-bold text-base text-foreground">
+                <input
+                  type="number"
+                  step="0.1"
+                  value={expectedReturn}
+                  onChange={(e) => setExpectedReturn(Math.max(0, Number(e.target.value)))}
+                  className="bg-transparent border-none outline-none text-foreground font-mono font-bold text-base text-right p-0 focus:ring-0 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  style={{ width: `${Math.max(3, String(expectedReturn).length) * 9 + 5}px` }}
+                />
+                <span>%</span>
+              </div>
             </div>
             <input
               type="range"
               min={1}
               max={30}
               step={0.5}
-              value={expectedReturn}
+              value={Math.min(30, Math.max(1, expectedReturn))}
               onChange={(e) => setExpectedReturn(Number(e.target.value))}
               className="w-full accent-primary h-1 bg-border rounded-lg appearance-none cursor-pointer"
             />
@@ -198,16 +213,23 @@ export default function SIPCalculator() {
                 <Calendar className="w-4 h-4 text-primary" />
                 Time Period (Years)
               </span>
-              <span className="text-foreground font-mono font-bold text-base bg-[#F2F0EF]/80 border border-border px-3 py-1 rounded-xl">
-                {years} {years === 1 ? 'Year' : 'Years'}
-              </span>
+              <div className="flex items-center gap-1 bg-[#F2F0EF]/80 border border-border px-3 py-1 rounded-xl font-mono font-bold text-base text-foreground">
+                <input
+                  type="number"
+                  value={years}
+                  onChange={(e) => setYears(Math.max(0, Number(e.target.value)))}
+                  className="bg-transparent border-none outline-none text-foreground font-mono font-bold text-base text-right p-0 focus:ring-0 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  style={{ width: `${Math.max(2, String(years).length) * 9 + 5}px` }}
+                />
+                <span>{years === 1 ? 'Year' : 'Years'}</span>
+              </div>
             </div>
             <input
               type="range"
               min={1}
               max={40}
               step={1}
-              value={years}
+              value={Math.min(40, Math.max(1, years))}
               onChange={(e) => setYears(Number(e.target.value))}
               className="w-full accent-primary h-1 bg-border rounded-lg appearance-none cursor-pointer"
             />

@@ -887,6 +887,7 @@ router.post('/portfolio-valuations/upload', upload.single('file'), async (req: A
       gain: parseExcelNumber(row["Gain"]),
       absoluteReturn: parseExcelNumber(row["Absolute Return (%)"]),
       cagr: parseExcelNumber(row["CAGR (%)"]),
+      xirr: parseExcelNumber(row["XIRR (%)"] || row["XIRR"] || row["xirr"]),
     }));
 
     // Save using a transaction with chunking to prevent PostgreSQL parameter limits
@@ -903,6 +904,7 @@ router.post('/portfolio-valuations/upload', upload.single('file'), async (req: A
           gain: null,
           absoluteReturn: null,
           cagr: null,
+          xirr: null,
         }
       });
 
@@ -942,6 +944,7 @@ router.post('/portfolio-valuations/upload', upload.single('file'), async (req: A
               gain: row.gain,
               absoluteReturn: row.absoluteReturn,
               cagr: row.cagr,
+              xirr: row.xirr,
               iwellCode: row.iwellCode || match.iwellCode,
               iwellCode2: row.iwellCode2 || match.iwellCode2,
             }
@@ -964,6 +967,7 @@ router.post('/portfolio-valuations/upload', upload.single('file'), async (req: A
               gain: row.gain,
               absoluteReturn: row.absoluteReturn,
               cagr: row.cagr,
+              xirr: row.xirr,
             }
           });
           updatedCount++;
@@ -1036,6 +1040,7 @@ router.get('/portfolio-valuations', async (req: AuthenticatedRequest, res: Respo
       gain: c.gain,
       absoluteReturn: c.absoluteReturn,
       cagr: c.cagr,
+      xirr: c.xirr,
       createdAt: c.createdAt,
     }));
 
@@ -1070,6 +1075,7 @@ router.delete('/portfolio-valuations/clear', async (req: AuthenticatedRequest, r
         gain: null,
         absoluteReturn: null,
         cagr: null,
+        xirr: null,
       }
     });
     res.json({

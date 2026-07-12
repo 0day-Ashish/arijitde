@@ -252,16 +252,23 @@ export default function SWPCalculator() {
                     <Coins className="w-4 h-4 text-primary" />
                     Total Corpus Amount
                   </span>
-                  <span className="text-foreground font-mono font-bold text-base bg-[#F2F0EF]/80 border border-border px-3 py-1 rounded-xl">
-                    {formatCurrency(corpusAmount)}
-                  </span>
+                  <div className="flex items-center gap-1 bg-[#F2F0EF]/80 border border-border px-3 py-1 rounded-xl font-mono font-bold text-base text-foreground">
+                    <span>₹</span>
+                    <input
+                      type="number"
+                      value={corpusAmount}
+                      onChange={(e) => setCorpusAmount(Math.max(0, Number(e.target.value)))}
+                      className="bg-transparent border-none outline-none text-foreground font-mono font-bold text-base text-right p-0 focus:ring-0 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      style={{ width: `${Math.max(3, String(corpusAmount).length) * 9 + 5}px` }}
+                    />
+                  </div>
                 </div>
                 <input
                   type="range"
                   min={100000}
                   max={50000000}
                   step={100000}
-                  value={corpusAmount}
+                  value={Math.min(50000000, Math.max(100000, corpusAmount))}
                   onChange={(e) => setCorpusAmount(Number(e.target.value))}
                   className="w-full accent-primary h-1 bg-border rounded-lg appearance-none cursor-pointer"
                 />
@@ -279,16 +286,23 @@ export default function SWPCalculator() {
                     <Download className="w-4 h-4 text-primary" />
                     Desired Monthly Withdrawal
                   </span>
-                  <span className="text-foreground font-mono font-bold text-base bg-[#F2F0EF]/80 border border-border px-3 py-1 rounded-xl">
-                    {formatCurrency(monthlyWithdrawal)}
-                  </span>
+                  <div className="flex items-center gap-1 bg-[#F2F0EF]/80 border border-border px-3 py-1 rounded-xl font-mono font-bold text-base text-foreground">
+                    <span>₹</span>
+                    <input
+                      type="number"
+                      value={monthlyWithdrawal}
+                      onChange={(e) => setMonthlyWithdrawal(Math.max(0, Number(e.target.value)))}
+                      className="bg-transparent border-none outline-none text-foreground font-mono font-bold text-base text-right p-0 focus:ring-0 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      style={{ width: `${Math.max(3, String(monthlyWithdrawal).length) * 9 + 5}px` }}
+                    />
+                  </div>
                 </div>
                 <input
                   type="range"
                   min={5000}
                   max={500000}
                   step={5000}
-                  value={monthlyWithdrawal}
+                  value={Math.min(500000, Math.max(5000, monthlyWithdrawal))}
                   onChange={(e) => setMonthlyWithdrawal(Number(e.target.value))}
                   className="w-full accent-primary h-1 bg-border rounded-lg appearance-none cursor-pointer"
                 />
@@ -306,16 +320,24 @@ export default function SWPCalculator() {
                     <TrendingUp className="w-4 h-4 text-primary" />
                     Expected Return Rate (p.a)
                   </span>
-                  <span className="text-foreground font-mono font-bold text-base bg-[#F2F0EF]/80 border border-border px-3 py-1 rounded-xl">
-                    {expectedReturn}%
-                  </span>
+                  <div className="flex items-center gap-1 bg-[#F2F0EF]/80 border border-border px-3 py-1 rounded-xl font-mono font-bold text-base text-foreground">
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={expectedReturn}
+                      onChange={(e) => setExpectedReturn(Math.max(0, Number(e.target.value)))}
+                      className="bg-transparent border-none outline-none text-foreground font-mono font-bold text-base text-right p-0 focus:ring-0 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      style={{ width: `${Math.max(3, String(expectedReturn).length) * 9 + 5}px` }}
+                    />
+                    <span>%</span>
+                  </div>
                 </div>
                 <input
                   type="range"
                   min={1}
                   max={25}
                   step={0.5}
-                  value={expectedReturn}
+                  value={Math.min(25, Math.max(1, expectedReturn))}
                   onChange={(e) => setExpectedReturn(Number(e.target.value))}
                   className="w-full accent-primary h-1 bg-border rounded-lg appearance-none cursor-pointer"
                 />
@@ -333,16 +355,23 @@ export default function SWPCalculator() {
                     <Calendar className="w-4 h-4 text-primary" />
                     Withdrawal Tenure (Years)
                   </span>
-                  <span className="text-foreground font-mono font-bold text-base bg-[#F2F0EF]/80 border border-border px-3 py-1 rounded-xl">
-                    {tenureYears} Years
-                  </span>
+                  <div className="flex items-center gap-1 bg-[#F2F0EF]/80 border border-border px-3 py-1 rounded-xl font-mono font-bold text-base text-foreground">
+                    <input
+                      type="number"
+                      value={tenureYears}
+                      onChange={(e) => setTenureYears(Math.max(0, Number(e.target.value)))}
+                      className="bg-transparent border-none outline-none text-foreground font-mono font-bold text-base text-right p-0 focus:ring-0 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      style={{ width: `${Math.max(2, String(tenureYears).length) * 9 + 5}px` }}
+                    />
+                    <span>{tenureYears === 1 ? 'Year' : 'Years'}</span>
+                  </div>
                 </div>
                 <input
                   type="range"
                   min={1}
                   max={40}
                   step={1}
-                  value={tenureYears}
+                  value={Math.min(40, Math.max(1, tenureYears))}
                   onChange={(e) => setTenureYears(Number(e.target.value))}
                   className="w-full accent-primary h-1 bg-border rounded-lg appearance-none cursor-pointer"
                 />
@@ -362,16 +391,23 @@ export default function SWPCalculator() {
                     <Download className="w-4 h-4 text-primary" />
                     Desired Monthly Income (Payout)
                   </span>
-                  <span className="text-foreground font-mono font-bold text-base bg-[#F2F0EF]/80 border border-border px-3 py-1 rounded-xl">
-                    {formatCurrency(desiredMonthlyIncome)}
-                  </span>
+                  <div className="flex items-center gap-1 bg-[#F2F0EF]/80 border border-border px-3 py-1 rounded-xl font-mono font-bold text-base text-foreground">
+                    <span>₹</span>
+                    <input
+                      type="number"
+                      value={desiredMonthlyIncome}
+                      onChange={(e) => setDesiredMonthlyIncome(Math.max(0, Number(e.target.value)))}
+                      className="bg-transparent border-none outline-none text-foreground font-mono font-bold text-base text-right p-0 focus:ring-0 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      style={{ width: `${Math.max(3, String(desiredMonthlyIncome).length) * 9 + 5}px` }}
+                    />
+                  </div>
                 </div>
                 <input
                   type="range"
                   min={5000}
                   max={500000}
                   step={5000}
-                  value={desiredMonthlyIncome}
+                  value={Math.min(500000, Math.max(5000, desiredMonthlyIncome))}
                   onChange={(e) => setDesiredMonthlyIncome(Number(e.target.value))}
                   className="w-full accent-primary h-1 bg-border rounded-lg appearance-none cursor-pointer"
                 />
@@ -389,16 +425,24 @@ export default function SWPCalculator() {
                     <TrendingUp className="w-4 h-4 text-primary" />
                     Expected Return Rate (p.a)
                   </span>
-                  <span className="text-foreground font-mono font-bold text-base bg-[#F2F0EF]/80 border border-border px-3 py-1 rounded-xl">
-                    {corpusExpectedReturn}%
-                  </span>
+                  <div className="flex items-center gap-1 bg-[#F2F0EF]/80 border border-border px-3 py-1 rounded-xl font-mono font-bold text-base text-foreground">
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={corpusExpectedReturn}
+                      onChange={(e) => setCorpusExpectedReturn(Math.max(0, Number(e.target.value)))}
+                      className="bg-transparent border-none outline-none text-foreground font-mono font-bold text-base text-right p-0 focus:ring-0 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      style={{ width: `${Math.max(3, String(corpusExpectedReturn).length) * 9 + 5}px` }}
+                    />
+                    <span>%</span>
+                  </div>
                 </div>
                 <input
                   type="range"
                   min={1}
                   max={25}
                   step={0.5}
-                  value={corpusExpectedReturn}
+                  value={Math.min(25, Math.max(1, corpusExpectedReturn))}
                   onChange={(e) => setCorpusExpectedReturn(Number(e.target.value))}
                   className="w-full accent-primary h-1 bg-border rounded-lg appearance-none cursor-pointer"
                 />
@@ -416,16 +460,23 @@ export default function SWPCalculator() {
                     <Calendar className="w-4 h-4 text-primary" />
                     Duration of Payout (Years)
                   </span>
-                  <span className="text-foreground font-mono font-bold text-base bg-[#F2F0EF]/80 border border-border px-3 py-1 rounded-xl">
-                    {desiredTenureYears} Years
-                  </span>
+                  <div className="flex items-center gap-1 bg-[#F2F0EF]/80 border border-border px-3 py-1 rounded-xl font-mono font-bold text-base text-foreground">
+                    <input
+                      type="number"
+                      value={desiredTenureYears}
+                      onChange={(e) => setDesiredTenureYears(Math.max(0, Number(e.target.value)))}
+                      className="bg-transparent border-none outline-none text-foreground font-mono font-bold text-base text-right p-0 focus:ring-0 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      style={{ width: `${Math.max(2, String(desiredTenureYears).length) * 9 + 5}px` }}
+                    />
+                    <span>{desiredTenureYears === 1 ? 'Year' : 'Years'}</span>
+                  </div>
                 </div>
                 <input
                   type="range"
                   min={1}
                   max={45}
                   step={1}
-                  value={desiredTenureYears}
+                  value={Math.min(45, Math.max(1, desiredTenureYears))}
                   onChange={(e) => setDesiredTenureYears(Number(e.target.value))}
                   className="w-full accent-primary h-1 bg-border rounded-lg appearance-none cursor-pointer"
                 />

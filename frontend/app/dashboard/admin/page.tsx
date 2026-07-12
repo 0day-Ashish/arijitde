@@ -99,6 +99,36 @@ function formatDob(val: string | null | undefined): string {
   return trimmed;
 }
 
+function formatExcelDate(val: string | null | undefined): string {
+  if (!val) return 'N/A';
+  const trimmed = val.trim();
+  if (/^\d+$/.test(trimmed)) {
+    const serial = parseInt(trimmed, 10);
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const d = new Date((serial - 25569) * msPerDay);
+    if (!isNaN(d.getTime())) {
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      return `${day}/${month}/${year}`;
+    }
+  }
+  
+  if (/^\d{1,2}[-/]\d{1,2}[-/]\d{4}$/.test(trimmed)) {
+    return trimmed.replace(/-/g, '/');
+  }
+
+  const dateObj = new Date(trimmed);
+  if (!isNaN(dateObj.getTime())) {
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const year = dateObj.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
+  return trimmed;
+}
+
+
 export default function AdminDashboard() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -1159,7 +1189,7 @@ export default function AdminDashboard() {
             className={`py-3 text-sm font-bold font-clash tracking-wide border-b-2 cursor-pointer transition duration-200 whitespace-nowrap ${activeTab === 'users' ? 'border-neutral-900 text-neutral-900' : 'border-transparent text-neutral-500 hover:text-neutral-900'
               }`}
           >
-            Users Registry ({filteredUsers.length})
+            Visitors Registry ({filteredUsers.length})
           </button>
 
           <button
@@ -1167,20 +1197,7 @@ export default function AdminDashboard() {
             className={`py-3 text-sm font-bold font-clash tracking-wide border-b-2 cursor-pointer transition duration-200 flex items-center gap-2 whitespace-nowrap ${activeTab === 'consultations' ? 'border-neutral-900 text-neutral-900' : 'border-transparent text-neutral-500 hover:text-neutral-900'
               }`}
           >
-            Consultation Leads
-          </button>
-
-          <button
-            onClick={() => setActiveTab('liveSessions')}
-            className={`py-3 text-sm font-bold font-clash tracking-wide border-b-2 cursor-pointer transition duration-200 flex items-center gap-2 whitespace-nowrap ${activeTab === 'liveSessions' ? 'border-neutral-900 text-neutral-900' : 'border-transparent text-neutral-500 hover:text-neutral-900'
-              }`}
-          >
-            Live Sessions Queue
-            {advisorySessions.filter(s => s.status === 'PENDING').length > 0 && (
-              <span className="px-2 py-0.5 text-[10px] bg-primary text-white rounded-full font-bold animate-pulse">
-                {advisorySessions.filter(s => s.status === 'PENDING').length}
-              </span>
-            )}
+            Visitors Session Queue
           </button>
 
           <button
@@ -1192,6 +1209,19 @@ export default function AdminDashboard() {
             {stats.totalExistingClients > 0 && (
               <span className="px-2 py-0.5 text-[10px] bg-neutral-900 text-white rounded-full font-bold">
                 {stats.totalExistingClients}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => setActiveTab('liveSessions')}
+            className={`py-3 text-sm font-bold font-clash tracking-wide border-b-2 cursor-pointer transition duration-200 flex items-center gap-2 whitespace-nowrap ${activeTab === 'liveSessions' ? 'border-neutral-900 text-neutral-900' : 'border-transparent text-neutral-500 hover:text-neutral-900'
+              }`}
+          >
+            Existing Clients Session Queue
+            {advisorySessions.filter(s => s.status === 'PENDING').length > 0 && (
+              <span className="px-2 py-0.5 text-[10px] bg-primary text-white rounded-full font-bold animate-pulse">
+                {advisorySessions.filter(s => s.status === 'PENDING').length}
               </span>
             )}
           </button>
@@ -2735,101 +2765,6 @@ export default function AdminDashboard() {
             {/* Scrollable details view */}
             <div className="space-y-8 flex-1 pb-10">
 
-              {/* Section 1: Personal & Profile Details */}
-              <div className="border border-neutral-200 bg-neutral-50 rounded-2xl p-5 space-y-4">
-                <h3 className="text-xs font-bold font-clash uppercase tracking-wider text-neutral-900 border-b border-neutral-200 pb-2">
-                  Personal & Profile Details
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <DetailField label="Title" value={selectedExistingClient.title} />
-                  <DetailField label="Name" value={selectedExistingClient.name} />
-                  <DetailField label="PAN" value={selectedExistingClient.pan} />
-                  <DetailField label="Aadhaar" value={selectedExistingClient.aadhaar} />
-                  <DetailField label="Date of Birth" value={formatDob(selectedExistingClient.dob)} />
-                  <DetailField label="Birthday Wish" value={selectedExistingClient.birthdayWish} />
-                  <DetailField label="Anniversary" value={selectedExistingClient.anniversary} />
-                  <DetailField label="Profession" value={selectedExistingClient.profession} />
-                  <DetailField label="Bank Details" value={selectedExistingClient.bankDetails} />
-                </div>
-              </div>
-
-              {/* Section 2: Contact & Address Details */}
-              <div className="border border-neutral-200 bg-neutral-50 rounded-2xl p-5 space-y-4">
-                <h3 className="text-xs font-bold font-clash uppercase tracking-wider text-neutral-900 border-b border-neutral-200 pb-2">
-                  Contact & Address Details
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <DetailField label="Email Address" value={selectedExistingClient.email} />
-                  <DetailField label="Disable Email" value={selectedExistingClient.disableEmail} />
-                  <DetailField label="Secondary Email" value={selectedExistingClient.secondaryEmail} />
-                  <DetailField label="Mobile Number" value={selectedExistingClient.mobile} />
-                  <DetailField label="Landline" value={selectedExistingClient.landline} />
-                  <DetailField label="Address 1" value={selectedExistingClient.address1} />
-                  <DetailField label="Address 2" value={selectedExistingClient.address2} />
-                  <DetailField label="Address 3" value={selectedExistingClient.address3} />
-                  <DetailField label="City" value={selectedExistingClient.city} />
-                  <DetailField label="State" value={selectedExistingClient.state} />
-                  <DetailField label="Country" value={selectedExistingClient.country} />
-                  <DetailField label="PIN Code" value={selectedExistingClient.pinCode} />
-                </div>
-              </div>
-
-              {/* Section 3: Overseas Contact Details */}
-              <div className="border border-neutral-200 bg-neutral-50 rounded-2xl p-5 space-y-4">
-                <h3 className="text-xs font-bold font-clash uppercase tracking-wider text-neutral-900 border-b border-neutral-200 pb-2">
-                  Overseas Contact Details
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <DetailField label="Overseas Address 1" value={selectedExistingClient.overseasAddress1} />
-                  <DetailField label="Overseas Address 2" value={selectedExistingClient.overseasAddress2} />
-                  <DetailField label="Overseas Address 3" value={selectedExistingClient.overseasAddress3} />
-                  <DetailField label="Overseas City" value={selectedExistingClient.overseasCity} />
-                  <DetailField label="Overseas State" value={selectedExistingClient.overseasState} />
-                  <DetailField label="Overseas Country" value={selectedExistingClient.overseasCountry} />
-                  <DetailField label="Overseas PIN" value={selectedExistingClient.overseasPin} />
-                  <DetailField label="Overseas Phone" value={selectedExistingClient.overseasPhone} />
-                  <DetailField label="Overseas Mobile" value={selectedExistingClient.overseasMobile} />
-                </div>
-              </div>
-
-              {/* Section 4: Distribution & Target Allocation */}
-              <div className="border border-neutral-200 bg-neutral-50 rounded-2xl p-5 space-y-4">
-                <h3 className="text-xs font-bold font-clash uppercase tracking-wider text-neutral-900 border-b border-neutral-200 pb-2">
-                  Distribution & Target Allocation
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <DetailField label="Current AUM" value={selectedExistingClient.aum !== null && selectedExistingClient.aum !== undefined ? `₹${selectedExistingClient.aum.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : 'N/A'} />
-                  <DetailField label="Target SIP Amount" value={selectedExistingClient.targetSipAmount !== null && selectedExistingClient.targetSipAmount !== undefined ? `₹${selectedExistingClient.targetSipAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : 'N/A'} />
-                  <DetailField label="Target ELSS Amount" value={selectedExistingClient.targetElssAmount !== null && selectedExistingClient.targetElssAmount !== undefined ? `₹${selectedExistingClient.targetElssAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : 'N/A'} />
-                  <DetailField label="Target Equity Allocation" value={selectedExistingClient.targetEquityAllocation !== null && selectedExistingClient.targetEquityAllocation !== undefined ? `${selectedExistingClient.targetEquityAllocation}%` : 'N/A'} />
-                  <DetailField label="Target Debt Allocation" value={selectedExistingClient.targetDebtAllocation !== null && selectedExistingClient.targetDebtAllocation !== undefined ? `${selectedExistingClient.targetDebtAllocation}%` : 'N/A'} />
-                  <DetailField label="Preferred Billing Mode" value={selectedExistingClient.preferredBillingMode} />
-                  <DetailField label="First Investment Date" value={selectedExistingClient.firstInvestmentDate} />
-                  <DetailField label="Review Frequency" value={selectedExistingClient.reviewFrequency} />
-                  <DetailField label="Last Review Date" value={selectedExistingClient.lastReviewDate} />
-                  <DetailField label="Model Name" value={selectedExistingClient.modelName} />
-                  <DetailField label="File Number" value={selectedExistingClient.fileNumber} />
-                </div>
-              </div>
-
-              {/* Section 4.5: Portfolio Valuation Details */}
-              <div className="border border-neutral-200 bg-neutral-50 rounded-2xl p-5 space-y-4">
-                <h3 className="text-xs font-bold font-clash uppercase tracking-wider text-neutral-900 border-b border-neutral-200 pb-2">
-                  Portfolio Valuation Details (Fresh from CSV)
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <DetailField label="Balance Units" value={selectedExistingClient.balanceUnits !== null && selectedExistingClient.balanceUnits !== undefined ? selectedExistingClient.balanceUnits.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : 'N/A'} />
-                  <DetailField label="Purchase Value" value={selectedExistingClient.purchaseValue !== null && selectedExistingClient.purchaseValue !== undefined ? `₹${selectedExistingClient.purchaseValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : 'N/A'} />
-                  <DetailField label="Current Value (AUM)" value={selectedExistingClient.currentValue !== null && selectedExistingClient.currentValue !== undefined ? `₹${selectedExistingClient.currentValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : 'N/A'} />
-                  <DetailField label="One-Day Change" value={selectedExistingClient.oneDayChange !== null && selectedExistingClient.oneDayChange !== undefined ? `₹${selectedExistingClient.oneDayChange.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : 'N/A'} />
-                  <DetailField label="Dividend" value={selectedExistingClient.dividend !== null && selectedExistingClient.dividend !== undefined ? `₹${selectedExistingClient.dividend.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : 'N/A'} />
-                  <DetailField label="Average Holding" value={formatAvgHolding(selectedExistingClient.averageHoldingDays)} />
-                  <DetailField label="Gain" value={selectedExistingClient.gain !== null && selectedExistingClient.gain !== undefined ? `₹${selectedExistingClient.gain.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : 'N/A'} />
-                  <DetailField label="Absolute Return" value={selectedExistingClient.absoluteReturn !== null && selectedExistingClient.absoluteReturn !== undefined ? `${selectedExistingClient.absoluteReturn.toFixed(2)}%` : 'N/A'} />
-                  <DetailField label="CAGR (%)" value={selectedExistingClient.cagr !== null && selectedExistingClient.cagr !== undefined ? `${selectedExistingClient.cagr.toFixed(2)}%` : 'N/A'} />
-                </div>
-              </div>
-
               {/* Section 4.6: Folio Holdings / Scheme Details */}
               <div id="admin-folio-details-section" className="border border-neutral-200 bg-neutral-50 rounded-2xl p-5 space-y-4">
                 <div className="flex justify-between items-center border-b border-neutral-200 pb-2">
@@ -2910,54 +2845,109 @@ export default function AdminDashboard() {
                 )}
               </div>
 
-              {/* Section 5: System Codes & References */}
+              {/* Section 1: Personal & Profile Details */}
               <div className="border border-neutral-200 bg-neutral-50 rounded-2xl p-5 space-y-4">
                 <h3 className="text-xs font-bold font-clash uppercase tracking-wider text-neutral-900 border-b border-neutral-200 pb-2">
-                  System Codes & References
+                  Personal & Profile Details
                 </h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <DetailField label="App Code" value={selectedExistingClient.appCode} />
-                  <DetailField label="IWELL Code" value={selectedExistingClient.iwellCode} />
-                  <DetailField label="IWELL Code 2" value={selectedExistingClient.iwellCode2} />
-                  <DetailField label="Family Head" value={selectedExistingClient.familyHead} />
-                  <DetailField label="Family Head IWELL Code" value={selectedExistingClient.familyHeadIwellCode} />
-                  <DetailField label="Family Head IWELL Code 2" value={selectedExistingClient.familyHeadIwellCode2} />
-                  <DetailField label="Referred By" value={selectedExistingClient.referredBy} />
-                  <DetailField label="Tags" value={selectedExistingClient.tags} />
-                  <div className="col-span-3">
-                    <DetailField label="Update Log" value={selectedExistingClient.updateLog} />
-                  </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <DetailField label="Title" value={selectedExistingClient.title} />
+                  <DetailField label="Name" value={selectedExistingClient.name} />
+                  <DetailField label="PAN" value={selectedExistingClient.pan} />
+                  <DetailField label="Aadhaar" value={selectedExistingClient.aadhaar} />
+                  <DetailField label="Date of Birth" value={formatDob(selectedExistingClient.dob)} />
+                  <DetailField label="Birthday Wish" value={selectedExistingClient.birthdayWish} />
+                  <DetailField label="Anniversary" value={selectedExistingClient.anniversary} />
+                  <DetailField label="Profession" value={selectedExistingClient.profession} />
+                  <DetailField 
+                    label="Bank Details" 
+                    value={(() => {
+                      const bankVal = selectedExistingClient.bankDetails;
+                      const ifsc = selectedExistingClient.folios?.find((f: any) => f.ifscCode)?.ifscCode;
+                      if (!bankVal) return ifsc ? `IFSC: ${ifsc}` : 'N/A';
+                      return ifsc ? `${bankVal} | IFSC: ${ifsc}` : bankVal;
+                    })()} 
+                  />
                 </div>
               </div>
 
-              {/* Section 6: Equity & Demat Info */}
+              {/* Section 2: Contact & Address Details */}
               <div className="border border-neutral-200 bg-neutral-50 rounded-2xl p-5 space-y-4">
                 <h3 className="text-xs font-bold font-clash uppercase tracking-wider text-neutral-900 border-b border-neutral-200 pb-2">
-                  Equity & Demat Info
+                  Contact & Address Details
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <DetailField label="Equity Code 1" value={selectedExistingClient.equityCode1} />
-                  <DetailField label="Equity Code 2" value={selectedExistingClient.equityCode2} />
-                  <DetailField label="Depository" value={selectedExistingClient.depository} />
-                  <DetailField label="DP Name" value={selectedExistingClient.dpName} />
-                  <DetailField label="DP ID" value={selectedExistingClient.dpId} />
-                  <DetailField label="NPS Account Number" value={selectedExistingClient.npsAccountNumber} />
-                  <DetailField label="KYC Status" value={selectedExistingClient.kycStatus} />
+                  <DetailField label="Email Address" value={selectedExistingClient.email} />
+                  <DetailField label="Secondary Email" value={selectedExistingClient.secondaryEmail} />
+                  <DetailField label="Mobile Number" value={selectedExistingClient.mobile} />
+                  <DetailField label="Landline" value={selectedExistingClient.landline} />
+                  <DetailField label="Address 1" value={selectedExistingClient.address1} />
+                  <DetailField label="Address 2" value={selectedExistingClient.address2} />
+                  <DetailField label="Address 3" value={selectedExistingClient.address3} />
+                  <DetailField label="City" value={selectedExistingClient.city} />
+                  <DetailField label="State" value={selectedExistingClient.state} />
+                  <DetailField label="Country" value={selectedExistingClient.country} />
+                  <DetailField label="PIN Code" value={selectedExistingClient.pinCode} />
                 </div>
               </div>
 
-              {/* Section 7: Billing Percentages */}
+              {/* Section 4.5: Portfolio Valuation Details */}
               <div className="border border-neutral-200 bg-neutral-50 rounded-2xl p-5 space-y-4">
                 <h3 className="text-xs font-bold font-clash uppercase tracking-wider text-neutral-900 border-b border-neutral-200 pb-2">
-                  Billing Rates (%)
+                  Portfolio Valuation Details (Fresh from CSV)
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <DetailField label="Equity MF Billing (%)" value={selectedExistingClient.equityMfBilling !== null && selectedExistingClient.equityMfBilling !== undefined ? `${selectedExistingClient.equityMfBilling}%` : 'N/A'} />
-                  <DetailField label="Debt MF Billing (%)" value={selectedExistingClient.debtMfBilling !== null && selectedExistingClient.debtMfBilling !== undefined ? `${selectedExistingClient.debtMfBilling}%` : 'N/A'} />
-                  <DetailField label="Shares Billing (%)" value={selectedExistingClient.sharesBilling !== null && selectedExistingClient.sharesBilling !== undefined ? `${selectedExistingClient.sharesBilling}%` : 'N/A'} />
-                  <DetailField label="Bonds Billing (%)" value={selectedExistingClient.bondsBilling !== null && selectedExistingClient.bondsBilling !== undefined ? `${selectedExistingClient.bondsBilling}%` : 'N/A'} />
-                  <DetailField label="Fixed Deposit Billing (%)" value={selectedExistingClient.fixedDepositBilling !== null && selectedExistingClient.fixedDepositBilling !== undefined ? `${selectedExistingClient.fixedDepositBilling}%` : 'N/A'} />
-                  <DetailField label="Other Asset Billing (%)" value={selectedExistingClient.otherAssetBilling !== null && selectedExistingClient.otherAssetBilling !== undefined ? `${selectedExistingClient.otherAssetBilling}%` : 'N/A'} />
+                  <DetailField label="Balance Units" value={selectedExistingClient.balanceUnits !== null && selectedExistingClient.balanceUnits !== undefined ? selectedExistingClient.balanceUnits.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : 'N/A'} />
+                  <DetailField label="Invested Amount" value={selectedExistingClient.purchaseValue !== null && selectedExistingClient.purchaseValue !== undefined ? `₹${selectedExistingClient.purchaseValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : 'N/A'} />
+                  <DetailField label="Current Value (AUM)" value={selectedExistingClient.currentValue !== null && selectedExistingClient.currentValue !== undefined ? `₹${selectedExistingClient.currentValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : 'N/A'} />
+                  <DetailField label="One-Day Change" value={selectedExistingClient.oneDayChange !== null && selectedExistingClient.oneDayChange !== undefined ? `₹${selectedExistingClient.oneDayChange.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : 'N/A'} />
+                  <DetailField label="Dividend" value={selectedExistingClient.dividend !== null && selectedExistingClient.dividend !== undefined ? `₹${selectedExistingClient.dividend.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : 'N/A'} />
+                  <DetailField label="Average Holding" value={formatAvgHolding(selectedExistingClient.averageHoldingDays)} />
+                  <DetailField label="Gain" value={selectedExistingClient.gain !== null && selectedExistingClient.gain !== undefined ? `₹${selectedExistingClient.gain.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : 'N/A'} />
+                  <DetailField label="Absolute Return" value={selectedExistingClient.absoluteReturn !== null && selectedExistingClient.absoluteReturn !== undefined ? `${selectedExistingClient.absoluteReturn.toFixed(2)}%` : 'N/A'} />
+                  <DetailField label="CAGR (%)" value={selectedExistingClient.cagr !== null && selectedExistingClient.cagr !== undefined ? `${selectedExistingClient.cagr.toFixed(2)}%` : 'N/A'} />
+                  <DetailField label="XIRR (%)" value={selectedExistingClient.xirr !== null && selectedExistingClient.xirr !== undefined ? `${selectedExistingClient.xirr.toFixed(2)}%` : 'N/A'} />
+                </div>
+              </div>
+
+              {/* Section 4: Distribution & Target Allocation */}
+              <div className="border border-neutral-200 bg-neutral-50 rounded-2xl p-5 space-y-4">
+                <h3 className="text-xs font-bold font-clash uppercase tracking-wider text-neutral-900 border-b border-neutral-200 pb-2">
+                  Distribution & Target Allocation
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <DetailField label="Current AUM" value={selectedExistingClient.aum !== null && selectedExistingClient.aum !== undefined ? `₹${selectedExistingClient.aum.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : 'N/A'} />
+                  <DetailField label="Target SIP Amount" value={selectedExistingClient.targetSipAmount !== null && selectedExistingClient.targetSipAmount !== undefined ? `₹${selectedExistingClient.targetSipAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : 'N/A'} />
+                  <DetailField label="Target ELSS Amount" value={selectedExistingClient.targetElssAmount !== null && selectedExistingClient.targetElssAmount !== undefined ? `₹${selectedExistingClient.targetElssAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : 'N/A'} />
+                  <DetailField label="First Investment Date" value={formatExcelDate(selectedExistingClient.firstInvestmentDate)} />
+                  <DetailField label="Review Frequency" value={selectedExistingClient.reviewFrequency} />
+                  <DetailField label="Last Review Date" value={selectedExistingClient.lastReviewDate} />
+                </div>
+              </div>
+
+
+
+
+
+
+
+
+
+              {/* Section 3: Overseas Contact Details */}
+              <div className="border border-neutral-200 bg-neutral-50 rounded-2xl p-5 space-y-4">
+                <h3 className="text-xs font-bold font-clash uppercase tracking-wider text-neutral-900 border-b border-neutral-200 pb-2">
+                  Overseas Contact Details
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <DetailField label="Overseas Address 1" value={selectedExistingClient.overseasAddress1} />
+                  <DetailField label="Overseas Address 2" value={selectedExistingClient.overseasAddress2} />
+                  <DetailField label="Overseas Address 3" value={selectedExistingClient.overseasAddress3} />
+                  <DetailField label="Overseas City" value={selectedExistingClient.overseasCity} />
+                  <DetailField label="Overseas State" value={selectedExistingClient.overseasState} />
+                  <DetailField label="Overseas Country" value={selectedExistingClient.overseasCountry} />
+                  <DetailField label="Overseas PIN" value={selectedExistingClient.overseasPin} />
+                  <DetailField label="Overseas Phone" value={selectedExistingClient.overseasPhone} />
+                  <DetailField label="Overseas Mobile" value={selectedExistingClient.overseasMobile} />
                 </div>
               </div>
 

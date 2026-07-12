@@ -152,16 +152,23 @@ export default function InflationCalculator() {
                 <Coins className="w-4 h-4 text-primary" />
                 Current Cost of Goal
               </span>
-              <span className="text-foreground font-mono font-bold text-base bg-[#F2F0EF]/80 border border-border px-3 py-1 rounded-xl">
-                {formatCurrency(currentCost)}
-              </span>
+              <div className="flex items-center gap-1 bg-[#F2F0EF]/80 border border-border px-3 py-1 rounded-xl font-mono font-bold text-base text-foreground">
+                <span>₹</span>
+                <input
+                  type="number"
+                  value={currentCost}
+                  onChange={(e) => setCurrentCost(Math.max(0, Number(e.target.value)))}
+                  className="bg-transparent border-none outline-none text-foreground font-mono font-bold text-base text-right p-0 focus:ring-0 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  style={{ width: `${Math.max(3, String(currentCost).length) * 9 + 5}px` }}
+                />
+              </div>
             </div>
             <input
               type="range"
               min={50000}
               max={25000000}
               step={50000}
-              value={currentCost}
+              value={Math.min(25000000, Math.max(50000, currentCost))}
               onChange={(e) => setCurrentCost(Number(e.target.value))}
               className="w-full accent-primary h-1 bg-border rounded-lg appearance-none cursor-pointer"
             />
@@ -179,16 +186,23 @@ export default function InflationCalculator() {
                 <Calendar className="w-4 h-4 text-primary" />
                 Years to Goal
               </span>
-              <span className="text-foreground font-mono font-bold text-base bg-[#F2F0EF]/80 border border-border px-3 py-1 rounded-xl">
-                {yearsToGoal} Years
-              </span>
+              <div className="flex items-center gap-1 bg-[#F2F0EF]/80 border border-border px-3 py-1 rounded-xl font-mono font-bold text-base text-foreground">
+                <input
+                  type="number"
+                  value={yearsToGoal}
+                  onChange={(e) => setYearsToGoal(Math.max(0, Number(e.target.value)))}
+                  className="bg-transparent border-none outline-none text-foreground font-mono font-bold text-base text-right p-0 focus:ring-0 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  style={{ width: `${Math.max(2, String(yearsToGoal).length) * 9 + 5}px` }}
+                />
+                <span>{yearsToGoal === 1 ? 'Year' : 'Years'}</span>
+              </div>
             </div>
             <input
               type="range"
               min={1}
               max={40}
               step={1}
-              value={yearsToGoal}
+              value={Math.min(40, Math.max(1, yearsToGoal))}
               onChange={(e) => setYearsToGoal(Number(e.target.value))}
               className="w-full accent-primary h-1 bg-border rounded-lg appearance-none cursor-pointer"
             />
@@ -206,16 +220,24 @@ export default function InflationCalculator() {
                 <ShieldAlert className="w-4 h-4 text-primary" />
                 Expected Inflation Rate (p.a)
               </span>
-              <span className="text-foreground font-mono font-bold text-base bg-[#F2F0EF]/80 border border-border px-3 py-1 rounded-xl">
-                {inflationRate}%
-              </span>
+              <div className="flex items-center gap-1 bg-[#F2F0EF]/80 border border-border px-3 py-1 rounded-xl font-mono font-bold text-base text-foreground">
+                <input
+                  type="number"
+                  step="0.1"
+                  value={inflationRate}
+                  onChange={(e) => setInflationRate(Math.max(0, Number(e.target.value)))}
+                  className="bg-transparent border-none outline-none text-foreground font-mono font-bold text-base text-right p-0 focus:ring-0 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  style={{ width: `${Math.max(3, String(inflationRate).length) * 9 + 5}px` }}
+                />
+                <span>%</span>
+              </div>
             </div>
             <input
               type="range"
               min={1}
               max={15}
               step={0.5}
-              value={inflationRate}
+              value={Math.min(15, Math.max(1, inflationRate))}
               onChange={(e) => setInflationRate(Number(e.target.value))}
               className="w-full accent-primary h-1 bg-border rounded-lg appearance-none cursor-pointer"
             />
@@ -233,16 +255,24 @@ export default function InflationCalculator() {
                 <TrendingUp className="w-4 h-4 text-primary" />
                 Expected SIP Returns (p.a)
               </span>
-              <span className="text-foreground font-mono font-bold text-base bg-[#F2F0EF]/80 border border-border px-3 py-1 rounded-xl">
-                {expectedReturns}%
-              </span>
+              <div className="flex items-center gap-1 bg-[#F2F0EF]/80 border border-border px-3 py-1 rounded-xl font-mono font-bold text-base text-foreground">
+                <input
+                  type="number"
+                  step="0.1"
+                  value={expectedReturns}
+                  onChange={(e) => setExpectedReturns(Math.max(0, Number(e.target.value)))}
+                  className="bg-transparent border-none outline-none text-foreground font-mono font-bold text-base text-right p-0 focus:ring-0 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  style={{ width: `${Math.max(3, String(expectedReturns).length) * 9 + 5}px` }}
+                />
+                <span>%</span>
+              </div>
             </div>
             <input
               type="range"
               min={4}
               max={20}
               step={0.5}
-              value={expectedReturns}
+              value={Math.min(20, Math.max(4, expectedReturns))}
               onChange={(e) => setExpectedReturns(Number(e.target.value))}
               className="w-full accent-primary h-1 bg-border rounded-lg appearance-none cursor-pointer"
             />

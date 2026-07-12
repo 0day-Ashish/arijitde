@@ -1704,7 +1704,7 @@ export default function UserDashboard() {
                 <div className="text-center max-w-xl mx-auto space-y-2 animate-in fade-in duration-300">
                   <h1 className="text-3xl md:text-4xl font-semibold tracking-wide text-neutral-900 font-clash">Analyze Investments</h1>
                   <p className="text-neutral-500 text-xs font-sans leading-relaxed">
-                    Upload your Groww portfolio statement. We'll run them through our scoring algorithm with live AMFI benchmark comparison.
+                    Upload your portfolio statement. We'll run them through our scoring algorithm with live AMFI benchmark comparison.
                   </p>
                 </div>
 
@@ -1719,7 +1719,7 @@ export default function UserDashboard() {
                     >
                       <div className="flex items-center gap-2.5">
                         <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
-                        <span className="text-xs font-bold text-neutral-900">How to get your Portfolio Statement from the Groww app?</span>
+                        <span className="text-xs font-bold text-neutral-900">How to get your Portfolio Statement from any ivestment app? For example Groww</span>
                       </div>
                       <ChevronDown className={`w-4 h-4 text-neutral-500 transition-transform duration-300 ${showGrowwGuide ? 'rotate-180' : ''}`} />
                     </button>

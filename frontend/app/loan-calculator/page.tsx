@@ -171,9 +171,16 @@ export default function LoanCalculator() {
                 Total Loan Amount
               </span>
               <div className="flex items-center gap-2">
-                <span className="text-foreground font-mono font-bold text-base bg-[#F2F0EF]/80 border border-border px-3 py-1 rounded-xl">
-                  {formatCurrency(loanAmount)}
-                </span>
+                <div className="flex items-center gap-1 bg-[#F2F0EF]/80 border border-border px-3 py-1 rounded-xl font-mono font-bold text-base text-foreground">
+                  <span>₹</span>
+                  <input
+                    type="number"
+                    value={loanAmount}
+                    onChange={(e) => setLoanAmount(Math.max(0, Number(e.target.value)))}
+                    className="bg-transparent border-none outline-none text-foreground font-mono font-bold text-base text-right p-0 focus:ring-0 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    style={{ width: `${Math.max(3, String(loanAmount).length) * 9 + 5}px` }}
+                  />
+                </div>
               </div>
             </div>
             <input
@@ -181,7 +188,7 @@ export default function LoanCalculator() {
               min={100000}
               max={50000000}
               step={100000}
-              value={loanAmount}
+              value={Math.min(50000000, Math.max(100000, loanAmount))}
               onChange={(e) => setLoanAmount(Number(e.target.value))}
               className="w-full accent-primary h-1 bg-border rounded-lg appearance-none cursor-pointer"
             />
@@ -199,16 +206,24 @@ export default function LoanCalculator() {
                 <TrendingUp className="w-4 h-4 text-primary" />
                 Interest Rate (p.a)
               </span>
-              <span className="text-foreground font-mono font-bold text-base bg-[#F2F0EF]/80 border border-border px-3 py-1 rounded-xl">
-                {interestRate}%
-              </span>
+              <div className="flex items-center gap-1 bg-[#F2F0EF]/80 border border-border px-3 py-1 rounded-xl font-mono font-bold text-base text-foreground">
+                <input
+                  type="number"
+                  step="0.1"
+                  value={interestRate}
+                  onChange={(e) => setInterestRate(Math.max(0, Number(e.target.value)))}
+                  className="bg-transparent border-none outline-none text-foreground font-mono font-bold text-base text-right p-0 focus:ring-0 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  style={{ width: `${Math.max(3, String(interestRate).length) * 9 + 5}px` }}
+                />
+                <span>%</span>
+              </div>
             </div>
             <input
               type="range"
               min={5}
               max={20}
               step={0.1}
-              value={interestRate}
+              value={Math.min(20, Math.max(5, interestRate))}
               onChange={(e) => setInterestRate(Number(e.target.value))}
               className="w-full accent-primary h-1 bg-border rounded-lg appearance-none cursor-pointer"
             />
@@ -226,16 +241,23 @@ export default function LoanCalculator() {
                 <Calendar className="w-4 h-4 text-primary" />
                 Original Tenure (Years)
               </span>
-              <span className="text-foreground font-mono font-bold text-base bg-[#F2F0EF]/80 border border-border px-3 py-1 rounded-xl">
-                {years} Years
-              </span>
+              <div className="flex items-center gap-1 bg-[#F2F0EF]/80 border border-border px-3 py-1 rounded-xl font-mono font-bold text-base text-foreground">
+                <input
+                  type="number"
+                  value={years}
+                  onChange={(e) => setYears(Math.max(0, Number(e.target.value)))}
+                  className="bg-transparent border-none outline-none text-foreground font-mono font-bold text-base text-right p-0 focus:ring-0 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  style={{ width: `${Math.max(2, String(years).length) * 9 + 5}px` }}
+                />
+                <span>{years === 1 ? 'Year' : 'Years'}</span>
+              </div>
             </div>
             <input
               type="range"
               min={1}
               max={30}
               step={1}
-              value={years}
+              value={Math.min(30, Math.max(1, years))}
               onChange={(e) => setYears(Number(e.target.value))}
               className="w-full accent-primary h-1 bg-border rounded-lg appearance-none cursor-pointer"
             />
@@ -253,16 +275,25 @@ export default function LoanCalculator() {
                 <Sparkles className="w-4 h-4" />
                 Monthly Extra Prepayment
               </span>
-              <span className="text-foreground font-mono font-bold text-base bg-[#F2F0EF]/80 border border-border px-3 py-1 rounded-xl">
-                {formatCurrency(monthlyPrepayment)}
-              </span>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 bg-[#F2F0EF]/80 border border-border px-3 py-1 rounded-xl font-mono font-bold text-base text-foreground">
+                  <span>₹</span>
+                  <input
+                    type="number"
+                    value={monthlyPrepayment}
+                    onChange={(e) => setMonthlyPrepayment(Math.max(0, Number(e.target.value)))}
+                    className="bg-transparent border-none outline-none text-foreground font-mono font-bold text-base text-right p-0 focus:ring-0 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    style={{ width: `${Math.max(3, String(monthlyPrepayment).length) * 9 + 5}px` }}
+                  />
+                </div>
+              </div>
             </div>
             <input
               type="range"
               min={0}
               max={100000}
               step={1000}
-              value={monthlyPrepayment}
+              value={Math.min(100000, Math.max(0, monthlyPrepayment))}
               onChange={(e) => setMonthlyPrepayment(Number(e.target.value))}
               className="w-full accent-[#3A8293] h-1 bg-border rounded-lg appearance-none cursor-pointer"
             />

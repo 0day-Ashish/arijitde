@@ -351,6 +351,7 @@ model ExistingClient {
   gain                       Float?
   absoluteReturn             Float?
   cagr                       Float?
+  xirr                       Float?
   
   createdAt                  DateTime @default(now())
 

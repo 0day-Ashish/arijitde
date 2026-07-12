@@ -142,18 +142,33 @@ export default function Footer({ footerRef }: FooterProps) {
       {/* Big Brand Logo Text */}
       <div 
         ref={containerRef}
-        className={`w-full overflow-hidden flex flex-col justify-end items-center relative min-h-[140px] mt-10 transition-all duration-[1500ms] ease-out ${
-          isVisible ? "opacity-100 blur-0 translate-y-0" : "opacity-0 blur-xl translate-y-8"
-        }`}
+        className="w-full overflow-hidden flex flex-col justify-end items-center relative min-h-[140px] mt-10"
       >
         <div className="absolute bottom-[-10vw] left-1/2 -translate-x-1/2 w-[60vw] h-[20vw] rounded-full bg-[radial-gradient(circle,rgba(0,0,0,0.03)_0%,transparent_70%)] pointer-events-none select-none" />
 
         {/* Thank You Note */}
-        <div className="text-[12px] sm:text-[14px] font-mono uppercase tracking-widest text-black select-none z-10 text-center animate-pulse mb-6">
+        <div 
+          style={{
+            transition: 'all 2000ms cubic-bezier(0.16, 1, 0.3, 1)',
+            opacity: isVisible ? 1 : 0,
+            transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
+          }}
+          className="text-[12px] sm:text-[14px] font-mono uppercase tracking-widest text-black select-none z-10 text-center animate-pulse mb-6"
+        >
           Thank you for choosing us!
         </div>
 
-        <h1 style={{ fontSize: "15vw" }} className="font-chillax font-bold text-black tracking-tighter leading-none select-none translate-y-[20%] text-center uppercase">
+        <h1 
+          style={{ 
+            fontSize: "15vw",
+            transition: 'all 2400ms cubic-bezier(0.16, 1, 0.3, 1)',
+            letterSpacing: isVisible ? '0.06em' : '-0.08em',
+            filter: isVisible ? 'blur(0px)' : 'blur(24px)',
+            transform: isVisible ? 'translateY(20%) scale(1)' : 'translateY(100px) scale(0.85)',
+            opacity: isVisible ? 1 : 0
+          }} 
+          className="font-chillax font-bold text-black leading-none select-none text-center uppercase"
+        >
           FinAnalysis
         </h1>
       </div>
