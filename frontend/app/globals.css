@@ -72,12 +72,12 @@
 }
 
 :root {
-    --bg-base: #FAF6F0;
-    --bg-glow-start: rgba(245, 158, 11, 0.35);
-    --bg-glow-mid: rgba(251, 191, 36, 0.18);
-    --bg-glow-end: rgba(250, 246, 240, 0);
+    --bg-base: #F2F0EF;
+    --bg-glow-start: rgba(147, 197, 253, 0.95);
+    --bg-glow-mid: rgba(186, 230, 253, 0.65);
+    --bg-glow-end: rgba(242, 240, 239, 0);
 
-    --background: #FAF6F0;
+    --background: #F2F0EF;
     --foreground: #000000;
     --card: #FFFDF9;
     --card-foreground: #000000;
@@ -107,12 +107,12 @@
 }
 
 .dark {
-    --bg-base: #FAF6F0;
-    --bg-glow-start: rgba(245, 158, 11, 0.35);
-    --bg-glow-mid: rgba(251, 191, 36, 0.18);
-    --bg-glow-end: rgba(250, 246, 240, 0);
+    --bg-base: #F2F0EF;
+    --bg-glow-start: rgba(147, 197, 253, 0.95);
+    --bg-glow-mid: rgba(186, 230, 253, 0.65);
+    --bg-glow-end: rgba(242, 240, 239, 0);
 
-    --background: #FAF6F0;
+    --background: #F2F0EF;
     --foreground: #000000;
     --card: #FFFDF9;
     --card-foreground: #000000;
@@ -148,7 +148,7 @@
     @apply bg-background text-foreground font-clash;
     }
   html {
-    @apply font-clash;
+    @apply bg-background font-clash;
     }
 }
 
