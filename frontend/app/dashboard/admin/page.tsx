@@ -1364,6 +1364,70 @@ export default function AdminDashboard() {
                   </table>
                 </div>
               </div>
+
+              {/* Contact Messages Section */}
+              <div className="mt-8 flex flex-col gap-4">
+                <div>
+                  <h2 className="text-xl font-semibold tracking-tight font-clash text-neutral-900">Contact Form Submissions</h2>
+                  <p className="text-[11px] md:text-xs text-neutral-500 font-mono mt-1">Queries submitted by public users on the homepage</p>
+                </div>
+
+                <div className="border border-neutral-200 bg-white rounded-2xl overflow-hidden shadow-sm">
+                  <div className="overflow-x-auto w-full">
+                    <table className="w-full text-left text-xs font-sans text-neutral-900">
+                      <thead>
+                        <tr className="border-b border-neutral-200 bg-neutral-50 uppercase tracking-widest text-[10px] font-bold text-neutral-500 select-none">
+                          <th className="px-6 py-4 w-[200px]">Submitted At</th>
+                          <th className="px-6 py-4 w-[200px]">Name</th>
+                          <th className="px-6 py-4 w-[250px]">Email</th>
+                          <th className="px-6 py-4">Message</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-neutral-100">
+                        {fetchingContactMessages ? (
+                          <tr>
+                            <td colSpan={4} className="px-6 py-10 text-center text-neutral-400 font-mono">
+                              Loading contact messages...
+                            </td>
+                          </tr>
+                        ) : contactMessages.length === 0 ? (
+                          <tr>
+                            <td colSpan={4} className="px-6 py-10 text-center text-neutral-400 font-mono">
+                              No contact messages found.
+                            </td>
+                          </tr>
+                        ) : (
+                          contactMessages.map((msg: any) => (
+                            <tr key={msg.id} className="hover:bg-neutral-50 transition-colors duration-150">
+                              <td className="px-6 py-4 whitespace-nowrap text-neutral-500 font-mono">
+                                {new Date(msg.createdAt).toLocaleString('en-IN', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                  hour12: true,
+                                })}
+                              </td>
+                              <td className="px-6 py-4 font-semibold text-neutral-800 font-clash whitespace-nowrap">
+                                {msg.name}
+                              </td>
+                              <td className="px-6 py-4 font-mono text-neutral-600 whitespace-nowrap">
+                                <a href={`mailto:${msg.email}`} className="text-neutral-600 hover:text-neutral-900 hover:underline">
+                                  {msg.email}
+                                </a>
+                              </td>
+                              <td className="px-6 py-4 text-neutral-700 break-words max-w-md">
+                                {msg.message}
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
@@ -2147,70 +2211,6 @@ export default function AdminDashboard() {
 
         </div>
 
-        {/* Contact Messages Section */}
-        <div className="mt-8 flex flex-col gap-4">
-          <div>
-            <h2 className="text-xl font-semibold tracking-tight font-clash text-neutral-900">Contact Form Submissions</h2>
-            <p className="text-[11px] md:text-xs text-neutral-500 font-mono mt-1">Queries submitted by public users on the homepage</p>
-          </div>
-
-          <div className="border border-neutral-200 bg-white rounded-2xl overflow-hidden shadow-sm">
-            <div className="overflow-x-auto w-full">
-              <table className="w-full text-left text-xs font-sans text-neutral-900">
-                <thead>
-                  <tr className="border-b border-neutral-200 bg-neutral-50 uppercase tracking-widest text-[10px] font-bold text-neutral-500 select-none">
-                    <th className="px-6 py-4 w-[200px]">Submitted At</th>
-                    <th className="px-6 py-4 w-[200px]">Name</th>
-                    <th className="px-6 py-4 w-[250px]">Email</th>
-                    <th className="px-6 py-4">Message</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-neutral-100">
-                  {fetchingContactMessages ? (
-                    <tr>
-                      <td colSpan={4} className="px-6 py-10 text-center text-neutral-400 font-mono">
-                        Loading contact messages...
-                      </td>
-                    </tr>
-                  ) : contactMessages.length === 0 ? (
-                    <tr>
-                      <td colSpan={4} className="px-6 py-10 text-center text-neutral-400 font-mono">
-                        No contact messages found.
-                      </td>
-                    </tr>
-                  ) : (
-                    contactMessages.map((msg: any) => (
-                      <tr key={msg.id} className="hover:bg-neutral-50 transition-colors duration-150">
-                        <td className="px-6 py-4 whitespace-nowrap text-neutral-500 font-mono">
-                          {new Date(msg.createdAt).toLocaleString('en-IN', {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: true,
-                          })}
-                        </td>
-                        <td className="px-6 py-4 font-semibold text-neutral-800 font-clash whitespace-nowrap">
-                          {msg.name}
-                        </td>
-                        <td className="px-6 py-4 font-mono text-neutral-600 whitespace-nowrap">
-                          <a href={`mailto:${msg.email}`} className="text-neutral-600 hover:text-neutral-900 hover:underline">
-                            {msg.email}
-                          </a>
-                        </td>
-                        <td className="px-6 py-4 text-neutral-700 break-words max-w-md">
-                          {msg.message}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
       </main>
 
       {/* User Details Slide Drawer */}
@@ -2334,19 +2334,6 @@ export default function AdminDashboard() {
 
                 <div className="space-y-3">
                   <div>
-                    <label className="text-[10px] font-bold text-neutral-900 uppercase block mb-1">Active Plan</label>
-                    <select
-                      value={activePlan}
-                      onChange={(e) => setActivePlan(e.target.value)}
-                      className="w-full text-xs font-mono border border-neutral-200 rounded-xl px-3 py-2.5 bg-white text-neutral-900 focus:outline-none"
-                    >
-                      <option value="FREE">Free Tier</option>
-                      <option value="PREMIUM">Premium Pro Plan</option>
-                      <option value="MAX">Max Portfolio Plan</option>
-                    </select>
-                  </div>
-
-                  <div>
                     <label className="text-[10px] font-bold text-neutral-900 uppercase block mb-1">PAN Number</label>
                     <input
                       type="text"
@@ -2355,17 +2342,6 @@ export default function AdminDashboard() {
                       value={pan}
                       onChange={(e) => setPan(e.target.value.toUpperCase())}
                       className="w-full text-xs font-mono border border-neutral-200 rounded-xl px-3 py-2.5 bg-white text-neutral-900 focus:outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-[10px] font-bold text-neutral-900 uppercase block mb-1">Distributor Verification Notes</label>
-                    <textarea
-                      rows={3}
-                      placeholder="Add assessment evaluation, portfolio adjustments notes, or payment screenshot validation comments..."
-                      value={advisorNotes}
-                      onChange={(e) => setAdvisorNotes(e.target.value)}
-                      className="w-full text-xs border border-neutral-200 rounded-xl px-3 py-2 bg-white text-neutral-900 focus:outline-none font-sans"
                     />
                   </div>
 
