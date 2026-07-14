@@ -504,9 +504,11 @@ export default function Home() {
                 <div className={`grid transition-all duration-350 ease-in-out overflow-hidden text-sm md:text-base text-foreground font-bold ${expandedOption === "services" ? "grid-rows-[1fr] mt-2.5 opacity-100" : "grid-rows-[0fr] opacity-0"
                   }`}>
                   <div className="overflow-hidden space-y-2.5 font-sans pr-4 leading-relaxed font-bold text-foreground text-sm md:text-base">
-                    <p>
-                      We provide a comprehensive, fully regulated suite of financial and wealth creation solutions tailored to your unique lifecycle goals. This includes systematically managed <span className="font-extrabold text-primary">Mutual Funds & SIP planning</span> for long-term compound growth, high-yield <span className="font-extrabold text-primary">Fixed Deposits, Specialized Investment Funds (SIF)</span>, and <span className="font-extrabold text-primary">Portfolio Management Services (PMS)</span> for sophisticated asset allocation. Additionally, we protect your family's future with robust <span className="font-extrabold text-primary">Life Insurance (LIC), Mediclaim Health Insurance, Vehicle/Property Insurance</span>, and provide leverage options through <span className="font-extrabold text-primary">PNB Housing Finance</span> home loans.
-                    </p>
+                    <img
+                      src="/assets/services-1.png"
+                      alt="Services"
+                      className="w-full max-w-4xl h-auto rounded-2xl object-contain select-none pointer-events-none mt-2"
+                    />
                   </div>
                 </div>
               </div>
@@ -526,9 +528,11 @@ export default function Home() {
                 <div className={`grid transition-all duration-350 ease-in-out overflow-hidden text-sm md:text-base text-foreground font-bold ${expandedOption === "why-us" ? "grid-rows-[1fr] mt-2.5 opacity-100" : "grid-rows-[0fr] opacity-0"
                   }`}>
                   <div className="overflow-hidden space-y-2.5 font-sans pr-4 leading-relaxed font-bold text-foreground text-sm md:text-base">
-                    <p>
-                      In an era dominated by cold robo-distribution representatives and static investment apps, your hard-earned wealth deserves personalized, <span className="font-extrabold text-primary">relationship-driven human distribution</span>. We exist to bridge the gap between human empathy and data precision. By standing by our clients through decades of market turbulence, recessions, and regulatory shifts, we prioritize multi-generational trust and structured planning. We don't just measure relationships in transactions; we measure them in decades of successful outcomes and financial security.
-                    </p>
+                    <img
+                      src="/assets/whyweexist-1.png"
+                      alt="Why We Exist"
+                      className="w-full max-w-4xl h-auto rounded-2xl object-contain select-none pointer-events-none mt-2"
+                    />
                   </div>
                 </div>
               </div>
@@ -1156,7 +1160,7 @@ export default function Home() {
           <div className="relative text-left">
             <div className="text-center space-y-3 mb-8">
               <h2 className="text-3xl lg:text-5xl tracking-tight text-primary font-instrument-serif">
-                Connect With Our Distribution Representatives
+                Connect With Us
               </h2>
               <p className="text-muted-foreground text-xs leading-relaxed font-sans max-w-sm mx-auto">
                 Drop us a message and our wealth distribution team will get back to you shortly to analyze your portfolio.
