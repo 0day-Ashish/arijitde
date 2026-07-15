@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import SoftBoxBlurBg from "@/components/SoftBoxBlurBg";
-import Lenis from "lenis";
 import GradualBlur from "@/components/GradualBlur";
 import { ArrowLeft, UserPlus, ShieldAlert, Key, Mail, Lock, User, Sparkles, Eye, EyeOff } from "lucide-react";
 import Navbar from "@/components/Navbar";
@@ -50,26 +49,6 @@ export default function Onboarding() {
     document.cookie = `token=${token}; path=/; ${expiry}; SameSite=Lax; Secure`;
     document.cookie = `user=${encodeURIComponent(JSON.stringify(user))}; path=/; ${expiry}; SameSite=Lax; Secure`;
   };
-
-  // Lenis smooth scrolling initialization
-  useEffect(() => {
-    const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      smoothWheel: true,
-    });
-    let rafId: number;
-    function raf(time: number) {
-      lenis.raf(time);
-      rafId = requestAnimationFrame(raf);
-    }
-    rafId = requestAnimationFrame(raf);
-    return () => {
-      lenis.destroy();
-      cancelAnimationFrame(rafId);
-    };
-  }, []);
-
   // Mount animation & query param parsing
   useEffect(() => {
     document.title = "Book a Call | FinAnalysis - Arijit De";

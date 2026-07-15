@@ -5,7 +5,6 @@ import { ArrowLeft, Share2, Download, ChevronRight, Info, Sparkles, AlertCircle,
 import Navbar from "@/components/Navbar";
 import SoftBoxBlurBg from "@/components/SoftBoxBlurBg";
 import GradualBlur from "@/components/GradualBlur";
-import Lenis from "lenis";
 
 // ──── Types ────
 type Archetype = "Tiger" | "Elephant" | "Deer" | "Fox" | "Lion";
@@ -343,26 +342,6 @@ export default function Quiz() {
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
   const [hasCachedResult, setHasCachedResult] = useState(false);
-
-  // Lenis smooth scrolling initialization
-  useEffect(() => {
-    const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      smoothWheel: true,
-    });
-    let rafId: number;
-    function raf(time: number) {
-      lenis.raf(time);
-      rafId = requestAnimationFrame(raf);
-    }
-    rafId = requestAnimationFrame(raf);
-    return () => {
-      lenis.destroy();
-      cancelAnimationFrame(rafId);
-    };
-  }, []);
-
   // Mount animation
   useEffect(() => {
     document.title = "Investor Personality Test | FinAnalysis";

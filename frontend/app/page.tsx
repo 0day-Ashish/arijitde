@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import SoftBoxBlurBg from "@/components/SoftBoxBlurBg";
-import Lenis from "lenis";
 import GradualBlur from "@/components/GradualBlur";
 import ScrollRevealSection from "@/components/ScrollRevealSection";
 import ScrollBlurReveal from "@/components/ScrollBlurReveal";
@@ -242,28 +241,6 @@ export default function Home() {
 
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [expandedOption, setExpandedOption] = useState<string | null>(null);
-
-  // Lenis smooth scrolling initialization
-  useEffect(() => {
-    const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // standard expo out
-      smoothWheel: true,
-    });
-
-    let rafId: number;
-    function raf(time: number) {
-      lenis.raf(time);
-      rafId = requestAnimationFrame(raf);
-    }
-    rafId = requestAnimationFrame(raf);
-
-    return () => {
-      lenis.destroy();
-      cancelAnimationFrame(rafId);
-    };
-  }, []);
-
   // Services scroll sync tracking
   const [activeService, setActiveService] = useState(0);
   const serviceRefs = useRef<(HTMLDivElement | null)[]>([]);

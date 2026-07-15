@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import SoftBoxBlurBg from "@/components/SoftBoxBlurBg";
-import Lenis from "lenis";
 import GradualBlur from "@/components/GradualBlur";
 import { Coins, Calendar, TrendingUp, ShieldCheck, ArrowLeft } from "lucide-react";
 import Navbar from "@/components/Navbar";
@@ -22,26 +21,6 @@ export default function SIFCalculator() {
   const [investedAmount, setInvestedAmount] = useState(0);
   const [estReturns, setEstReturns] = useState(0);
   const [totalValue, setTotalValue] = useState(0);
-
-  // Lenis smooth scrolling
-  useEffect(() => {
-    const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      smoothWheel: true,
-    });
-    let rafId: number;
-    function raf(time: number) {
-      lenis.raf(time);
-      rafId = requestAnimationFrame(raf);
-    }
-    rafId = requestAnimationFrame(raf);
-    return () => {
-      lenis.destroy();
-      cancelAnimationFrame(rafId);
-    };
-  }, []);
-
   // Mount animation
   useEffect(() => {
     setMounted(true);

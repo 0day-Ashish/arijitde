@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import Lenis from "lenis";
 import { 
   LogOut, 
   LayoutGrid, 
@@ -369,28 +368,6 @@ export default function ClientDashboard() {
 
     return () => clearInterval(interval);
   }, []);
-
-  // Lenis smooth scrolling initialization
-  useEffect(() => {
-    const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // standard expo out
-      smoothWheel: true,
-    });
-
-    let rafId: number;
-    function raf(time: number) {
-      lenis.raf(time);
-      rafId = requestAnimationFrame(raf);
-    }
-    rafId = requestAnimationFrame(raf);
-
-    return () => {
-      lenis.destroy();
-      cancelAnimationFrame(rafId);
-    };
-  }, []);
-
   // Auth Guard & Setup
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
@@ -1211,7 +1188,7 @@ export default function ClientDashboard() {
 
         {/* Quiz reassessment modal */}
         {(!token || !userData) ? (
-          <div data-lenis-prevent className="w-full max-w-md mx-auto bg-white/40 border border-white/30 rounded-3xl p-8 shadow-2xl backdrop-blur-xl animate-in zoom-in-95 duration-300 max-h-[85vh] overflow-y-auto custom-scrollbar">
+          <div className="w-full max-w-md mx-auto bg-white/40 border border-white/30 rounded-3xl p-8 shadow-2xl backdrop-blur-xl animate-in zoom-in-95 duration-300 max-h-[85vh] overflow-y-auto custom-scrollbar">
             <div className="space-y-6 text-center">
               <div className="space-y-2">
                 <div className="mx-auto w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-3">
@@ -1455,7 +1432,7 @@ export default function ClientDashboard() {
             </div>
           </div>
         ) : showQuiz ? (
-          <div data-lenis-prevent className="w-full max-w-md mx-auto bg-white/30 border border-white/30 rounded-3xl p-8 shadow-2xl backdrop-blur-xl animate-in zoom-in-95 duration-300 max-h-[85vh] overflow-y-auto custom-scrollbar">
+          <div className="w-full max-w-md mx-auto bg-white/30 border border-white/30 rounded-3xl p-8 shadow-2xl backdrop-blur-xl animate-in zoom-in-95 duration-300 max-h-[85vh] overflow-y-auto custom-scrollbar">
             <div className="flex justify-between items-center text-[10px] font-mono text-neutral-500 mb-6 uppercase tracking-widest">
               <span>Client Targets Quiz</span>
               <span>Step {quizStep} of 5</span>
@@ -1492,7 +1469,7 @@ export default function ClientDashboard() {
                   <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">What is the primary reason you&apos;re investing?</h2>
                   <p className="text-neutral-500 text-xs font-sans leading-relaxed">Goal alignment score.</p>
                 </div>
-                <div data-lenis-prevent className="grid grid-cols-1 gap-2 text-left max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
+                <div className="grid grid-cols-1 gap-2 text-left max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
                   {GOAL_OPTIONS.map((goal) => {
                     const isSelected = quizGoal === goal.value;
                     const IconComponent = goal.icon;
@@ -2178,7 +2155,7 @@ export default function ClientDashboard() {
                                 <span className="text-xs text-amber-700 font-medium font-sans font-semibold">Underperforming Value</span>
                               </div>
                               <div className="text-[10px] text-neutral-500 leading-normal font-sans">
-                                By switching underperforming assets to category leaders, your estimated 1-year profits could increase from <span className="font-semibold text-neutral-800">₹{Math.round(comparison.totalCurrentProfit).toLocaleString('en-IN')}</span> to <span className="font-semibold text-emerald-600">₹{Math.round(comparison.totalAchievableProfit).toLocaleString('en-IN')}</span>.
+                                By switching underperforming assets to category leaders, your estimated 1-year profits could increase from <span className="font-semibold text-neutral-800">{comparison.totalCurrentProfit < 0 ? "-" : ""}₹{Math.abs(Math.round(comparison.totalCurrentProfit)).toLocaleString('en-IN')}</span> to <span className="font-semibold text-emerald-600">{comparison.totalAchievableProfit < 0 ? "-" : ""}₹{Math.abs(Math.round(comparison.totalAchievableProfit)).toLocaleString('en-IN')}</span>.
                               </div>
                             </div>
                           </div>
@@ -2213,14 +2190,18 @@ export default function ClientDashboard() {
                                           <td className="py-3 px-4 font-semibold text-neutral-900">{categoryLabel} Fund</td>
                                           <td className="py-3 px-4 text-right font-mono">₹{f.invested.toLocaleString('en-IN')}</td>
                                           <td className="py-3 px-4 text-center font-mono font-medium">
-                                            <span className="text-red-500">{f.currentReturn.toFixed(1)}%</span>
+                                            <span className={f.currentReturn >= 0 ? "text-emerald-600 font-medium" : "text-red-500"}>{f.currentReturn.toFixed(1)}%</span>
                                             <span className="text-neutral-400 mx-1.5">&rarr;</span>
-                                            <span className="text-emerald-600 font-bold">{f.bestReturn.toFixed(1)}%</span>
+                                            <span className={f.bestReturn >= 0 ? "text-emerald-600 font-bold" : "text-red-500 font-bold"}>{f.bestReturn.toFixed(1)}%</span>
                                           </td>
                                           <td className="py-3 px-4 text-center font-mono">
-                                            <span>₹{Math.round(f.currentProfit).toLocaleString('en-IN')}</span>
+                                            <span className={f.currentProfit >= 0 ? "text-neutral-700" : "text-red-500"}>
+                                              {f.currentProfit < 0 ? "-" : ""}₹{Math.abs(Math.round(f.currentProfit)).toLocaleString('en-IN')}
+                                            </span>
                                             <span className="text-neutral-400 mx-1.5">&rarr;</span>
-                                            <span className="text-emerald-600 font-semibold">₹{Math.round(f.achievableProfit).toLocaleString('en-IN')}</span>
+                                            <span className={f.achievableProfit >= 0 ? "text-emerald-600 font-semibold" : "text-red-500 font-semibold"}>
+                                              {f.achievableProfit < 0 ? "-" : ""}₹{Math.abs(Math.round(f.achievableProfit)).toLocaleString('en-IN')}
+                                            </span>
                                           </td>
                                           <td className="py-3 px-4 text-right font-mono font-bold text-amber-700">
                                             + ₹{Math.round(f.gap).toLocaleString('en-IN')}

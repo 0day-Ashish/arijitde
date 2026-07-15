@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import SoftBoxBlurBg from "@/components/SoftBoxBlurBg";
-import Lenis from "lenis";
 import { Coins, Calendar, TrendingUp, ArrowLeft, ShieldAlert, Award } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -22,26 +21,6 @@ export default function InflationCalculator() {
   const [futureCost, setFutureCost] = useState(0);
   const [inflationImpact, setInflationImpact] = useState(0);
   const [requiredMonthlySip, setRequiredMonthlySip] = useState(0);
-
-  // Lenis smooth scrolling
-  useEffect(() => {
-    const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      smoothWheel: true,
-    });
-    let rafId: number;
-    function raf(time: number) {
-      lenis.raf(time);
-      rafId = requestAnimationFrame(raf);
-    }
-    rafId = requestAnimationFrame(raf);
-    return () => {
-      lenis.destroy();
-      cancelAnimationFrame(rafId);
-    };
-  }, []);
-
   // Mount animation
   useEffect(() => {
     setMounted(true);

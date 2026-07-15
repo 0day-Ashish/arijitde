@@ -160,26 +160,7 @@
   font-family: 'Clash', sans-serif !important;
 }
 
-/* Lenis smooth scrolling rules */
-html.lenis, html.lenis body {
-  height: auto;
-}
 
-.lenis-smooth {
-  scroll-behavior: auto !important;
-}
-
-.lenis-smooth [data-lenis-prevent] {
-  overscroll-behavior: contain;
-}
-
-.lenis-stopped {
-  overflow: hidden;
-}
-
-.lenis-smooth iframe {
-  pointer-events: none;
-}
 
 /* Scroll-slide-card styling (static) */
 .scroll-slide-card {

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import SoftBoxBlurBg from "@/components/SoftBoxBlurBg";
-import Lenis from "lenis";
 import GradualBlur from "@/components/GradualBlur";
 import { Info, HelpCircle, ToggleLeft, ShieldAlert, Monitor, Settings } from "lucide-react";
 import Navbar from "@/components/Navbar";
@@ -11,26 +10,6 @@ import Footer from "@/components/Footer";
 export default function CookiesPolicy() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [mounted, setMounted] = useState(false);
-
-  // Lenis smooth scrolling
-  useEffect(() => {
-    const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      smoothWheel: true,
-    });
-    let rafId: number;
-    function raf(time: number) {
-      lenis.raf(time);
-      rafId = requestAnimationFrame(raf);
-    }
-    rafId = requestAnimationFrame(raf);
-    return () => {
-      lenis.destroy();
-      cancelAnimationFrame(rafId);
-    };
-  }, []);
-
   // Mount animation
   useEffect(() => {
     setMounted(true);

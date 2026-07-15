@@ -31,7 +31,7 @@ export default function NotFound() {
 
         {/* Home Button */}
         <div className="pt-2">
-          <Link
+           <Link
             href="/"
             className="inline-flex items-center gap-2 px-8 py-4 bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-xs rounded-2xl transition duration-200 shadow-md uppercase tracking-wider group cursor-pointer"
           >

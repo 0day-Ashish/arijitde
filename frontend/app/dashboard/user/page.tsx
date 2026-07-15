@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import Lenis from "lenis";
 import {
   LogOut,
   Layout,
@@ -229,30 +228,6 @@ export default function UserDashboard() {
 
     setIsLoaded(true);
   }, []);
-
-
-
-  // Lenis smooth scrolling initialization
-  useEffect(() => {
-    const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // standard expo out
-      smoothWheel: true,
-    });
-
-    let rafId: number;
-    function raf(time: number) {
-      lenis.raf(time);
-      rafId = requestAnimationFrame(raf);
-    }
-    rafId = requestAnimationFrame(raf);
-
-    return () => {
-      lenis.destroy();
-      cancelAnimationFrame(rafId);
-    };
-  }, []);
-
   const fetchFreeSlots = async () => {
     try {
       setFetchingSlots(true);
@@ -1603,7 +1578,7 @@ export default function UserDashboard() {
                   </div>
 
                   <form onSubmit={handleDateFormSubmit} className="space-y-6">
-                    <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2" data-lenis-prevent="true">
+                    <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
                       {pendingFunds.map((fund, idx) => (
                         <div key={idx} className="p-4 bg-white/40 border border-border/20 rounded-2xl space-y-3 text-left">
                           <div className="flex justify-between items-start gap-2">
@@ -1724,7 +1699,7 @@ export default function UserDashboard() {
                     </button>
 
                     {showGrowwGuide && (
-                      <div className="px-5 pb-5 pt-1 text-[11px] text-neutral-700 space-y-2 border-t border-amber-500/10 font-sans leading-relaxed text-left" data-lenis-prevent="true">
+                      <div className="px-5 pb-5 pt-1 text-[11px] text-neutral-700 space-y-2 border-t border-amber-500/10 font-sans leading-relaxed text-left">
                         <ol className="list-decimal list-inside space-y-2 pl-1">
                           <li>Open the <strong className="text-neutral-900">Groww app</strong> on your mobile device (or log in on their web portal).</li>
                           <li>Go to the <strong className="text-neutral-900">Mutual Funds</strong> tab at the bottom and click on your <strong className="text-neutral-900">Dashboard</strong>.</li>
