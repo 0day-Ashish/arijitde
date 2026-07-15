@@ -73,8 +73,8 @@ export default function SvgScrollWipe({ screen1, screen2 }: SvgScrollWipeProps) 
         backgroundColor: 'rgba(250, 246, 240, 0)',
         visibility: 'hidden'
       });
-      gsap.set(screen1, { opacity: 1, y: 0 });
-      gsap.set(screen2, { opacity: 0, y: 40 });
+      gsap.set(screen1, { opacity: 1, y: 0, pointerEvents: 'auto' });
+      gsap.set(screen2, { opacity: 0, y: 40, pointerEvents: 'none' });
 
       // Create scroll timeline mapping exactly to scroll progress (0.0 to 1.0)
       const tl = gsap.timeline({
@@ -113,6 +113,7 @@ export default function SvgScrollWipe({ screen1, screen2 }: SvgScrollWipeProps) 
       tl.to(screen1, {
         opacity: 0,
         y: -40,
+        pointerEvents: 'none',
         duration: 0.15,
         ease: 'power2.in',
       }, 0.25);
@@ -120,6 +121,7 @@ export default function SvgScrollWipe({ screen1, screen2 }: SvgScrollWipeProps) 
       tl.to(screen2, {
         opacity: 1,
         y: 0,
+        pointerEvents: 'auto',
         duration: 0.18,
         ease: 'power2.out',
       }, 0.42);

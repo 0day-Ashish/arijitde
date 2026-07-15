@@ -13,6 +13,7 @@ import { GoArrowDownRight } from "react-icons/go";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ChatbotWidget from "@/components/ChatbotWidget";
+import BackToTop from "@/components/BackToTop";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 const servicesData = [
@@ -444,12 +445,23 @@ export default function Home() {
               <span>35+ Years of Certified Amfi-Registered Mutual Fund Distribution</span>
             </div>
             <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold text-primary font-chillax leading-tight tracking-tight uppercase">
-              Preserving Legacy<br />
-              <span className="text-primary">& Trust of Mr. Arindam De</span>
+              Built on the legacy<br />
+              <span className="text-primary">of Mr. Arindam De</span>
             </h1>
             <p className="text-muted-foreground text-sm sm:text-base md:text-lg max-w-2xl mx-auto font-sans leading-relaxed font-normal">
               Combining 35+ years of generation-spanning trust with systematic portfolio optimization and machine learning diagnostics to accelerate your growth.
             </p>
+            <div className="pt-2">
+              <a
+                href="/onboarding"
+                className="inline-flex items-center gap-2.5 px-8 py-4 bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-xs rounded-2xl transition duration-200 shadow-md uppercase tracking-wider group cursor-pointer"
+              >
+                <span className="font-bold text-xs">Get My Free Portfolio Report</span>
+                <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-200 stroke-white" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </a>
+            </div>
           </div>
         }
         screen2={
@@ -557,7 +569,7 @@ export default function Home() {
               Meet Virtual Arijit : Real-Time Insights, Zero Waiting.
             </h2>
             <p className="text-[#64748B] text-sm leading-relaxed font-sans">
-              Have questions about how we check anomalies, calculate fee efficiency, or structure systematic portfolios? It is trained directly on our 35-year distribution playbook to answer your investment questions instantly.
+              Have questions about how we check anomalies, calculate fee efficiency, or structure systematic portfolios? It leverages insights from our 35-year distribution experience to answer your questions instantly.
             </p>
           </div>
 
@@ -1163,7 +1175,7 @@ export default function Home() {
                 Connect With Us
               </h2>
               <p className="text-muted-foreground text-xs leading-relaxed font-sans max-w-sm mx-auto">
-                Drop us a message and our wealth distribution team will get back to you shortly to analyze your portfolio.
+                Drop us a message and we will get back to you shortly to analyze your portfolio.
               </p>
             </div>
 
@@ -1302,6 +1314,9 @@ export default function Home() {
         isOpen={isChatOpen}
         onOpenChange={setIsChatOpen}
       />
+
+      {/* Back to Top Button */}
+      <BackToTop />
 
       {/* Cookie Acceptance Banner */}
       {showCookieBox && isLoaded && (

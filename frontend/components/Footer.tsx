@@ -109,7 +109,7 @@ export default function Footer({ footerRef }: FooterProps) {
           <div className="flex-1 flex flex-col gap-2.5 relative z-10">
             <h3 className="font-instrument-serif text-xl sm:text-3xl font-bold text-amber-800">New investment?</h3>
             <p className="font-chillax text-base sm:text-xl text-neutral-800 leading-relaxed">
-              Reach out today to our CEO for new financial enquiries at{" "}
+              Reach out today to Arijit De for new financial enquiries at{" "}
               <a href="mailto:contact@finanalysis.in" className="text-amber-700 hover:text-amber-900 hover:underline font-semibold font-chillax">
                 contact@finanalysis.in
               </a>
@@ -119,12 +119,15 @@ export default function Footer({ footerRef }: FooterProps) {
       </div>
 
       {/* SEBI Compliance Disclaimer Block */}
-      <div className="w-full max-w-5xl mx-auto px-6 pt-8 pb-4 text-center text-xs md:text-sm text-slate-500 font-sans leading-relaxed select-text space-y-1">
-        <p className="font-semibold text-neutral-700">
+      <div className="w-full max-w-5xl mx-auto px-6 pt-8 pb-4 text-center text-xs md:text-sm text-slate-900 font-sans leading-relaxed select-text space-y-1.5">
+        <p className="font-semibold text-neutral-700 text-[12px] sm:text-sm">
           Arijit De | AMFI-registered Mutual Fund Distributor | ARN-273396
         </p>
         <p>
           Portfolio reports on this platform are automated technology outputs and do not constitute investment advice under SEBI regulations.
+        </p>
+        <p className="text-[13px] sm:text-sm font-medium text-slate-900 mt-1">
+          Mutual fund investments are subject to market risks. Please read all scheme related documents carefully.
         </p>
       </div>
 
@@ -136,7 +139,7 @@ export default function Footer({ footerRef }: FooterProps) {
           <a href="/terms" className="hover:text-primary transition duration-200">Terms</a>
           <a href="/cookies" className="hover:text-primary transition duration-200">Cookies</a>
         </div>
-        <span>Website by <a href="https://arddev.in" target="_blank" rel="noopener noreferrer" className="hover:text-primary font-bold transition duration-200 font-sans">ard.dev</a></span>
+        <span>Designed and Developed by <a href="https://arddev.in" target="_blank" rel="noopener noreferrer" className="hover:text-primary font-bold transition duration-200 font-sans">ard.dev</a></span>
       </div>
 
       {/* Big Brand Logo Text */}

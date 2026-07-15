@@ -720,13 +720,12 @@ export default function UserDashboard() {
 
       if (data.success) {
         if (data.data.requiresDates) {
-          const todayStr = new Date().toISOString().substring(0, 10);
           const initialFunds = data.data.funds.map((f: any) => ({
             fundName: f.fundName,
             invested: f.invested,
             currentValue: f.currentValue,
-            startDate: todayStr,
-            type: "LUMPSUM",
+            startDate: "",
+            type: "",
             sipAmount: 0,
           }));
           setPendingFunds(initialFunds);
