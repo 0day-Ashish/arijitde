@@ -301,6 +301,7 @@ export default function ClientDashboard() {
   // Client specifics
   const [clientBookings, setClientBookings] = useState<string[]>([]);
   const [showBookingSuccess, setShowBookingSuccess] = useState(false);
+  const [showAnalysisCompleted, setShowAnalysisCompleted] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<string>("");
 
 
@@ -746,6 +747,7 @@ export default function ClientDashboard() {
         setStatusMsg("Calculating financial health scores...");
         await calculatePortfolioScore(pId);
         await fetchClientData();
+        setShowAnalysisCompleted(true);
       } else {
         setError(data.error || "Failed to analyze certified portfolio");
       }
@@ -791,6 +793,7 @@ export default function ClientDashboard() {
         await calculatePortfolioScore(pId);
         await fetchClientData();
         setUploadedFile(null);
+        setShowAnalysisCompleted(true);
       } else {
         setError(data.error || "Failed to process Excel upload.");
       }
@@ -864,6 +867,7 @@ export default function ClientDashboard() {
         await fetchClientData();
         // Reset manual grid
         setManualRows([{ fundName: "", type: "SIP", startDate: "", sipAmount: 0, invested: 0, currentValue: 0 }]);
+        setShowAnalysisCompleted(true);
       } else {
         setError(data.error || "Failed to submit manual portfolio");
       }
@@ -1709,19 +1713,10 @@ export default function ClientDashboard() {
                     <button
                       onClick={handleAnalyzeCertifiedPortfolio}
                       disabled={apiLoading}
-                      className="flex items-center gap-1.5 px-4 py-2 bg-[#3A8293] hover:bg-[#3A8293]/90 text-white font-bold text-xs rounded-xl shadow-md transition duration-200 cursor-pointer disabled:opacity-50 select-none font-sans shrink-0"
+                      className="flex items-center gap-1.5 px-4 py-2 bg-[#3A8293] hover:bg-[#3A8293]/90 text-white font-bold text-xs rounded-xl shadow-md transition duration-200 cursor-pointer disabled:opacity-50 select-none font-sans shrink-0 min-w-[140px] justify-center"
                     >
-                      {apiLoading ? (
-                        <>
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          <span>Analyzing...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="w-3.5 h-3.5 text-white" />
-                          <span>Analyze Portfolio</span>
-                        </>
-                      )}
+                      {apiLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5 text-white" />}
+                      <span>{apiLoading ? "Analyzing..." : "Analyze Portfolio"}</span>
                     </button>
                   </div>
 
@@ -2434,6 +2429,29 @@ export default function ClientDashboard() {
               className="w-full py-3 bg-primary text-primary-foreground font-semibold text-xs rounded-xl hover:bg-primary/95 transition cursor-pointer font-sans"
             >
               Back to Client Portal
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Analysis Completed Modal Overlay */}
+      {showAnalysisCompleted && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/40 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="w-full max-w-md bg-white/90 border border-white/40 rounded-3xl p-8 shadow-2xl backdrop-blur-xl animate-in zoom-in-95 duration-300 text-center space-y-6">
+            <div className="w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-500/20 flex items-center justify-center text-emerald-600 mx-auto">
+              <CheckCircle2 className="w-8 h-8 stroke-[1.5]" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide font-clash font-bold">Analysis Completed!</h2>
+              <p className="text-neutral-500 text-xs font-sans leading-relaxed">
+                Your portfolio has been analyzed successfully. We have computed your XIRR, asset allocation, and overall portfolio score.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowAnalysisCompleted(false)}
+              className="w-full py-3 bg-[#3A8293] hover:bg-[#3A8293]/90 text-white font-semibold text-xs rounded-xl transition cursor-pointer font-sans font-bold"
+            >
+              View Portfolio Report
             </button>
           </div>
         </div>

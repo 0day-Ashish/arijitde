@@ -6,6 +6,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
+  ScrollTrigger.config({ ignoreMobileResize: true });
 }
 
 interface SvgScrollWipeProps {
@@ -148,16 +149,21 @@ export default function SvgScrollWipe({ screen1, screen2 }: SvgScrollWipeProps) 
       tl.set(overlay, { visibility: 'hidden' }, 1.0);
     }, triggerRef); // scope to triggerRef
 
+    const refreshTimer = setTimeout(() => {
+      ScrollTrigger.refresh();
+    }, 1500);
+
     // Explicit cleanup using gsap.context to prevent duplicate pin-spacers during React 18 double mounts or Hot Reloads
     return () => {
       ctx.revert();
+      clearTimeout(refreshTimer);
     };
   }, []);
 
   return (
     <div ref={triggerRef} className="h-[600vh] w-full relative z-20">
       {/* Sticky view container */}
-      <div ref={containerRef} className="relative h-screen w-full overflow-hidden flex items-center justify-center bg-transparent">
+      <div ref={containerRef} className="relative h-screen h-dvh w-full overflow-hidden flex items-center justify-center bg-transparent">
 
         {/* Screen 1 wrapper */}
         <div

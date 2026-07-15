@@ -391,7 +391,13 @@ export default function Home() {
     }, 1000); // Match slide duration
   };
 
-
+  useEffect(() => {
+    if (preloaderGone) {
+      import("gsap/ScrollTrigger").then(({ ScrollTrigger }) => {
+        ScrollTrigger.refresh();
+      });
+    }
+  }, [preloaderGone]);
 
   useEffect(() => {
     if (typeof window !== "undefined" && sessionStorage.getItem("hasSeenPreloader")) {
