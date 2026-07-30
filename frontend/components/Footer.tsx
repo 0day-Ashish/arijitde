@@ -52,7 +52,7 @@ export default function Footer({ footerRef }: FooterProps) {
       <div className="w-full max-w-5xl mx-auto px-6 mb-20 flex flex-col items-center gap-12 text-center">
         {/* Big "Good buy." title */}
         <h2 className="font-instrument-serif text-7xl sm:text-7xl md:text-[8rem] lg:text-[12rem] font-normal text-primary tracking-tight leading-none drop-shadow-sm select-none">
-          Good buy.
+          Good bye.
         </h2>
         
         {/* Paragraph description */}
@@ -163,11 +163,11 @@ export default function Footer({ footerRef }: FooterProps) {
 
         <h1 
           style={{ 
-            fontSize: "15vw",
+            fontSize: "12vw",
             transition: 'all 2400ms cubic-bezier(0.16, 1, 0.3, 1)',
             letterSpacing: isVisible ? '0.06em' : '-0.08em',
             filter: isVisible ? 'blur(0px)' : 'blur(24px)',
-            transform: isVisible ? 'translateY(20%) scale(1)' : 'translateY(100px) scale(0.85)',
+            transform: isVisible ? 'translateY(5%) scale(1)' : 'translateY(100px) scale(0.85)',
             opacity: isVisible ? 1 : 0
           }} 
           className="font-chillax font-bold text-black leading-none select-none text-center uppercase"

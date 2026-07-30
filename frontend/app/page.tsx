@@ -12,8 +12,13 @@ import { GoArrowDownRight } from "react-icons/go";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ChatbotWidget from "@/components/ChatbotWidget";
-import BackToTop from "@/components/BackToTop";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 const servicesData = [
   {
@@ -302,7 +307,30 @@ export default function Home() {
     return () => observer.disconnect();
   }, []);
 
-  // Scroll-driven video playback loop
+  const envelopeRef = useRef<HTMLDivElement>(null);
+  const helloSectionRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!preloaderGone) return;
+
+    const envelope = envelopeRef.current;
+    if (!envelope) return;
+
+    const ctx = gsap.context(() => {
+      gsap.to(envelope, {
+        y: -15,
+        duration: 2.5,
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut",
+      });
+    }, helloSectionRef);
+
+    return () => {
+      ctx.revert();
+    };
+  }, [preloaderGone]);
+
+
   useEffect(() => {
     let animationFrameId: number;
     let targetTime = 0;
@@ -413,7 +441,7 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="relative min-h-screen w-full bg-transparent text-foreground flex flex-col font-clash">
+    <main className="relative min-h-screen w-full bg-transparent text-foreground font-clash">
       {/* Fixed Background container with User's Gradient Theme */}
       <div className="fixed inset-0 z-0 select-none pointer-events-none bg-[#F2F0EF] bg-[radial-gradient(circle_at_bottom,rgba(147,197,253,0.95)_0%,rgba(186,230,253,0.65)_45%,rgba(242,240,239,0)_85%)]">
         <SoftBoxBlurBg />
@@ -423,7 +451,7 @@ export default function Home() {
 
       <SvgScrollWipe
         screen1={
-          <div className="flex flex-col items-center justify-center text-center px-6 max-w-5xl mx-auto space-y-6">
+          <div className="flex flex-col items-center justify-center text-center px-6 max-w-5xl mx-auto space-y-6 pt-28 md:pt-24 lg:pt-32">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-white/20 backdrop-blur-md text-xs font-medium text-primary select-none">
               <span>35+ Years of Certified Amfi-Registered Mutual Fund Distribution</span>
             </div>
@@ -448,9 +476,9 @@ export default function Home() {
           </div>
         }
         screen2={
-          <div className="w-full max-w-6xl mx-auto flex flex-col md:flex-row items-center md:items-start justify-center gap-12 md:gap-24 px-6 text-left">
+          <div className="w-full max-w-6xl mx-auto flex flex-col items-center justify-center gap-10 md:gap-14 px-6 text-center">
             {/* Profile Image */}
-            <div className="shrink-0">
+            <div className="shrink-0 flex justify-center">
               <div className="w-64 h-64 md:w-80 md:h-80 rounded-[24px] border border-border shadow-lg overflow-hidden bg-card flex items-center justify-center">
                 <img
                   src="/assets/me.jpeg"
@@ -461,7 +489,7 @@ export default function Home() {
             </div>
 
             {/* Expanding Options */}
-            <div className="flex-1 flex flex-col gap-4 md:gap-6 text-left select-text relative z-10 max-w-4xl">
+            <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10 text-left select-text relative z-10">
               {/* 01: About Us */}
               <div className="flex flex-col">
                 <button
@@ -1074,83 +1102,138 @@ export default function Home() {
       <div id="faq" className="w-full bg-transparent relative z-10 py-32">
         <div className="w-full max-w-5xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-16 items-start relative">
 
-          {/* Left Column: Title & Subtitle */}
-          <div className="lg:col-span-4 flex flex-col gap-4 text-left lg:sticky lg:top-32">
+          {/* Left Column: Title & FAQ List */}
+          <div className="lg:col-span-7 flex flex-col gap-12 text-left w-full">
             <ScrollBlurReveal className="flex flex-col gap-4">
-              <span className="text-[10px] md:text-sm uppercase text-muted-foreground font-clash font-bold">
+              <span className="text-[10px] md:text-sm uppercase text-muted-foreground font-clash font-bold tracking-wider">
                 Common Inquiries
               </span>
-              <h2 className="text-3xl md:text-5xl font-normal leading-tight text-primary font-instrument-serif">
-                Frequently Asked Questions
+              <h2 className="text-4xl md:text-[5rem] leading-[1.05] text-primary tracking-tight font-normal">
+                <span className="font-clash">Frequently</span>{" "}
+                <span className="font-clash font-medium tracking-tight">asked</span>
+                <span className="block font-clash font-medium tracking-tight">questions</span>
               </h2>
-              <p className="text-muted-foreground text-sm font-sans mt-2">
-                Can't find the answer you're looking for? Reach out to our support team at <a href="mailto:contact@finanalysis.in" className="text-primary hover:underline font-mono">contact@finanalysis.in</a>.
-              </p>
             </ScrollBlurReveal>
-          </div>
 
-          {/* Right Column: Interactive Accordion List */}
-          <div className="lg:col-span-8 flex flex-col w-full border-t border-border mt-6 lg:mt-0">
-            {faqData.map((faq, idx) => {
-              const isOpen = activeFaq === idx;
-              return (
-                <div
-                  key={idx}
-                  className="border-b border-border py-6 flex flex-col text-left transition-colors duration-300"
-                >
-                  <button
-                    onClick={() => setActiveFaq(isOpen ? null : idx)}
-                    className="flex justify-between items-center w-full gap-4 text-left focus:outline-none group"
+            {/* Interactive Accordion List */}
+            <div className="flex flex-col w-full border-t border-border mt-6">
+              {faqData.map((faq, idx) => {
+                const isOpen = activeFaq === idx;
+                return (
+                  <div
+                    key={idx}
+                    className="border-b border-border py-6 flex flex-col text-left transition-colors duration-300"
                   >
-                    <h3 className={`text-base md:text-lg font-normal tracking-wide transition-colors duration-300 font-clash ${isOpen ? "text-primary font-semibold" : "text-foreground group-hover:text-primary"
-                      }`}>
-                      {faq.question}
-                    </h3>
+                    <button
+                      onClick={() => setActiveFaq(isOpen ? null : idx)}
+                      className="flex justify-between items-center w-full gap-4 text-left focus:outline-none group py-1"
+                    >
+                      <h3 className={`text-base md:text-lg font-medium tracking-wide transition-colors duration-300 font-clash ${isOpen ? "text-primary font-semibold" : "text-foreground group-hover:text-primary"
+                        }`}>
+                        {faq.question}
+                      </h3>
 
-                    {/* Expand/Collapse Chevron Indicator */}
-                    <span className={`text-xl md:text-2xl transition-transform duration-500 text-muted-foreground ${isOpen ? "text-primary rotate-180" : "group-hover:text-primary"
-                      }`}>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </span>
-                  </button>
+                      {/* Expand/Collapse Chevron Indicator */}
+                      <span className={`text-xl md:text-2xl transition-transform duration-500 text-muted-foreground ${isOpen ? "text-primary rotate-180" : "group-hover:text-primary"
+                        }`}>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </span>
+                    </button>
 
-                  {/* Accordion description container */}
-                  <div className={`grid transition-all duration-[500ms] ease-in-out ${isOpen ? "grid-rows-[1fr] opacity-100 mt-4" : "grid-rows-[0fr] opacity-0"
-                    }`}>
-                    <div className="overflow-hidden bg-white/30 backdrop-blur-2xl p-5 rounded-2xl border border-border/50 shadow-sm">
-                      <p className="text-xs md:text-sm text-muted-foreground leading-relaxed font-sans pr-4">
-                        {faq.answer}
-                      </p>
+                    {/* Accordion description container */}
+                    <div className={`grid transition-all duration-[400ms] ease-in-out ${isOpen ? "grid-rows-[1fr] opacity-100 mt-2" : "grid-rows-[0fr] opacity-0"
+                      }`}>
+                      <div className="overflow-hidden">
+                        <p className="text-sm md:text-base text-muted-foreground leading-relaxed font-sans pr-4 pb-4 pt-1">
+                          {faq.answer}
+                        </p>
+                      </div>
                     </div>
                   </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Right Column: Sticky Call Booking Widget */}
+          <div className="lg:col-span-5 w-full lg:sticky lg:top-32 flex justify-center lg:justify-end mt-12 lg:mt-0">
+            <ScrollBlurReveal className="w-full max-w-sm">
+              <div className="w-full rounded-[2.5rem] p-8 md:p-10 bg-white/30 backdrop-blur-2xl border border-border shadow-[0_20px_50px_rgba(147,197,253,0.12)] relative overflow-hidden flex flex-col text-left text-foreground group hover:scale-[1.02] transition-transform duration-500">
+                {/* Local Box Background (Book Call Image) inside the card */}
+                <div className="absolute inset-0 z-0 select-none pointer-events-none opacity-90">
+                  <img
+                    src="/assets/bookcall.jpeg"
+                    alt="Book Call Background"
+                    className="w-full h-full object-cover"
+                  />
+                  {/* Subtle overlay to ensure text contrast */}
+                  <div className="absolute inset-0 bg-white/10" />
                 </div>
-              );
-            })}
+
+                {/* Call-to-action Heading */}
+                <h3 className="text-3xl md:text-4xl font-semibold leading-tight mb-8 font-clash relative z-10 text-primary">
+                  Book a 15-min<br />intro call
+                </h3>
+
+                {/* Booking Button */}
+                <button
+                  onClick={() => setIsChatOpen(true)}
+                  className="w-full py-4 px-6 rounded-2xl bg-primary text-primary-foreground font-semibold text-center hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 shadow-md cursor-pointer relative z-10"
+                >
+                  Book a call
+                </button>
+
+                {/* Divider Line */}
+                <div className="w-full h-[1px] bg-border my-8 relative z-10" />
+
+                {/* Footer section with email and arrow button */}
+                <div className="flex justify-between items-center relative z-10 w-full">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Prefer to email?</span>
+                    <a
+                      href="mailto:contact@finanalysis.in"
+                      className="text-sm font-semibold hover:underline text-primary font-mono"
+                    >
+                      contact@finanalysis.in
+                    </a>
+                  </div>
+
+                  <a
+                    href="mailto:contact@finanalysis.in"
+                    className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:scale-110 hover:bg-primary/90 active:scale-95 transition-all duration-300 shadow-md cursor-pointer flex-shrink-0"
+                    aria-label="Send email"
+                  >
+                    <svg className="w-5 h-5 transform stroke-[2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                    </svg>
+                  </a>
+                </div>
+              </div>
+            </ScrollBlurReveal>
           </div>
 
         </div>
       </div>
 
       {/* Hello Text Section */}
-      <div className="w-full relative z-10 py-16 px-6 bg-transparent select-none">
-        <ScrollBlurReveal className="w-full max-w-5xl mx-auto text-center flex flex-col items-center justify-center space-y-6">
-          <h2 className="font-chillax text-7xl sm:text-9xl md:text-[10rem] lg:text-[14rem] font-normal text-primary tracking-tight leading-none drop-shadow-sm">
-            “Hello”
-          </h2>
-          <div className="w-48 h-48 sm:w-64 sm:h-64 md:w-80 md:h-80 relative overflow-hidden flex items-center justify-center">
-            <img
-              src="/assets/telephone.png"
-              alt="Telephone"
-              className="w-full h-full object-contain select-none"
-            />
-          </div>
-        </ScrollBlurReveal>
+      <div ref={helloSectionRef} className="w-full relative z-10 bg-transparent select-none">
+        <div className="w-full flex flex-col items-center justify-center px-6 py-2">
+          <ScrollBlurReveal className="w-full max-w-5xl mx-auto text-center flex flex-col items-center justify-center">
+            <div ref={envelopeRef} className="w-64 h-64 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] lg:w-[32rem] lg:h-[32rem] relative z-0 flex items-center justify-center">
+              <img
+                src="/assets/envelope.png"
+                alt="Envelope"
+                className="w-full h-full object-contain pointer-events-none select-none"
+              />
+            </div>
+          </ScrollBlurReveal>
+        </div>
       </div>
 
       {/* Contact Section */}
-      <div id="contact" className="w-full bg-transparent relative z-10 py-24 overflow-hidden">
+      <div id="contact" className="w-full bg-transparent relative z-10 pt-10 pb-24 overflow-hidden">
         <ScrollBlurReveal className="w-full max-w-xl mx-auto px-6">
           <div className="relative text-left">
             <div className="text-center space-y-3 mb-8">
@@ -1297,9 +1380,6 @@ export default function Home() {
         isOpen={isChatOpen}
         onOpenChange={setIsChatOpen}
       />
-
-      {/* Back to Top Button */}
-      <BackToTop />
 
       {/* Cookie Acceptance Banner */}
       {showCookieBox && isLoaded && (

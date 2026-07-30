@@ -5,6 +5,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import SessionSync from "@/components/SessionSync";
 import CursorFollower from "@/components/CursorFollower";
+import SmoothScroll from "@/components/SmoothScroll";
 import { Analytics } from "@vercel/analytics/next"
 
 const chillax = localFont({
@@ -95,6 +96,7 @@ export default function RootLayout({
         <SessionSync />
         <Analytics />
         <CursorFollower />
+        <SmoothScroll />
         {children}
       </body>
     </html>
