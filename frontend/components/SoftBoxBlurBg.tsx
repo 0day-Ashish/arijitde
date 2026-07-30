@@ -79,7 +79,7 @@ export default function SoftBoxBlurBg() {
   }
 
   return (
-    <div className="absolute inset-0 w-full h-full overflow-hidden select-none pointer-events-none">
+    <div className="backdrop-inner absolute inset-0 w-full h-full overflow-hidden select-none pointer-events-none">
       <style>{`
         .pillow-grid-container {
           display: grid;

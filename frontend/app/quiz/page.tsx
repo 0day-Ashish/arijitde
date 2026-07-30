@@ -682,11 +682,11 @@ export default function Quiz() {
     <main className="relative min-h-screen w-full bg-transparent text-foreground flex flex-col font-clash overflow-x-hidden">
       {/* Dynamic Glow and Background */}
       <div 
-        className="page-backdrop fixed inset-0 z-0 select-none pointer-events-none transition-all duration-[1000ms] ease-out bg-[#F2F0EF]"
+        className="page-backdrop fixed inset-0 z-0 select-none pointer-events-none transition-all duration-[1000ms] ease-out"
         style={{
-          background: currentTheme 
-            ? `radial-gradient(circle at bottom, ${currentTheme.glowColor} 0%, rgba(186,230,253,0.15) 45%, rgba(242,240,239,0) 85%)` 
-            : undefined
+          backgroundImage: currentTheme
+            ? `radial-gradient(circle at 50% calc(100% - var(--backdrop-bleed)), ${currentTheme.glowColor} 0%, rgba(186,230,253,0.15) 45%, rgba(242,240,239,0) 85%)`
+            : 'none'
         }}
       >
         <SoftBoxBlurBg />

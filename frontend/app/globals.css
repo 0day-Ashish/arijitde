@@ -152,14 +152,40 @@
     }
 }
 
-/* Full-bleed fixed page background layer.
-   `inset-0` resolves against the current layout viewport, which mobile browsers
-   keep at the toolbar-visible height for a moment after the toolbar retracts on
-   scroll — leaving a strip of bare body background exposed at the bottom.
-   Sizing to the large viewport keeps the layer covering the screen in both states. */
+/* Fixed page background layer — the single source of the page gradient.
+   A layer sized to the layout viewport (`inset: 0`) cannot cover the whole screen
+   on mobile: Chrome/Android keeps the layout viewport at the toolbar-visible
+   height for a moment after the toolbar retracts, and iOS Safari reveals a strip
+   *below* the layout viewport when the bottom bar expands or the page overscrolls
+   past its end. Either way the bare canvas shows through as a grey/white band.
+   So the layer bleeds below the viewport on mobile, and the glow is re-anchored up
+   by the same amount. Bleeding downwards only is deliberate: it leaves the glow's
+   centre and its farthest-corner radius exactly where they were, so the on-screen
+   rendering is unchanged. The bleed is 0 on desktop, which has no collapsing UI. */
 .page-backdrop {
-  min-height: 100vh;
+  --backdrop-bleed: 0px;
+  bottom: calc(-1 * var(--backdrop-bleed));
+  height: auto;
   min-height: 100lvh;
+  background-color: var(--bg-base);
+  background-image: radial-gradient(
+    circle at 50% calc(100% - var(--backdrop-bleed)),
+    var(--bg-glow-start) 0%,
+    var(--bg-glow-mid) 45%,
+    var(--bg-glow-end) 85%
+  );
+}
+
+@media (max-width: 1279px), (hover: none) {
+  .page-backdrop {
+    --backdrop-bleed: 8rem;
+  }
+}
+
+/* Decorative children stay aligned to the real viewport box, not the bled one. */
+.page-backdrop > .backdrop-inner {
+  bottom: var(--backdrop-bleed);
+  height: auto;
 }
 
 .font-chillax {

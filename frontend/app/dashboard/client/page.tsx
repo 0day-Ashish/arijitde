@@ -1126,7 +1126,7 @@ export default function ClientDashboard() {
   return (
     <main className="w-full min-h-screen bg-transparent text-neutral-900 flex flex-col relative font-clash select-none overflow-x-hidden">
       {/* Background with Ambient Radial Glows */}
-      <div className="page-backdrop fixed inset-0 z-0 select-none pointer-events-none bg-[#F2F0EF] bg-[radial-gradient(circle_at_bottom,rgba(147,197,253,0.95)_0%,rgba(186,230,253,0.65)_45%,rgba(242,240,239,0)_85%)]">
+      <div className="page-backdrop fixed inset-0 z-0 select-none pointer-events-none">
         <SoftBoxBlurBg />
       </div>
 
