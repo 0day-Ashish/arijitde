@@ -8,7 +8,7 @@ export default function NotFound() {
   return (
     <main className="relative min-h-screen w-full bg-[#F2F0EF] text-foreground flex flex-col items-center justify-center font-clash px-6 overflow-hidden">
       {/* Background container */}
-      <div className="fixed inset-0 z-0 select-none pointer-events-none bg-theme-glow">
+      <div className="page-backdrop fixed inset-0 z-0 select-none pointer-events-none bg-theme-glow">
         <SoftBoxBlurBg />
       </div>
 

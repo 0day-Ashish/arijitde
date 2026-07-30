@@ -152,6 +152,16 @@
     }
 }
 
+/* Full-bleed fixed page background layer.
+   `inset-0` resolves against the current layout viewport, which mobile browsers
+   keep at the toolbar-visible height for a moment after the toolbar retracts on
+   scroll — leaving a strip of bare body background exposed at the bottom.
+   Sizing to the large viewport keeps the layer covering the screen in both states. */
+.page-backdrop {
+  min-height: 100vh;
+  min-height: 100lvh;
+}
+
 .font-chillax {
   font-family: 'Chillax', sans-serif !important;
 }
