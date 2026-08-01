@@ -451,7 +451,7 @@ export default function Home() {
 
       <SvgScrollWipe
         screen1={
-          <div className="flex flex-col items-center justify-center text-center px-6 max-w-5xl mx-auto space-y-6 pt-28 md:pt-24 lg:pt-32">
+          <ScrollBlurReveal className="flex flex-col items-center justify-center text-center px-6 max-w-5xl mx-auto space-y-6 pt-28 md:pt-24 lg:pt-32">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-white/20 backdrop-blur-md text-xs font-medium text-primary select-none">
               <span>35+ Years of Certified Amfi-Registered Mutual Fund Distribution</span>
             </div>
@@ -473,10 +473,10 @@ export default function Home() {
                 </svg>
               </a>
             </div>
-          </div>
+          </ScrollBlurReveal>
         }
         screen2={
-          <div className="w-full max-w-6xl mx-auto flex flex-col items-center justify-center gap-10 md:gap-14 px-6 text-center">
+          <ScrollBlurReveal className="w-full max-w-6xl mx-auto flex flex-col items-center justify-center gap-10 md:gap-14 px-6 text-center">
             {/* Profile Image */}
             <div className="shrink-0 flex justify-center">
               <div className="w-64 h-64 md:w-80 md:h-80 rounded-[24px] border border-border shadow-lg overflow-hidden bg-card flex items-center justify-center">
@@ -618,7 +618,7 @@ export default function Home() {
                 </div>
               </div>
             </div>
-          </div>
+          </ScrollBlurReveal>
         }
       />
 
@@ -629,7 +629,8 @@ export default function Home() {
         {/* Ambient backing glow */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-[radial-gradient(circle,rgba(46,125,50,0.03)_0%,transparent_70%)] pointer-events-none select-none" />
 
-        <div className="w-full max-w-5xl mx-auto p-8 md:p-12 bg-white/20 backdrop-blur-2xl border border-border rounded-3xl shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-12 relative z-10">
+        <ScrollBlurReveal className="w-full max-w-5xl mx-auto">
+          <div className="w-full p-8 md:p-12 bg-white/20 backdrop-blur-2xl border border-border rounded-3xl shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-12 relative z-10">
           <div className="space-y-4 max-w-xl text-left">
             <span className="text-[10px] text-primary border border-primary/25 bg-primary/5 px-3 py-1 rounded-full uppercase tracking-wider font-semibold">
               Instant Support
@@ -670,7 +671,8 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </div>
+      </ScrollBlurReveal>
+    </div>
       {/* Investor Quiz Section */}
       <div className="w-full relative z-10 py-16 px-6">
         <ScrollBlurReveal className="w-full max-w-5xl mx-auto">
@@ -1174,7 +1176,8 @@ export default function Home() {
             </ScrollBlurReveal>
 
             {/* Interactive Accordion List */}
-            <div className="flex flex-col w-full border-t border-border mt-6">
+            <ScrollBlurReveal className="w-full">
+              <div className="flex flex-col w-full border-t border-border mt-6">
               {faqData.map((faq, idx) => {
                 const isOpen = activeFaq === idx;
                 return (
@@ -1213,6 +1216,7 @@ export default function Home() {
                 );
               })}
             </div>
+            </ScrollBlurReveal>
           </div>
 
           {/* Right Column: Sticky Call Booking Widget */}
@@ -1235,13 +1239,15 @@ export default function Home() {
                   Book a 15-min<br />intro call
                 </h3>
 
-                {/* Booking Button */}
-                <button
-                  onClick={() => setIsChatOpen(true)}
-                  className="w-full py-4 px-6 rounded-2xl bg-primary text-primary-foreground font-semibold text-center hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 shadow-md cursor-pointer relative z-10"
+                {/* Booking Link */}
+                <a
+                  href="https://wa.me/919831093297"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full block py-4 px-6 rounded-2xl bg-primary text-primary-foreground font-semibold text-center hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 shadow-md cursor-pointer relative z-10"
                 >
                   Book a call
-                </button>
+                </a>
 
                 {/* Divider Line */}
                 <div className="w-full h-[1px] bg-border my-8 relative z-10" />
