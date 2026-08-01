@@ -508,7 +508,7 @@ export default function Home() {
                     <img
                       src="/assets/about.svg"
                       alt="About Us"
-                      className="w-full max-w-4xl h-auto rounded-2xl object-contain select-none pointer-events-none mt-2"
+                      className="w-56 h-auto rounded-2xl object-contain select-none pointer-events-none mt-2 mx-auto block"
                     />
                     <p>
                       FinAnalysis blends over 35 years of trusted AMFI-registered Mutual Fund distribution with modern technology and data science. Founded on a legacy started by <strong className="text-primary font-extrabold">Arindam De</strong> in 1989, we have transitioned across multiple market cycles to safeguard and grow client wealth. Today, <strong className="text-primary font-extrabold">Arijit De</strong> (SEBI-certified Mutual Fund Distributor ARN-273396 and SIF distributor) integrates computer science analytics, systematic portfolio optimization, and structured asset allocation, delivering a modern, data-backed approach to wealth management that prior generations never had access to.
@@ -535,7 +535,7 @@ export default function Home() {
                     <img
                       src="/assets/service.png"
                       alt="Services"
-                      className="w-full max-w-4xl h-auto rounded-2xl object-contain select-none pointer-events-none mt-2"
+                      className="w-56 h-auto rounded-2xl object-contain select-none pointer-events-none mt-2 mx-auto block"
                     />
                     <p>
                       We provide a comprehensive, fully regulated suite of financial and wealth creation solutions tailored to your unique lifecycle goals. This includes systematically managed <span className="font-extrabold text-primary">Mutual Funds & SIP planning</span> for long-term compound growth, high-yield <span className="font-extrabold text-primary">Fixed Deposits, Specialized Investment Funds (SIF)</span>, and <span className="font-extrabold text-primary">Portfolio Management Services (PMS)</span> for sophisticated asset allocation. Additionally, we protect your family's future with robust <span className="font-extrabold text-primary">Life Insurance (LIC), Mediclaim Health Insurance, Vehicle/Property Insurance</span>, and provide leverage options through <span className="font-extrabold text-primary">PNB Housing Finance</span> home loans.
@@ -562,7 +562,7 @@ export default function Home() {
                     <img
                       src="/assets/exist.png"
                       alt="Why We Exist"
-                      className="w-full max-w-4xl h-auto rounded-2xl object-contain select-none pointer-events-none mt-2"
+                      className="w-56 h-auto rounded-2xl object-contain select-none pointer-events-none mt-2 mx-auto block"
                     />
                     <p>
                       In an era dominated by cold robo-distribution representatives and static investment apps, your hard-earned wealth deserves personalized, <span className="font-extrabold text-primary">relationship-driven human distribution</span>. We exist to bridge the gap between human empathy and data precision. By standing by our clients through decades of market turbulence, recessions, and regulatory shifts, we prioritize multi-generational trust and structured planning. We don't just measure relationships in transactions; we measure them in decades of successful outcomes and financial security.
