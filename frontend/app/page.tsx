@@ -502,9 +502,14 @@ export default function Home() {
                     <GoArrowDownRight className="inline-block ml-2 align-middle transition-transform duration-300 group-hover:translate-x-1 group-hover:translate-y-1" />
                   </span>
                 </button>
-                <div className={`grid transition-all duration-350 ease-in-out overflow-hidden text-sm md:text-base text-foreground font-bold ${expandedOption === "about" ? "grid-rows-[1fr] mt-2.5 opacity-100" : "grid-rows-[0fr] opacity-0"
+                <div className={`grid md:hidden transition-all duration-350 ease-in-out overflow-hidden text-sm text-foreground font-bold ${expandedOption === "about" ? "grid-rows-[1fr] mt-2.5 opacity-100" : "grid-rows-[0fr] opacity-0"
                   }`}>
-                  <div className="overflow-hidden space-y-2.5 font-sans pr-4 leading-relaxed font-bold text-foreground text-sm md:text-base">
+                  <div className="overflow-hidden space-y-2.5 font-sans pr-4 leading-relaxed font-bold text-foreground text-sm">
+                    <img
+                      src="/assets/about.svg"
+                      alt="About Us"
+                      className="w-full max-w-4xl h-auto rounded-2xl object-contain select-none pointer-events-none mt-2"
+                    />
                     <p>
                       FinAnalysis blends over 35 years of trusted AMFI-registered Mutual Fund distribution with modern technology and data science. Founded on a legacy started by <strong className="text-primary font-extrabold">Arindam De</strong> in 1989, we have transitioned across multiple market cycles to safeguard and grow client wealth. Today, <strong className="text-primary font-extrabold">Arijit De</strong> (SEBI-certified Mutual Fund Distributor ARN-273396 and SIF distributor) integrates computer science analytics, systematic portfolio optimization, and structured asset allocation, delivering a modern, data-backed approach to wealth management that prior generations never had access to.
                     </p>
@@ -524,14 +529,17 @@ export default function Home() {
                     <GoArrowDownRight className="inline-block ml-2 align-middle transition-transform duration-300 group-hover:translate-x-1 group-hover:translate-y-1" />
                   </span>
                 </button>
-                <div className={`grid transition-all duration-350 ease-in-out overflow-hidden text-sm md:text-base text-foreground font-bold ${expandedOption === "services" ? "grid-rows-[1fr] mt-2.5 opacity-100" : "grid-rows-[0fr] opacity-0"
+                <div className={`grid md:hidden transition-all duration-350 ease-in-out overflow-hidden text-sm text-foreground font-bold ${expandedOption === "services" ? "grid-rows-[1fr] mt-2.5 opacity-100" : "grid-rows-[0fr] opacity-0"
                   }`}>
-                  <div className="overflow-hidden space-y-2.5 font-sans pr-4 leading-relaxed font-bold text-foreground text-sm md:text-base">
+                  <div className="overflow-hidden space-y-2.5 font-sans pr-4 leading-relaxed font-bold text-foreground text-sm">
                     <img
-                      src="/assets/services-1.png"
+                      src="/assets/service.png"
                       alt="Services"
                       className="w-full max-w-4xl h-auto rounded-2xl object-contain select-none pointer-events-none mt-2"
                     />
+                    <p>
+                      We provide a comprehensive, fully regulated suite of financial and wealth creation solutions tailored to your unique lifecycle goals. This includes systematically managed <span className="font-extrabold text-primary">Mutual Funds & SIP planning</span> for long-term compound growth, high-yield <span className="font-extrabold text-primary">Fixed Deposits, Specialized Investment Funds (SIF)</span>, and <span className="font-extrabold text-primary">Portfolio Management Services (PMS)</span> for sophisticated asset allocation. Additionally, we protect your family's future with robust <span className="font-extrabold text-primary">Life Insurance (LIC), Mediclaim Health Insurance, Vehicle/Property Insurance</span>, and provide leverage options through <span className="font-extrabold text-primary">PNB Housing Finance</span> home loans.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -548,14 +556,64 @@ export default function Home() {
                     <GoArrowDownRight className="inline-block ml-2 align-middle transition-transform duration-300 group-hover:translate-x-1 group-hover:translate-y-1" />
                   </span>
                 </button>
-                <div className={`grid transition-all duration-350 ease-in-out overflow-hidden text-sm md:text-base text-foreground font-bold ${expandedOption === "why-us" ? "grid-rows-[1fr] mt-2.5 opacity-100" : "grid-rows-[0fr] opacity-0"
+                <div className={`grid md:hidden transition-all duration-350 ease-in-out overflow-hidden text-sm text-foreground font-bold ${expandedOption === "why-us" ? "grid-rows-[1fr] mt-2.5 opacity-100" : "grid-rows-[0fr] opacity-0"
                   }`}>
-                  <div className="overflow-hidden space-y-2.5 font-sans pr-4 leading-relaxed font-bold text-foreground text-sm md:text-base">
+                  <div className="overflow-hidden space-y-2.5 font-sans pr-4 leading-relaxed font-bold text-foreground text-sm">
                     <img
-                      src="/assets/whyweexist-1.png"
+                      src="/assets/exist.png"
                       alt="Why We Exist"
                       className="w-full max-w-4xl h-auto rounded-2xl object-contain select-none pointer-events-none mt-2"
                     />
+                    <p>
+                      In an era dominated by cold robo-distribution representatives and static investment apps, your hard-earned wealth deserves personalized, <span className="font-extrabold text-primary">relationship-driven human distribution</span>. We exist to bridge the gap between human empathy and data precision. By standing by our clients through decades of market turbulence, recessions, and regulatory shifts, we prioritize multi-generational trust and structured planning. We don't just measure relationships in transactions; we measure them in decades of successful outcomes and financial security.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Desktop Full-Width Expanded Content */}
+            <div className={`hidden md:grid transition-all duration-350 ease-in-out overflow-hidden w-full ${expandedOption ? "grid-rows-[1fr] mt-10 opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+              <div className="overflow-hidden w-full grid grid-cols-1 grid-rows-1">
+                {/* 01: About Us */}
+                <div className={`col-start-1 row-start-1 transition-all duration-500 ease-in-out ${expandedOption === "about" ? "opacity-100 pointer-events-auto scale-100 translate-y-0" : "opacity-0 pointer-events-none scale-95 -translate-y-2"}`}>
+                  <div className="flex flex-col items-center justify-center gap-8 max-w-5xl mx-auto text-center">
+                    <img
+                      src="/assets/about.svg"
+                      alt="About Us"
+                      className="w-76 h-auto rounded-2xl object-contain select-none pointer-events-none"
+                    />
+                    <p className="font-sans leading-relaxed font-bold text-foreground text-base md:text-lg max-w-4xl mx-auto">
+                      FinAnalysis blends over 35 years of trusted AMFI-registered Mutual Fund distribution with modern technology and data science. Founded on a legacy started by <strong className="text-primary font-extrabold">Arindam De</strong> in 1989, we have transitioned across multiple market cycles to safeguard and grow client wealth. Today, <strong className="text-primary font-extrabold">Arijit De</strong> (SEBI-certified Mutual Fund Distributor ARN-273396 and SIF distributor) integrates computer science analytics, systematic portfolio optimization, and structured asset allocation, delivering a modern, data-backed approach to wealth management that prior generations never had access to.
+                    </p>
+                  </div>
+                </div>
+
+                {/* 02: Services */}
+                <div className={`col-start-1 row-start-1 transition-all duration-500 ease-in-out ${expandedOption === "services" ? "opacity-100 pointer-events-auto scale-100 translate-y-0" : "opacity-0 pointer-events-none scale-95 -translate-y-2"}`}>
+                  <div className="flex flex-col items-center justify-center gap-8 max-w-5xl mx-auto text-center">
+                    <img
+                      src="/assets/service.png"
+                      alt="Services"
+                      className="w-76 h-auto rounded-2xl object-contain select-none pointer-events-none"
+                    />
+                    <p className="font-sans leading-relaxed font-bold text-foreground text-base md:text-lg max-w-4xl mx-auto">
+                      We provide a comprehensive, fully regulated suite of financial and wealth creation solutions tailored to your unique lifecycle goals. This includes systematically managed <span className="font-extrabold text-primary">Mutual Funds & SIP planning</span> for long-term compound growth, high-yield <span className="font-extrabold text-primary">Fixed Deposits, Specialized Investment Funds (SIF)</span>, and <span className="font-extrabold text-primary">Portfolio Management Services (PMS)</span> for sophisticated asset allocation. Additionally, we protect your family's future with robust <span className="font-extrabold text-primary">Life Insurance (LIC), Mediclaim Health Insurance, Vehicle/Property Insurance</span>, and provide leverage options through <span className="font-extrabold text-primary">PNB Housing Finance</span> home loans.
+                    </p>
+                  </div>
+                </div>
+
+                {/* 03: Why Us */}
+                <div className={`col-start-1 row-start-1 transition-all duration-500 ease-in-out ${expandedOption === "why-us" ? "opacity-100 pointer-events-auto scale-100 translate-y-0" : "opacity-0 pointer-events-none scale-95 -translate-y-2"}`}>
+                  <div className="flex flex-col items-center justify-center gap-8 max-w-5xl mx-auto text-center">
+                    <img
+                      src="/assets/exist.png"
+                      alt="Why We Exist"
+                      className="w-76 h-auto rounded-2xl object-contain select-none pointer-events-none"
+                    />
+                    <p className="font-sans leading-relaxed font-bold text-foreground text-base md:text-lg max-w-4xl mx-auto">
+                      In an era dominated by cold robo-distribution representatives and static investment apps, your hard-earned wealth deserves personalized, <span className="font-extrabold text-primary">relationship-driven human distribution</span>. We exist to bridge the gap between human empathy and data precision. By standing by our clients through decades of market turbulence, recessions, and regulatory shifts, we prioritize multi-generational trust and structured planning. We don't just measure relationships in transactions; we measure them in decades of successful outcomes and financial security.
+                    </p>
                   </div>
                 </div>
               </div>
