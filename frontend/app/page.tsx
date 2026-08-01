@@ -114,6 +114,38 @@ const faqData = [
   }
 ]
 
+const servicesList = [
+  {
+    title: "Mutual Funds & SIP",
+    desc: "Systematically managed for long-term compound growth.",
+    tag: "Wealth Creation"
+  },
+  {
+    title: "Fixed Deposits",
+    desc: "Secure, high-yield options for guaranteed stable returns.",
+    tag: "Capital Protection"
+  },
+  {
+    title: "Specialized Investment Funds (SIF)",
+    desc: "Sophisticated compounding returns using hurdle rates and strategic top-ups.",
+    tag: "High Yield"
+  },
+  {
+    title: "Portfolio Management (PMS)",
+    desc: "Tailored active strategies for customized asset allocation.",
+    tag: "Premium Advisory"
+  },
+  {
+    title: "Insurance Solutions",
+    desc: "Robust Life Insurance (LIC), Mediclaim health, and property protection.",
+    tag: "Risk Mitigation"
+  },
+  {
+    title: "Housing Finance & Loans",
+    desc: "Structured leverage options through PNB Housing Finance home loans.",
+    tag: "Leverage Options"
+  }
+];
 
 export default function Home() {
   const [count, setCount] = useState(0);
@@ -531,15 +563,23 @@ export default function Home() {
                 </button>
                 <div className={`grid md:hidden transition-all duration-350 ease-in-out overflow-hidden text-sm text-foreground font-bold ${expandedOption === "services" ? "grid-rows-[1fr] mt-2.5 opacity-100" : "grid-rows-[0fr] opacity-0"
                   }`}>
-                  <div className="overflow-hidden space-y-2.5 font-sans pr-4 leading-relaxed font-bold text-foreground text-sm">
-                    <img
-                      src="/assets/service.png"
-                      alt="Services"
-                      className="w-56 h-auto rounded-2xl object-contain select-none pointer-events-none mt-2 mx-auto block"
-                    />
-                    <p>
-                      We provide a comprehensive, fully regulated suite of financial and wealth creation solutions tailored to your unique lifecycle goals. This includes systematically managed <span className="font-extrabold text-primary">Mutual Funds & SIP planning</span> for long-term compound growth, high-yield <span className="font-extrabold text-primary">Fixed Deposits, Specialized Investment Funds (SIF)</span>, and <span className="font-extrabold text-primary">Portfolio Management Services (PMS)</span> for sophisticated asset allocation. Additionally, we protect your family's future with robust <span className="font-extrabold text-primary">Life Insurance (LIC), Mediclaim Health Insurance, Vehicle/Property Insurance</span>, and provide leverage options through <span className="font-extrabold text-primary">PNB Housing Finance</span> home loans.
-                    </p>
+                  <div className="overflow-hidden space-y-4 font-sans pr-4 leading-relaxed font-bold text-foreground text-sm">
+                    <div className="grid grid-cols-1 gap-4 mt-2">
+                      {servicesList.map((service, idx) => (
+                        <div key={idx} className="p-5 rounded-2xl border border-amber-500/20 bg-gradient-to-br from-white/50 via-white/35 to-amber-500/5 shadow-[0_15px_35px_rgba(245,158,11,0.06)] backdrop-blur-2xl flex flex-col text-left relative overflow-hidden">
+                          <div className="absolute top-0 right-0 w-12 h-12 bg-amber-400/5 rounded-full blur-lg pointer-events-none" />
+                          <span className="text-[8px] font-mono text-amber-700 tracking-wider uppercase font-bold bg-amber-500/10 px-2 py-0.5 rounded-full w-fit">
+                            {service.tag}
+                          </span>
+                          <h4 className="text-sm font-bold text-primary font-clash mt-2.5 mb-1 text-left">
+                            {service.title}
+                          </h4>
+                          <p className="text-xs text-muted-foreground leading-relaxed font-sans font-medium text-left">
+                            {service.desc}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -591,15 +631,25 @@ export default function Home() {
 
                 {/* 02: Services */}
                 <div className={`col-start-1 row-start-1 transition-all duration-500 ease-in-out ${expandedOption === "services" ? "opacity-100 pointer-events-auto scale-100 translate-y-0" : "opacity-0 pointer-events-none scale-95 -translate-y-2"}`}>
-                  <div className="flex flex-col items-center justify-center gap-8 max-w-5xl mx-auto text-center">
-                    <img
-                      src="/assets/service.png"
-                      alt="Services"
-                      className="w-76 h-auto rounded-2xl object-contain select-none pointer-events-none"
-                    />
-                    <p className="font-sans leading-relaxed font-bold text-foreground text-base md:text-lg max-w-4xl mx-auto">
-                      We provide a comprehensive, fully regulated suite of financial and wealth creation solutions tailored to your unique lifecycle goals. This includes systematically managed <span className="font-extrabold text-primary">Mutual Funds & SIP planning</span> for long-term compound growth, high-yield <span className="font-extrabold text-primary">Fixed Deposits, Specialized Investment Funds (SIF)</span>, and <span className="font-extrabold text-primary">Portfolio Management Services (PMS)</span> for sophisticated asset allocation. Additionally, we protect your family's future with robust <span className="font-extrabold text-primary">Life Insurance (LIC), Mediclaim Health Insurance, Vehicle/Property Insurance</span>, and provide leverage options through <span className="font-extrabold text-primary">PNB Housing Finance</span> home loans.
-                    </p>
+                  <div className="flex flex-col items-center justify-center gap-6 max-w-5xl mx-auto text-center w-full">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mt-2">
+                      {servicesList.map((service, idx) => (
+                        <div key={idx} className="p-6 rounded-3xl border border-amber-500/20 bg-gradient-to-br from-white/50 via-white/35 to-amber-500/5 shadow-[0_20px_50px_rgba(245,158,11,0.08)] backdrop-blur-2xl flex flex-col justify-between text-left hover:border-amber-500/45 hover:scale-[1.02] transition-all duration-300 relative group overflow-hidden">
+                          <div className="absolute top-0 right-0 w-16 h-16 bg-amber-400/5 rounded-full blur-xl pointer-events-none group-hover:bg-amber-400/10 transition-colors duration-300" />
+                          <div>
+                            <span className="text-[9px] font-mono text-amber-700 tracking-wider uppercase font-bold bg-amber-500/10 px-2 py-0.5 rounded-full w-fit">
+                              {service.tag}
+                            </span>
+                            <h4 className="text-base font-bold text-primary font-clash mt-3 mb-1.5 group-hover:text-amber-700 transition-colors duration-300 text-left">
+                              {service.title}
+                            </h4>
+                            <p className="text-xs text-muted-foreground leading-relaxed font-sans font-medium text-left">
+                              {service.desc}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
