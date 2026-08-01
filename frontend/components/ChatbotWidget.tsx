@@ -180,6 +180,7 @@ export default function ChatbotWidget({
 
           {/* Message List */}
           <div
+            data-lenis-prevent
             className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 scrollbar-thin scrollbar-thumb-border select-text"
           >
             {messages.map((msg) => (

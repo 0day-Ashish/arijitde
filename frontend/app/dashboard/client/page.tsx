@@ -1188,7 +1188,7 @@ export default function ClientDashboard() {
 
         {/* Quiz reassessment modal */}
         {(!token || !userData) ? (
-          <div className="w-full max-w-md mx-auto bg-white/40 border border-white/30 rounded-3xl p-8 shadow-2xl backdrop-blur-xl animate-in zoom-in-95 duration-300 max-h-[85vh] overflow-y-auto custom-scrollbar">
+          <div data-lenis-prevent className="w-full max-w-md mx-auto bg-white/40 border border-white/30 rounded-3xl p-8 shadow-2xl backdrop-blur-xl animate-in zoom-in-95 duration-300 max-h-[85vh] overflow-y-auto custom-scrollbar">
             <div className="space-y-6 text-center">
               <div className="space-y-2">
                 <div className="mx-auto w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-3">
@@ -1432,7 +1432,7 @@ export default function ClientDashboard() {
             </div>
           </div>
         ) : showQuiz ? (
-          <div className="w-full max-w-md mx-auto bg-white/30 border border-white/30 rounded-3xl p-8 shadow-2xl backdrop-blur-xl animate-in zoom-in-95 duration-300 max-h-[85vh] overflow-y-auto custom-scrollbar">
+          <div data-lenis-prevent className="w-full max-w-md mx-auto bg-white/30 border border-white/30 rounded-3xl p-8 shadow-2xl backdrop-blur-xl animate-in zoom-in-95 duration-300 max-h-[85vh] overflow-y-auto custom-scrollbar">
             <div className="flex justify-between items-center text-[10px] font-mono text-neutral-500 mb-6 uppercase tracking-widest">
               <span>Client Targets Quiz</span>
               <span>Step {quizStep} of 5</span>
@@ -1469,7 +1469,7 @@ export default function ClientDashboard() {
                   <h2 className="text-2xl font-semibold text-neutral-900 tracking-wide">What is the primary reason you&apos;re investing?</h2>
                   <p className="text-neutral-500 text-xs font-sans leading-relaxed">Goal alignment score.</p>
                 </div>
-                <div className="grid grid-cols-1 gap-2 text-left max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
+                <div data-lenis-prevent className="grid grid-cols-1 gap-2 text-left max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
                   {GOAL_OPTIONS.map((goal) => {
                     const isSelected = quizGoal === goal.value;
                     const IconComponent = goal.icon;
@@ -1806,7 +1806,7 @@ export default function ClientDashboard() {
                                             align="center"
                                             iconType="circle"
                                             content={({ payload }) => (
-                                              <div className="flex flex-wrap gap-x-2.5 gap-y-1 justify-center mt-2 max-h-[60px] overflow-y-auto w-full px-1">
+                                              <div data-lenis-prevent className="flex flex-wrap gap-x-2.5 gap-y-1 justify-center mt-2 max-h-[60px] overflow-y-auto w-full px-1">
                                                 {payload?.map((entry: any, idx: number) => {
                                                   const percentage = totalAum > 0 ? ((pieData[idx]?.value || 0) / totalAum) * 100 : 0;
                                                   return (
@@ -1861,7 +1861,7 @@ export default function ClientDashboard() {
                                             align="center"
                                             iconType="circle"
                                             content={({ payload }) => (
-                                              <div className="flex flex-wrap gap-x-2.5 gap-y-1 justify-center mt-2 max-h-[60px] overflow-y-auto w-full px-1">
+                                              <div data-lenis-prevent className="flex flex-wrap gap-x-2.5 gap-y-1 justify-center mt-2 max-h-[60px] overflow-y-auto w-full px-1">
                                                 {payload?.map((entry: any, idx: number) => {
                                                   const percentage = totalAum > 0 ? ((categoryPieData[idx]?.value || 0) / totalAum) * 100 : 0;
                                                   return (
@@ -2360,7 +2360,7 @@ export default function ClientDashboard() {
                         No support queries raised yet. Fill out the form on the left to start.
                       </div>
                     ) : (
-                      <div className="space-y-4 max-h-[420px] overflow-y-auto pr-1">
+                      <div data-lenis-prevent className="space-y-4 max-h-[420px] overflow-y-auto pr-1">
                         {supportQueries.map((query) => (
                           <div key={query.id} className="border border-neutral-100 bg-white/50 rounded-2xl p-4 space-y-3 shadow-sm hover:shadow transition duration-200">
                             <div className="flex justify-between items-start gap-4">

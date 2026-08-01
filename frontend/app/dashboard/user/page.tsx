@@ -1011,7 +1011,7 @@ export default function UserDashboard() {
                   </p>
                 </div>
 
-                <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1 select-none custom-scrollbar">
+                <div data-lenis-prevent className="space-y-3 max-h-[300px] overflow-y-auto pr-1 select-none custom-scrollbar">
                   {GOAL_OPTIONS.map((goal) => {
                     const IconComponent = goal.icon;
                     const isSelected = quizGoal === goal.value;
@@ -1578,7 +1578,7 @@ export default function UserDashboard() {
                   </div>
 
                   <form onSubmit={handleDateFormSubmit} className="space-y-6">
-                    <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
+                    <div data-lenis-prevent className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
                       {pendingFunds.map((fund, idx) => (
                         <div key={idx} className="p-4 bg-white/40 border border-border/20 rounded-2xl space-y-3 text-left">
                           <div className="flex justify-between items-start gap-2">
@@ -2062,7 +2062,7 @@ export default function UserDashboard() {
                     {sessions[0].notes && (
                       <div className="border-t border-neutral-100 pt-2 space-y-1.5">
                         <span className="text-neutral-500 font-mono uppercase tracking-wider text-[10px] block">Arijit's Pre-Session Notes:</span>
-                        <div className="bg-neutral-50 border border-neutral-100 p-2.5 rounded-xl font-sans text-xs text-neutral-700 leading-relaxed max-h-[120px] overflow-y-auto italic">
+                        <div data-lenis-prevent className="bg-neutral-50 border border-neutral-100 p-2.5 rounded-xl font-sans text-xs text-neutral-700 leading-relaxed max-h-[120px] overflow-y-auto italic">
                           {sessions[0].notes}
                         </div>
                       </div>
