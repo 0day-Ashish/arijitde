@@ -1643,6 +1643,14 @@ export default function ClientDashboard() {
                       <span className="font-semibold text-neutral-800">{userData.pan}</span>
                     </div>
                   )}
+                  {existingClientData?.createdAt && (
+                    <div className="flex justify-between font-mono items-center">
+                      <span className="text-[9px] font-mono text-amber-700 tracking-widest uppercase font-bold">Last Updated:</span>
+                      <span className="font-semibold text-neutral-800">
+                        {new Date(existingClientData.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex justify-between font-mono items-start">
                     <span className="text-[9px] font-mono text-amber-700 tracking-widest uppercase font-bold mt-1">Total AUM:</span>
                     <div className="text-right">

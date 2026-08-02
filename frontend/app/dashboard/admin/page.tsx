@@ -83,7 +83,7 @@ function formatDob(val: string | null | undefined): string {
       return `${day}/${month}/${year}`;
     }
   }
-  
+
   // If it matches DD/MM/YYYY already, return it
   if (/^\d{1,2}[-/]\d{1,2}[-/]\d{4}$/.test(trimmed)) {
     return trimmed.replace(/-/g, '/');
@@ -114,7 +114,7 @@ function formatExcelDate(val: string | null | undefined): string {
       return `${day}/${month}/${year}`;
     }
   }
-  
+
   if (/^\d{1,2}[-/]\d{1,2}[-/]\d{4}$/.test(trimmed)) {
     return trimmed.replace(/-/g, '/');
   }
@@ -1173,7 +1173,7 @@ export default function AdminDashboard() {
                     {showCsvReminder ? '1 New' : '0 New'}
                   </span>
                 </div>
-                
+
                 {showCsvReminder ? (
                   <div className="space-y-3">
                     <div className="p-3 bg-red-50/50 border border-red-200/50 rounded-xl">
@@ -1466,8 +1466,8 @@ export default function AdminDashboard() {
                             </td>
                             <td className="px-6 py-5 whitespace-nowrap">
                               <span className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${user.role === 'ADMIN' ? 'bg-neutral-900 text-white' :
-                                  user.role === 'CLIENT' ? 'bg-amber-500/10 text-amber-700 border border-amber-500/25' :
-                                    'bg-neutral-100 text-neutral-600'
+                                user.role === 'CLIENT' ? 'bg-amber-500/10 text-amber-700 border border-amber-500/25' :
+                                  'bg-neutral-100 text-neutral-600'
                                 }`}>
                                 {user.role}
                               </span>
@@ -1590,7 +1590,7 @@ export default function AdminDashboard() {
                     {visitorAdvisorySessions.map((session: any) => {
                       const isEditing = editingSessionId === session.id;
                       const defaultMeetLink = session.googleMeetLink || `https://meet.google.com/abc-defg-hij`;
-                      
+
                       return (
                         <div
                           key={session.id}
@@ -1603,12 +1603,11 @@ export default function AdminDashboard() {
                                 <h3 className="font-bold text-neutral-950 text-base">
                                   {session.user?.name || "Visitor"}
                                 </h3>
-                                <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold font-mono uppercase tracking-wider ${
-                                  session.status === "CONFIRMED" ? "bg-emerald-500/10 text-emerald-700 border border-emerald-500/20" :
-                                  session.status === "COMPLETED" ? "bg-blue-500/10 text-blue-700 border border-blue-500/20" :
-                                  session.status === "REFUNDED" ? "bg-red-500/10 text-red-700 border border-red-500/20" :
-                                  "bg-amber-500/10 text-amber-700 border border-amber-500/20"
-                                }`}>
+                                <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold font-mono uppercase tracking-wider ${session.status === "CONFIRMED" ? "bg-emerald-500/10 text-emerald-700 border border-emerald-500/20" :
+                                    session.status === "COMPLETED" ? "bg-blue-500/10 text-blue-700 border border-blue-500/20" :
+                                      session.status === "REFUNDED" ? "bg-red-500/10 text-red-700 border border-red-500/20" :
+                                        "bg-amber-500/10 text-amber-700 border border-amber-500/20"
+                                  }`}>
                                   {session.status}
                                 </span>
                               </div>
@@ -1628,24 +1627,24 @@ export default function AdminDashboard() {
                                   <div className="flex items-center justify-between bg-white border border-neutral-100 p-2.5 rounded-xl text-xs font-mono">
                                     <span className="text-neutral-500">Option 1:</span>
                                     <span className="text-neutral-900 font-bold">
-                                      {new Date(session.preferredSlot1).getTime() > 0 
-                                        ? new Date(session.preferredSlot1).toLocaleString() 
+                                      {new Date(session.preferredSlot1).getTime() > 0
+                                        ? new Date(session.preferredSlot1).toLocaleString()
                                         : "Not submitted"}
                                     </span>
                                   </div>
                                   <div className="flex items-center justify-between bg-white border border-neutral-100 p-2.5 rounded-xl text-xs font-mono">
                                     <span className="text-neutral-500">Option 2:</span>
                                     <span className="text-neutral-900 font-bold">
-                                      {new Date(session.preferredSlot2).getTime() > 0 
-                                        ? new Date(session.preferredSlot2).toLocaleString() 
+                                      {new Date(session.preferredSlot2).getTime() > 0
+                                        ? new Date(session.preferredSlot2).toLocaleString()
                                         : "Not submitted"}
                                     </span>
                                   </div>
                                   <div className="flex items-center justify-between bg-white border border-neutral-100 p-2.5 rounded-xl text-xs font-mono">
                                     <span className="text-neutral-500">Option 3:</span>
                                     <span className="text-neutral-900 font-bold">
-                                      {new Date(session.preferredSlot3).getTime() > 0 
-                                        ? new Date(session.preferredSlot3).toLocaleString() 
+                                      {new Date(session.preferredSlot3).getTime() > 0
+                                        ? new Date(session.preferredSlot3).toLocaleString()
                                         : "Not submitted"}
                                     </span>
                                   </div>
@@ -1680,7 +1679,7 @@ export default function AdminDashboard() {
                                   <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest block font-bold">
                                     {session.status === "CONFIRMED" ? "Reschedule / Confirm Slot" : "Confirm Slot Booking"}
                                   </span>
-                                  
+
                                   <div className="space-y-3">
                                     <div className="space-y-1">
                                       <label className="text-[10px] font-semibold text-neutral-500">Select Date & Time *</label>
@@ -1792,7 +1791,7 @@ export default function AdminDashboard() {
                   {clientAdvisorySessions.map((session: any) => {
                     const isEditing = editingSessionId === session.id;
                     const defaultMeetLink = session.googleMeetLink || `https://meet.google.com/abc-defg-hij`;
-                    
+
                     return (
                       <div
                         key={session.id}
@@ -1805,12 +1804,11 @@ export default function AdminDashboard() {
                               <h3 className="font-bold text-neutral-950 text-base">
                                 {session.user?.name || "Premium Client"}
                               </h3>
-                              <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold font-mono uppercase tracking-wider ${
-                                session.status === "CONFIRMED" ? "bg-emerald-500/10 text-emerald-700 border border-emerald-500/20" :
-                                session.status === "COMPLETED" ? "bg-blue-500/10 text-blue-700 border border-blue-500/20" :
-                                session.status === "REFUNDED" ? "bg-red-500/10 text-red-700 border border-red-500/20" :
-                                "bg-amber-500/10 text-amber-700 border border-amber-500/20"
-                              }`}>
+                              <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold font-mono uppercase tracking-wider ${session.status === "CONFIRMED" ? "bg-emerald-500/10 text-emerald-700 border border-emerald-500/20" :
+                                  session.status === "COMPLETED" ? "bg-blue-500/10 text-blue-700 border border-blue-500/20" :
+                                    session.status === "REFUNDED" ? "bg-red-500/10 text-red-700 border border-red-500/20" :
+                                      "bg-amber-500/10 text-amber-700 border border-amber-500/20"
+                                }`}>
                                 {session.status}
                               </span>
                             </div>
@@ -1830,24 +1828,24 @@ export default function AdminDashboard() {
                                 <div className="flex items-center justify-between bg-white border border-neutral-100 p-2.5 rounded-xl text-xs font-mono">
                                   <span className="text-neutral-500">Option 1:</span>
                                   <span className="text-neutral-900 font-bold">
-                                    {new Date(session.preferredSlot1).getTime() > 0 
-                                      ? new Date(session.preferredSlot1).toLocaleString() 
+                                    {new Date(session.preferredSlot1).getTime() > 0
+                                      ? new Date(session.preferredSlot1).toLocaleString()
                                       : "Not submitted"}
                                   </span>
                                 </div>
                                 <div className="flex items-center justify-between bg-white border border-neutral-100 p-2.5 rounded-xl text-xs font-mono">
                                   <span className="text-neutral-500">Option 2:</span>
                                   <span className="text-neutral-900 font-bold">
-                                    {new Date(session.preferredSlot2).getTime() > 0 
-                                      ? new Date(session.preferredSlot2).toLocaleString() 
+                                    {new Date(session.preferredSlot2).getTime() > 0
+                                      ? new Date(session.preferredSlot2).toLocaleString()
                                       : "Not submitted"}
                                   </span>
                                 </div>
                                 <div className="flex items-center justify-between bg-white border border-neutral-100 p-2.5 rounded-xl text-xs font-mono">
                                   <span className="text-neutral-500">Option 3:</span>
                                   <span className="text-neutral-900 font-bold">
-                                    {new Date(session.preferredSlot3).getTime() > 0 
-                                      ? new Date(session.preferredSlot3).toLocaleString() 
+                                    {new Date(session.preferredSlot3).getTime() > 0
+                                      ? new Date(session.preferredSlot3).toLocaleString()
                                       : "Not submitted"}
                                   </span>
                                 </div>
@@ -1882,7 +1880,7 @@ export default function AdminDashboard() {
                                 <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest block font-bold">
                                   {session.status === "CONFIRMED" ? "Reschedule / Confirm Slot" : "Confirm Slot Booking"}
                                 </span>
-                                
+
                                 <div className="space-y-3">
                                   <div className="space-y-1">
                                     <label className="text-[10px] font-semibold text-neutral-500">Select Date & Time *</label>
@@ -2238,7 +2236,7 @@ export default function AdminDashboard() {
                 <div className="lg:col-span-6 bg-white border border-neutral-200 rounded-3xl p-6 shadow-sm flex flex-col justify-between relative overflow-hidden min-h-[220px]">
                   <div className="relative z-10 w-full h-full flex flex-col">
                     <span className="text-[10px] md:text-xs font-mono uppercase tracking-widest text-neutral-400 block mb-4">AUM Allocation Breakdown</span>
-                    
+
                     {fetchingAumData ? (
                       <div className="flex-1 flex items-center justify-center text-xs text-neutral-400 font-mono">
                         <span>Loading chart...</span>
@@ -2428,7 +2426,7 @@ export default function AdminDashboard() {
                               {query.message}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap align-top">
-                              <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-[9px] font-bold font-mono uppercase tracking-wider bg-amber-500/10 text-amber-700 border border-amber-500/20" style={query.status === 'RESOLVED' ? {backgroundColor: 'rgba(16,185,129,0.1)', color: '#047857', borderColor: 'rgba(16,185,129,0.2)'} : {}}>
+                              <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-[9px] font-bold font-mono uppercase tracking-wider bg-amber-500/10 text-amber-700 border border-amber-500/20" style={query.status === 'RESOLVED' ? { backgroundColor: 'rgba(16,185,129,0.1)', color: '#047857', borderColor: 'rgba(16,185,129,0.2)' } : {}}>
                                 {query.status}
                               </span>
                             </td>
@@ -2712,8 +2710,8 @@ export default function AdminDashboard() {
                             <div>
                               <span className="text-[10px] text-neutral-500 block uppercase font-mono">Compounding Score</span>
                               <span className={`px-2 py-0.5 rounded text-[9px] font-bold tracking-wider ${p.score.tag === 'ALIGNED' ? 'bg-emerald-500/10 text-emerald-700' :
-                                  p.score.tag === 'MODERATE' ? 'bg-amber-500/10 text-amber-700' :
-                                    'bg-destructive/10 text-destructive'
+                                p.score.tag === 'MODERATE' ? 'bg-amber-500/10 text-amber-700' :
+                                  'bg-destructive/10 text-destructive'
                                 }`}>
                                 {p.score.tag}
                               </span>
@@ -2859,8 +2857,8 @@ export default function AdminDashboard() {
                         </div>
                         <div className="text-right">
                           <span className={`px-2 py-0.5 rounded text-[9px] font-bold font-mono tracking-wider ${l.status === 'CONVERTED' ? 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/20' :
-                              l.status === 'CONTACTED' ? 'bg-amber-500/10 text-amber-700 border border-amber-500/20' :
-                                'bg-neutral-100 text-neutral-600 border border-neutral-200'
+                            l.status === 'CONTACTED' ? 'bg-amber-500/10 text-amber-700 border border-amber-500/20' :
+                              'bg-neutral-100 text-neutral-600 border border-neutral-200'
                             }`}>
                             {l.status}
                           </span>
@@ -3081,14 +3079,14 @@ export default function AdminDashboard() {
                   <DetailField label="Birthday Wish" value={selectedExistingClient.birthdayWish} />
                   <DetailField label="Anniversary" value={selectedExistingClient.anniversary} />
                   <DetailField label="Profession" value={selectedExistingClient.profession} />
-                  <DetailField 
-                    label="Bank Details" 
+                  <DetailField
+                    label="Bank Details"
                     value={(() => {
                       const bankVal = selectedExistingClient.bankDetails;
                       const ifsc = selectedExistingClient.folios?.find((f: any) => f.ifscCode)?.ifscCode;
                       if (!bankVal) return ifsc ? `IFSC: ${ifsc}` : 'N/A';
                       return ifsc ? `${bankVal} | IFSC: ${ifsc}` : bankVal;
-                    })()} 
+                    })()}
                   />
                 </div>
               </div>
