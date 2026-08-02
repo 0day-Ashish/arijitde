@@ -291,15 +291,16 @@ export default function AdminDashboard() {
         const diffDays = (now - uploadTime) / (1000 * 60 * 60 * 24);
 
         if (diffDays >= 14) {
-          let alreadySkippedRecently = false;
+          const cyclesSinceUploadForNow = Math.floor(diffDays / 14);
+
+          let cyclesSinceUploadForSkip = -1;
           if (lastSkip) {
             const skipTime = new Date(lastSkip).getTime();
-            const skipDiffHours = (now - skipTime) / (1000 * 60 * 60);
-            if (skipDiffHours < 24) {
-              alreadySkippedRecently = true;
-            }
+            const diffDaysForSkip = (skipTime - uploadTime) / (1000 * 60 * 60 * 24);
+            cyclesSinceUploadForSkip = Math.floor(diffDaysForSkip / 14);
           }
-          if (!alreadySkippedRecently) {
+
+          if (cyclesSinceUploadForNow > cyclesSinceUploadForSkip) {
             setShowCsvReminder(true);
           } else {
             setShowCsvReminder(false);
