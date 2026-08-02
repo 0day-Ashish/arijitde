@@ -32,7 +32,8 @@ import {
   Trash2,
   Save,
   Eye,
-  HelpCircle
+  HelpCircle,
+  Bell
 } from 'lucide-react';
 
 // Goal Mapping helper
@@ -232,6 +233,11 @@ export default function AdminDashboard() {
 
   const [screenshotModalUrl, setScreenshotModalUrl] = useState<string | null>(null);
 
+  // Notification center state variables
+  const [lastCsvUploadDate, setLastCsvUploadDate] = useState<string | null>(null);
+  const [showCsvReminder, setShowCsvReminder] = useState(false);
+  const [showNotificationsDropdown, setShowNotificationsDropdown] = useState(false);
+
   // Custom Confirm Modal state
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
@@ -271,6 +277,51 @@ export default function AdminDashboard() {
       window.location.href = '/onboarding';
     }
   }, []);
+
+  // 1b. Check for CSV Upload reminder (14 days threshold)
+  useEffect(() => {
+    const checkCsvReminder = () => {
+      const lastUpload = localStorage.getItem('lastClientCsvUploadDate');
+      const lastSkip = localStorage.getItem('skippedReminderDate');
+      setLastCsvUploadDate(lastUpload);
+
+      if (lastUpload) {
+        const uploadTime = new Date(lastUpload).getTime();
+        const now = new Date().getTime();
+        const diffDays = (now - uploadTime) / (1000 * 60 * 60 * 24);
+
+        if (diffDays >= 14) {
+          let alreadySkippedRecently = false;
+          if (lastSkip) {
+            const skipTime = new Date(lastSkip).getTime();
+            const skipDiffHours = (now - skipTime) / (1000 * 60 * 60);
+            if (skipDiffHours < 24) {
+              alreadySkippedRecently = true;
+            }
+          }
+          if (!alreadySkippedRecently) {
+            setShowCsvReminder(true);
+          } else {
+            setShowCsvReminder(false);
+          }
+        } else {
+          setShowCsvReminder(false);
+        }
+      } else {
+        // If there's no upload at all, trigger reminder to upload first client CSV
+        setShowCsvReminder(true);
+      }
+    };
+
+    checkCsvReminder();
+    const interval = setInterval(checkCsvReminder, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleSkipReminder = () => {
+    localStorage.setItem('skippedReminderDate', new Date().toISOString());
+    setShowCsvReminder(false);
+  };
 
   // 2. Fetch Data when token is ready
   useEffect(() => {
@@ -499,6 +550,10 @@ export default function AdminDashboard() {
       }
 
       alert(resData.message || 'Existing client database imported successfully!');
+      const nowStr = new Date().toISOString();
+      localStorage.setItem('lastClientCsvUploadDate', nowStr);
+      setLastCsvUploadDate(nowStr);
+      setShowCsvReminder(false);
       existingClientsPage === 1 ? fetchExistingClients(1, existingClientsSearchQuery) : setExistingClientsPage(1);
       await fetchAdminData();
     } catch (err: any) {
@@ -1096,6 +1151,76 @@ export default function AdminDashboard() {
             <span className="text-[10px] text-neutral-500 font-mono uppercase tracking-wider">Authenticated Admin</span>
             <span className="text-xs font-semibold text-neutral-900">{adminUser?.email}</span>
           </div>
+
+          {/* Notification Bell with Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setShowNotificationsDropdown(!showNotificationsDropdown)}
+              className="p-2 border border-neutral-200 bg-white rounded-xl hover:bg-neutral-100 transition-all duration-200 cursor-pointer relative text-neutral-600 hover:text-neutral-900"
+              title="Notifications"
+            >
+              <Bell className="w-4 h-4" />
+              {showCsvReminder && (
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-white" />
+              )}
+            </button>
+
+            {showNotificationsDropdown && (
+              <div className="absolute right-0 mt-2 w-80 bg-white border border-neutral-200 rounded-2xl shadow-xl z-50 p-4 animate-in fade-in duration-200 text-left">
+                <div className="flex items-center justify-between border-b border-neutral-100 pb-2 mb-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-900 font-clash">Notifications</h4>
+                  <span className="text-[10px] text-neutral-500 font-mono bg-neutral-100 px-2 py-0.5 rounded-full font-bold">
+                    {showCsvReminder ? '1 New' : '0 New'}
+                  </span>
+                </div>
+                
+                {showCsvReminder ? (
+                  <div className="space-y-3">
+                    <div className="p-3 bg-red-50/50 border border-red-200/50 rounded-xl">
+                      <div className="flex gap-2">
+                        <div className="p-1 bg-red-100 text-red-600 rounded-lg h-fit">
+                          <Bell className="w-3.5 h-3.5 animate-bounce" />
+                        </div>
+                        <div className="flex-1">
+                          <h5 className="text-xs font-bold text-neutral-900">CSV Reupload Reminder</h5>
+                          <p className="text-[11px] text-neutral-600 mt-1 font-medium leading-relaxed">
+                            It has been more than 14 days since the last client database import. Please upload the latest client CSV to keep the score comparisons updated.
+                          </p>
+                          {lastCsvUploadDate && (
+                            <span className="text-[9px] text-neutral-400 font-mono mt-1 block">
+                              Last Upload: {new Date(lastCsvUploadDate).toLocaleDateString('en-IN', { dateStyle: 'medium' })}
+                            </span>
+                          )}
+                          <div className="flex gap-2 mt-2.5">
+                            <button
+                              onClick={() => {
+                                setActiveTab('existingClients');
+                                setShowNotificationsDropdown(false);
+                              }}
+                              className="px-2.5 py-1 text-[10px] font-bold bg-neutral-900 hover:bg-neutral-800 text-white rounded-lg transition duration-200 cursor-pointer"
+                            >
+                              Upload Now
+                            </button>
+                            <button
+                              onClick={handleSkipReminder}
+                              className="px-2.5 py-1 text-[10px] font-bold border border-neutral-200 hover:bg-neutral-50 text-neutral-600 rounded-lg transition duration-200 cursor-pointer"
+                            >
+                              Skip
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="py-6 text-center text-xs text-neutral-400 font-medium">
+                    No new notifications
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           <button
             onClick={() => {
               setConfirmModal({
@@ -3142,6 +3267,56 @@ export default function AdminDashboard() {
               >
                 Confirm
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating CSV Upload Reminder Toast */}
+      {showCsvReminder && (
+        <div className="fixed bottom-6 right-6 w-96 bg-white border border-neutral-200 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.12)] p-4 z-50 animate-in slide-in-from-bottom duration-300">
+          <div className="flex gap-3">
+            <div className="p-2 bg-amber-100 text-amber-600 rounded-xl h-fit">
+              <Bell className="w-5 h-5 animate-pulse" />
+            </div>
+            <div className="flex-1 text-left">
+              <div className="flex justify-between items-start">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-900 font-clash">CSV Reupload Reminder</h4>
+                <button
+                  onClick={() => setShowCsvReminder(false)}
+                  className="text-neutral-400 hover:text-neutral-900 transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <p className="text-xs text-neutral-600 mt-1.5 font-medium leading-relaxed">
+                It has been 14+ days since the last existing clients CSV upload. Please upload the new CSV to ensure telemetry scoring remains accurate.
+              </p>
+              {lastCsvUploadDate && (
+                <span className="text-[10px] text-neutral-400 font-mono mt-1 block">
+                  Last upload: {new Date(lastCsvUploadDate).toLocaleDateString('en-IN', { dateStyle: 'medium' })}
+                </span>
+              )}
+              <div className="flex gap-2.5 mt-3">
+                <button
+                  onClick={() => {
+                    setActiveTab('existingClients');
+                    const element = document.getElementById('existing-client-csv-upload');
+                    if (element) {
+                      element.click();
+                    }
+                  }}
+                  className="px-3 py-1.5 text-[11px] font-bold bg-neutral-900 hover:bg-neutral-800 text-white rounded-lg transition duration-200 cursor-pointer shadow-sm"
+                >
+                  Upload Now
+                </button>
+                <button
+                  onClick={handleSkipReminder}
+                  className="px-3 py-1.5 text-[11px] font-bold border border-neutral-200 hover:bg-neutral-50 text-neutral-600 rounded-lg transition duration-200 cursor-pointer"
+                >
+                  Skip Reminder
+                </button>
+              </div>
             </div>
           </div>
         </div>
