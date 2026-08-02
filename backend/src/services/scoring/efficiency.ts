@@ -6,6 +6,7 @@ import {
   getCategoryBenchmarkReturn,
   CATEGORY_TOP_PERFORMERS,
   calculate1YReturn,
+  getSchemeNAV,
 } from '../amfiService';
 
 /**
@@ -70,10 +71,11 @@ export async function scoreDimension(
       const category = detectFundCategory(row.fundName);
       const topPerformer = CATEGORY_TOP_PERFORMERS[category] || CATEGORY_TOP_PERFORMERS['default']!;
       
-      const [fundResult, benchmarkReturn, bestReturn] = await Promise.all([
+      const [fundResult, benchmarkReturn, bestReturn, bestFundData] = await Promise.all([
         getFundReturn(row.fundName),
         getCategoryBenchmarkReturn(category),
         calculate1YReturn(topPerformer.code),
+        getSchemeNAV(topPerformer.code),
       ]);
       return {
         fundName: row.fundName,
@@ -83,7 +85,7 @@ export async function scoreDimension(
         bestReturn,
         invested: row.invested,
         currentValue: row.currentValue,
-        bestFundName: topPerformer.name,
+        bestFundName: bestFundData?.meta?.scheme_name || topPerformer.name,
       };
     });
 

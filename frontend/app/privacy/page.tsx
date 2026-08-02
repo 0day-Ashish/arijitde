@@ -100,7 +100,7 @@ export default function PrivacyPolicy() {
       title: "Contact & Inquiries",
       content: (
         <p className="font-sans text-sm text-muted-foreground leading-relaxed">
-          If you have questions regarding this Privacy Policy, data handling, or wish to invoke your rights of deletion/access, please write to us at <strong className="text-primary font-semibold">contact@finanalysis.in</strong>.
+          If you have questions regarding this Privacy Policy, data handling, or wish to invoke your rights of deletion/access, please write to us at <strong className="text-primary font-semibold">arijit1504@gmail.com</strong>.
         </p>
       )
     }

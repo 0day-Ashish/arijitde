@@ -67,8 +67,8 @@ export default function Footer({ footerRef }: FooterProps) {
           {/* General Enquiries */}
           <div className="flex flex-col items-center gap-2.5">
             <span className="text-primary font-bold text-base md:text-lg">General Enquiries</span>
-            <a href="mailto:contact@finanalysis.in" className="text-muted-foreground hover:text-primary transition duration-200 underline decoration-primary/30 underline-offset-4 font-normal">
-              contact@finanalysis.in
+            <a href="mailto:arijit1504@gmail.com" className="text-muted-foreground hover:text-primary transition duration-200 underline decoration-primary/30 underline-offset-4 font-normal">
+              arijit1504@gmail.com
             </a>
             <a href="https://wa.me/919831093297" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition duration-200 underline decoration-primary/30 underline-offset-4 font-normal">
               Book a call
@@ -110,8 +110,8 @@ export default function Footer({ footerRef }: FooterProps) {
             <h3 className="font-instrument-serif text-xl sm:text-3xl font-bold text-amber-800">New investment?</h3>
             <p className="font-chillax text-base sm:text-xl text-neutral-800 leading-relaxed">
               Reach out today to Arijit De for new financial enquiries at{" "}
-              <a href="mailto:contact@finanalysis.in" className="text-amber-700 hover:text-amber-900 hover:underline font-semibold font-chillax">
-                contact@finanalysis.in
+              <a href="mailto:arijit1504@gmail.com" className="text-amber-700 hover:text-amber-900 hover:underline font-semibold font-chillax">
+                arijit1504@gmail.com
               </a>
             </p>
           </div>

@@ -1591,15 +1591,15 @@ export default function Home() {
                   <div className="flex flex-col gap-1">
                     <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Prefer to email?</span>
                     <a
-                      href="mailto:contact@finanalysis.in"
+                      href="mailto:arijit1504@gmail.com"
                       className="text-sm font-semibold hover:underline text-primary font-mono"
                     >
-                      contact@finanalysis.in
+                      arijit1504@gmail.com
                     </a>
                   </div>
 
                   <a
-                    href="mailto:contact@finanalysis.in"
+                    href="mailto:arijit1504@gmail.com"
                     className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:scale-110 hover:bg-primary/90 active:scale-95 transition-all duration-300 shadow-md cursor-pointer flex-shrink-0"
                     aria-label="Send email"
                   >
