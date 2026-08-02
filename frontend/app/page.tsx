@@ -155,6 +155,13 @@ export default function Home() {
   const scrollVideoContainerRef = useRef<HTMLDivElement | null>(null);
   const scrollVideoRef = useRef<HTMLVideoElement | null>(null);
 
+  const scrollToFaq = () => {
+    const faqElement = document.getElementById("faq");
+    if (faqElement) {
+      faqElement.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
 
 
   // Daily Rewards Section States
@@ -525,20 +532,20 @@ export default function Home() {
             </div>
 
             {/* Expanding Options */}
-            <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10 text-left select-text relative z-10">
+            <div className="w-full grid grid-cols-1 xl:grid-cols-3 gap-8 xl:gap-10 text-left select-text relative z-10">
               {/* 01: About Us */}
               <div className="flex flex-col">
                 <button
                   onClick={() => setExpandedOption(expandedOption === "about" ? null : "about")}
                   className="group flex items-baseline gap-3 focus:outline-none cursor-pointer text-left"
                 >
-                  <span className={`text-xs md:text-sm font-mono transition duration-200 ${expandedOption === "about" ? "text-primary" : "text-muted-foreground group-hover:text-primary"}`}>01</span>
-                  <span className={`font-instrument-serif text-2xl md:text-4xl font-bold tracking-tight transition duration-200 ${expandedOption === "about" ? "text-primary" : "text-foreground group-hover:text-primary"}`}>
+                  <span className={`text-xs xl:text-sm font-mono transition duration-200 ${expandedOption === "about" ? "text-primary" : "text-muted-foreground group-hover:text-primary"}`}>01</span>
+                  <span className={`font-instrument-serif text-2xl xl:text-4xl font-bold tracking-tight transition duration-200 ${expandedOption === "about" ? "text-primary" : "text-foreground group-hover:text-primary"}`}>
                     About Us
                     <GoArrowDownRight className="inline-block ml-2 align-middle transition-transform duration-300 group-hover:translate-x-1 group-hover:translate-y-1" />
                   </span>
                 </button>
-                <div className={`grid md:hidden transition-all duration-350 ease-in-out overflow-hidden text-sm text-foreground font-bold ${expandedOption === "about" ? "grid-rows-[1fr] mt-2.5 opacity-100" : "grid-rows-[0fr] opacity-0"
+                <div className={`grid xl:hidden transition-all duration-350 ease-in-out overflow-hidden text-sm text-foreground font-bold ${expandedOption === "about" ? "grid-rows-[1fr] mt-2.5 opacity-100" : "grid-rows-[0fr] opacity-0"
                   }`}>
                   <div className="overflow-hidden space-y-2.5 font-sans pr-4 leading-relaxed font-bold text-foreground text-sm">
                     <img
@@ -559,13 +566,13 @@ export default function Home() {
                   onClick={() => setExpandedOption(expandedOption === "services" ? null : "services")}
                   className="group flex items-baseline gap-3 focus:outline-none cursor-pointer text-left"
                 >
-                  <span className={`text-xs md:text-sm font-mono transition duration-200 ${expandedOption === "services" ? "text-primary" : "text-muted-foreground group-hover:text-primary"}`}>02</span>
-                  <span className={`font-instrument-serif text-2xl md:text-4xl font-bold tracking-tight transition duration-200 ${expandedOption === "services" ? "text-primary" : "text-foreground group-hover:text-primary"}`}>
+                  <span className={`text-xs xl:text-sm font-mono transition duration-200 ${expandedOption === "services" ? "text-primary" : "text-muted-foreground group-hover:text-primary"}`}>02</span>
+                  <span className={`font-instrument-serif text-2xl xl:text-4xl font-bold tracking-tight transition duration-200 ${expandedOption === "services" ? "text-primary" : "text-foreground group-hover:text-primary"}`}>
                     What we provide
                     <GoArrowDownRight className="inline-block ml-2 align-middle transition-transform duration-300 group-hover:translate-x-1 group-hover:translate-y-1" />
                   </span>
                 </button>
-                <div className={`grid md:hidden transition-all duration-350 ease-in-out overflow-hidden text-sm text-foreground font-bold ${expandedOption === "services" ? "grid-rows-[1fr] mt-2.5 opacity-100" : "grid-rows-[0fr] opacity-0"
+                <div className={`grid xl:hidden transition-all duration-350 ease-in-out overflow-hidden text-sm text-foreground font-bold ${expandedOption === "services" ? "grid-rows-[1fr] mt-2.5 opacity-100" : "grid-rows-[0fr] opacity-0"
                   }`}>
                   <div className="overflow-hidden space-y-4 font-sans pr-4 leading-relaxed font-bold text-foreground text-sm">
                     <div className="flex flex-col gap-4 mt-2 w-full">
@@ -637,7 +644,10 @@ export default function Home() {
                                 mobileActiveLevel2 === "fd" ? "max-h-[200px] opacity-100 mt-2" : "max-h-0 opacity-0 pointer-events-none"
                               }`}>
                                 <div className="pl-4 border-l-2 border-amber-500/30">
-                                  <div className="p-3.5 rounded-xl border border-amber-500/25 bg-gradient-to-br from-amber-500/10 via-white/45 to-amber-500/5 text-left">
+                                  <div 
+                                    className="p-3.5 rounded-xl border border-amber-500/25 bg-gradient-to-br from-amber-500/10 via-white/45 to-amber-500/5 text-left cursor-pointer active:scale-[0.98] transition-all duration-200 select-none"
+                                    onClick={scrollToFaq}
+                                  >
                                     <span className="text-[7px] font-mono text-amber-800 tracking-wider uppercase font-bold bg-amber-500/20 px-1.5 py-0.5 rounded-full">
                                       Fixed Return
                                     </span>
@@ -680,7 +690,7 @@ export default function Home() {
 
                               {/* Level 3: Under MF */}
                               <div className={`transition-all duration-500 ease-in-out overflow-hidden ${
-                                mobileActiveLevel2 === "mf" ? "max-h-[500px] opacity-100 mt-2" : "max-h-0 opacity-0 pointer-events-none"
+                                mobileActiveLevel2 === "mf" ? "max-h-[800px] opacity-100 mt-2" : "max-h-0 opacity-0 pointer-events-none"
                               }`}>
                                 <div className="pl-4 border-l-2 border-amber-500/30 grid grid-cols-1 gap-2.5">
                                   {[
@@ -689,7 +699,11 @@ export default function Home() {
                                     { title: "PMS", desc: "Portfolio Management Services for customized asset allocation." },
                                     { title: "Lumpsum", desc: "Compounding one-time principal investments over any tenure." }
                                   ].map((sub, i) => (
-                                    <div key={i} className="p-4 rounded-xl border border-amber-500/25 bg-gradient-to-br from-amber-500/10 via-white/45 to-amber-500/5 text-left">
+                                    <div 
+                                      key={i} 
+                                      className="p-4 rounded-xl border border-amber-500/25 bg-gradient-to-br from-amber-500/10 via-white/45 to-amber-500/5 text-left cursor-pointer active:scale-[0.98] transition-all duration-200 select-none"
+                                      onClick={scrollToFaq}
+                                    >
                                       <span className="text-[7px] font-mono text-amber-800 tracking-wider uppercase font-bold bg-amber-500/20 px-1.5 py-0.5 rounded-full">
                                         Growth
                                       </span>
@@ -706,7 +720,10 @@ export default function Home() {
                       </div>
 
                       {/* Level 1: Life Insurance */}
-                      <div className="w-full p-5 rounded-2xl border border-amber-500/20 bg-gradient-to-br from-white/50 via-white/35 to-amber-500/5 shadow-[0_10px_25px_rgba(245,158,11,0.04)] text-left relative overflow-hidden">
+                      <div 
+                        className="w-full p-5 rounded-2xl border border-amber-500/20 bg-gradient-to-br from-white/50 via-white/35 to-amber-500/5 shadow-[0_10px_25px_rgba(245,158,11,0.04)] text-left relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all duration-200 select-none"
+                        onClick={scrollToFaq}
+                      >
                         <div className="absolute top-0 right-0 w-12 h-12 bg-amber-400/5 rounded-full blur-lg pointer-events-none" />
                         <span className="text-[8px] font-mono text-amber-700 tracking-wider uppercase font-bold bg-amber-500/10 px-2 py-0.5 rounded-full w-fit">
                           Risk Mitigation
@@ -730,13 +747,13 @@ export default function Home() {
                   onClick={() => setExpandedOption(expandedOption === "why-us" ? null : "why-us")}
                   className="group flex items-baseline gap-3 focus:outline-none cursor-pointer text-left"
                 >
-                  <span className={`text-xs md:text-sm font-mono transition duration-200 ${expandedOption === "why-us" ? "text-primary" : "text-muted-foreground group-hover:text-primary"}`}>03</span>
-                  <span className={`font-instrument-serif text-2xl md:text-4xl font-bold tracking-tight transition duration-200 ${expandedOption === "why-us" ? "text-primary" : "text-foreground group-hover:text-primary"}`}>
+                  <span className={`text-xs xl:text-sm font-mono transition duration-200 ${expandedOption === "why-us" ? "text-primary" : "text-muted-foreground group-hover:text-primary"}`}>03</span>
+                  <span className={`font-instrument-serif text-2xl xl:text-4xl font-bold tracking-tight transition duration-200 ${expandedOption === "why-us" ? "text-primary" : "text-foreground group-hover:text-primary"}`}>
                     Why we exist
                     <GoArrowDownRight className="inline-block ml-2 align-middle transition-transform duration-300 group-hover:translate-x-1 group-hover:translate-y-1" />
                   </span>
                 </button>
-                <div className={`grid md:hidden transition-all duration-350 ease-in-out overflow-hidden text-sm text-foreground font-bold ${expandedOption === "why-us" ? "grid-rows-[1fr] mt-2.5 opacity-100" : "grid-rows-[0fr] opacity-0"
+                <div className={`grid xl:hidden transition-all duration-350 ease-in-out overflow-hidden text-sm text-foreground font-bold ${expandedOption === "why-us" ? "grid-rows-[1fr] mt-2.5 opacity-100" : "grid-rows-[0fr] opacity-0"
                   }`}>
                   <div className="overflow-hidden space-y-2.5 font-sans pr-4 leading-relaxed font-bold text-foreground text-sm">
                     <img
@@ -753,8 +770,8 @@ export default function Home() {
             </div>
 
             {/* Desktop Full-Width Expanded Content */}
-            <div className={`hidden md:grid transition-all duration-350 ease-in-out overflow-hidden w-full ${expandedOption ? "grid-rows-[1fr] mt-10 opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
-              <div className="overflow-hidden w-full grid grid-cols-1 grid-rows-1">
+            <div className={`hidden xl:grid transition-all duration-350 ease-in-out w-full ${expandedOption ? "grid-rows-[1fr] mt-10 opacity-100 overflow-visible" : "grid-rows-[0fr] opacity-0 overflow-hidden"}`}>
+              <div className={`w-full grid grid-cols-1 grid-rows-1 ${expandedOption ? "overflow-visible" : "overflow-hidden"}`}>
                 {/* 01: About Us */}
                 <div className={`col-start-1 row-start-1 transition-all duration-500 ease-in-out ${expandedOption === "about" ? "opacity-100 pointer-events-auto scale-100 translate-y-0" : "opacity-0 pointer-events-none scale-95 -translate-y-2"}`}>
                   <div className="flex flex-col items-center justify-center gap-8 max-w-5xl mx-auto text-center">
@@ -772,11 +789,11 @@ export default function Home() {
                 {/* 02: Services */}
                 <div className={`col-start-1 row-start-1 transition-all duration-500 ease-in-out ${expandedOption === "services" ? "opacity-100 pointer-events-auto scale-100 translate-y-0" : "opacity-0 pointer-events-none scale-95 -translate-y-2"}`}>
                   <div className="flex flex-col items-center justify-start gap-8 max-w-5xl mx-auto text-center w-full min-h-[520px]">
-                    <div className="flex flex-row justify-center items-start gap-12 w-full mt-4">
+                    <div className="grid grid-cols-2 gap-16 lg:gap-28 w-full mt-4 justify-items-center items-start">
                       
                       {/* Investments Branch container (wraps Level 1, 2, and 3) */}
                       <div
-                        className="flex flex-col items-center animate-in fade-in duration-300"
+                        className="flex flex-col items-center animate-in fade-in duration-300 w-max xl:pl-16"
                         onMouseEnter={() => setActiveHoverLevel1("investments")}
                         onMouseLeave={() => {
                           setActiveHoverLevel1(null);
@@ -784,7 +801,7 @@ export default function Home() {
                         }}
                       >
                         {/* Level 1 Investments Box */}
-                        <div className={`p-6 w-80 rounded-3xl border transition-all duration-300 text-left relative overflow-hidden select-none cursor-pointer ${
+                        <div className={`p-6 w-80 min-w-[320px] max-w-[320px] min-h-[170px] rounded-3xl border transition-all duration-300 text-left relative overflow-hidden select-none cursor-pointer ${
                           activeHoverLevel1 === "investments"
                             ? "bg-amber-500/10 border-amber-500/40 shadow-lg scale-[1.02]"
                             : "border-amber-500/20 bg-gradient-to-br from-white/50 via-white/35 to-amber-500/5 shadow-[0_20px_50px_rgba(245,158,11,0.08)] hover:scale-[1.01]"
@@ -820,7 +837,7 @@ export default function Home() {
                             onMouseLeave={() => setActiveHoverLevel2(null)}
                           >
                             {/* FD Box */}
-                            <div className={`p-6 w-72 rounded-3xl border transition-all duration-300 text-left relative overflow-hidden select-none cursor-pointer ${
+                            <div className={`p-6 w-72 min-w-[288px] max-w-[288px] rounded-3xl border transition-all duration-300 text-left relative overflow-hidden select-none cursor-pointer ${
                               activeHoverLevel2 === "fd"
                                 ? "bg-amber-500/10 border-amber-500/40 shadow-md scale-[1.02]"
                                 : "border-amber-500/20 bg-gradient-to-br from-white/50 via-white/35 to-amber-500/5 shadow-[0_15px_35px_rgba(245,158,11,0.06)] hover:scale-[1.01]"
@@ -847,7 +864,10 @@ export default function Home() {
                                 ? "opacity-100 scale-100 max-h-[300px] translate-y-0"
                                 : "opacity-0 scale-95 max-h-0 -translate-y-4 overflow-hidden pointer-events-none"
                             }`}>
-                              <div className="p-5 w-64 rounded-2xl border border-amber-500/25 bg-gradient-to-br from-amber-500/10 via-white/45 to-amber-500/5 shadow-[0_15px_30px_rgba(245,158,11,0.1)] backdrop-blur-2xl text-left relative overflow-hidden">
+                              <div 
+                                className="p-5 w-64 rounded-2xl border border-amber-500/25 bg-gradient-to-br from-amber-500/10 via-white/45 to-amber-500/5 shadow-[0_15px_30px_rgba(245,158,11,0.1)] backdrop-blur-2xl text-left relative overflow-hidden cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 select-none"
+                                onClick={scrollToFaq}
+                              >
                                 <span className="text-[8px] font-mono text-amber-800 tracking-wider uppercase font-bold bg-amber-500/20 px-2 py-0.5 rounded-full w-fit">
                                   Fixed Return
                                 </span>
@@ -868,7 +888,7 @@ export default function Home() {
                             onMouseLeave={() => setActiveHoverLevel2(null)}
                           >
                             {/* MF Box */}
-                            <div className={`p-6 w-72 rounded-3xl border transition-all duration-300 text-left relative overflow-hidden select-none cursor-pointer ${
+                            <div className={`p-6 w-72 min-w-[288px] max-w-[288px] rounded-3xl border transition-all duration-300 text-left relative overflow-hidden select-none cursor-pointer ${
                               activeHoverLevel2 === "mf"
                                 ? "bg-amber-500/10 border-amber-500/40 shadow-md scale-[1.02]"
                                 : "border-amber-500/20 bg-gradient-to-br from-white/50 via-white/35 to-amber-500/5 shadow-[0_15px_35px_rgba(245,158,11,0.06)] hover:scale-[1.01]"
@@ -895,19 +915,23 @@ export default function Home() {
                                 ? "opacity-100 scale-100 max-h-[500px] translate-y-0"
                                 : "opacity-0 scale-95 max-h-0 -translate-y-4 overflow-hidden pointer-events-none"
                             }`}>
-                              <div className="grid grid-cols-2 gap-4 w-[460px]">
+                              <div className="grid grid-cols-2 gap-4 w-[580px]">
                                 {[
                                   { title: "SIP", desc: "Systematic investments for long-term compound growth." },
                                   { title: "SIF", desc: "Specialized Investment Funds with hurdle targets." },
                                   { title: "PMS", desc: "Portfolio Management Services for customized asset allocation." },
                                   { title: "Lumpsum", desc: "Compounding one-time principal investments over any tenure." }
                                 ].map((sub, i) => (
-                                  <div key={i} className="p-5 rounded-2xl border border-amber-500/25 bg-gradient-to-br from-amber-500/10 via-white/45 to-amber-500/5 shadow-[0_15px_30px_rgba(245,158,11,0.1)] backdrop-blur-2xl text-left relative overflow-hidden">
+                                  <div 
+                                    key={i} 
+                                    className="p-5 min-h-[145px] rounded-3xl border border-amber-500/25 bg-gradient-to-br from-amber-500/10 via-white/45 to-amber-500/5 shadow-[0_15px_30px_rgba(245,158,11,0.1)] backdrop-blur-2xl text-left relative overflow-hidden select-none cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
+                                    onClick={scrollToFaq}
+                                  >
                                     <span className="text-[8px] font-mono text-amber-800 tracking-wider uppercase font-bold bg-amber-500/20 px-2 py-0.5 rounded-full w-fit">
                                       Growth
                                     </span>
-                                    <h5 className="text-sm font-bold text-primary font-clash mt-2.5 mb-1">{sub.title}</h5>
-                                    <p className="text-xs text-muted-foreground leading-normal font-sans font-medium">{sub.desc}</p>
+                                    <h5 className="text-base font-bold text-primary font-clash mt-3 mb-1">{sub.title}</h5>
+                                    <p className="text-xs text-muted-foreground leading-relaxed font-sans font-medium">{sub.desc}</p>
                                   </div>
                                 ))}
                               </div>
@@ -919,7 +943,10 @@ export default function Home() {
 
                       {/* Life Insurance Box Branch (Level 1 only) */}
                       <div className="flex flex-col items-center">
-                        <div className="p-6 w-80 rounded-3xl border border-amber-500/20 bg-gradient-to-br from-white/50 via-white/35 to-amber-500/5 shadow-[0_20px_50px_rgba(245,158,11,0.08)] backdrop-blur-2xl text-left relative overflow-hidden select-none cursor-default hover:scale-[1.01] transition-transform duration-300">
+                        <div 
+                          className="p-6 w-80 min-w-[320px] max-w-[320px] min-h-[170px] rounded-3xl border border-amber-500/20 bg-gradient-to-br from-white/50 via-white/35 to-amber-500/5 shadow-[0_20px_50px_rgba(245,158,11,0.08)] backdrop-blur-2xl text-left relative overflow-hidden select-none cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
+                          onClick={scrollToFaq}
+                        >
                           <div className="absolute top-0 right-0 w-16 h-16 bg-amber-400/5 rounded-full blur-xl pointer-events-none" />
                           <span className="text-[9px] font-mono text-amber-700 tracking-wider uppercase font-bold bg-amber-500/10 px-2 py-0.5 rounded-full w-fit">
                             Risk Mitigation
