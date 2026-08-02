@@ -332,6 +332,45 @@ export default function ClientDashboard() {
 
   const [currentTime, setCurrentTime] = useState("");
 
+  // Computed values for portfolio totals and breakdowns (either certified client data or active portfolio fallback)
+  const hasExistingClientData = !!(existingClientData && (existingClientData.aum || existingClientData.currentValue || 0) > 0);
+  const hasActivePortfolioData = !!(activePortfolio && activePortfolio.rows && activePortfolio.rows.length > 0);
+  
+  const currentVal = (() => {
+    if (hasExistingClientData) {
+      return existingClientData.aum || existingClientData.currentValue || 0;
+    }
+    if (hasActivePortfolioData) {
+      return activePortfolio.rows.reduce((sum: number, r: any) => sum + (r.currentValue || 0), 0);
+    }
+    return 0;
+  })();
+
+  const investedVal = (() => {
+    if (existingClientData && (existingClientData.purchaseValue || 0) > 0) {
+      return existingClientData.purchaseValue;
+    }
+    if (hasActivePortfolioData) {
+      return activePortfolio.rows.reduce((sum: number, r: any) => sum + (r.invested || 0), 0);
+    }
+    return 0;
+  })();
+
+  const unifiedFolios = (() => {
+    if (existingClientData && existingClientData.folios && existingClientData.folios.length > 0) {
+      return existingClientData.folios;
+    }
+    if (hasActivePortfolioData) {
+      return activePortfolio.rows.map((r: any) => ({
+        schemeName: r.fundName || 'Unknown Scheme',
+        purchaseValue: r.invested || 0,
+        aum: r.currentValue || 0,
+        units: 0
+      }));
+    }
+    return [];
+  })();
+
   // View full scorecard inline toggle
   const [viewFullReport, setViewFullReport] = useState(false);
 
@@ -1586,12 +1625,7 @@ export default function ClientDashboard() {
                 <div className="absolute top-0 right-0 w-24 h-24 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
                 <div className="absolute bottom-0 left-0 w-24 h-24 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
 
-                <div className="flex justify-between items-center relative z-10">
-                  <span className="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-700 font-mono text-[9px] font-bold tracking-wider uppercase">
-                    {PLAN_LABELS[userData?.client?.activePlan || "PREMIUM"]}
-                  </span>
-                  <Award className="w-4 h-4 text-amber-600 animate-pulse" />
-                </div>
+
 
                 <div className="space-y-1 relative z-10">
                   <h2 className="text-xl font-semibold text-neutral-900 tracking-wide font-clash">
@@ -1612,19 +1646,20 @@ export default function ClientDashboard() {
                   <div className="flex justify-between font-mono items-start">
                     <span className="text-[9px] font-mono text-amber-700 tracking-widest uppercase font-bold mt-1">Total AUM:</span>
                     <div className="text-right">
-                      <span className="text-lg font-bold text-neutral-900 font-mono block">
-                        ₹{(existingClientData?.aum || existingClientData?.currentValue || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </span>
                       {(() => {
-                        const currentVal = existingClientData?.aum || existingClientData?.currentValue || 0;
-                        const investedVal = existingClientData?.purchaseValue || 0;
                         const totalGain = currentVal - investedVal;
                         const totalGainPercent = investedVal > 0 ? (totalGain / investedVal) * 100 : 0;
                         const isProfit = totalGain >= 0;
+
                         return (
-                          <span className={`text-xs font-bold font-mono ${isProfit ? 'text-emerald-600' : 'text-rose-600'}`}>
-                            ({isProfit ? '+' : ''}{totalGainPercent.toFixed(2)}%)
-                          </span>
+                          <>
+                            <span className="text-lg font-bold text-neutral-900 font-mono block">
+                              ₹{currentVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                            <span className={`text-xs font-bold font-mono ${isProfit ? 'text-emerald-600' : 'text-rose-600'}`}>
+                              ({isProfit ? '+' : ''}{totalGainPercent.toFixed(2)}%)
+                            </span>
+                          </>
                         );
                       })()}
                     </div>
@@ -1636,36 +1671,10 @@ export default function ClientDashboard() {
 
 
 
-            {/* Daily Wisdom card */}
-            <div className="w-full p-8 rounded-3xl bg-gradient-to-br from-amber-100/40 via-white/30 to-amber-500/10 backdrop-blur-2xl border border-amber-500/30 shadow-[0_20px_50px_rgba(245,158,11,0.12)] flex flex-col justify-between items-center text-center overflow-hidden relative min-h-[220px] animate-in fade-in duration-300">
-                {/* Decorative glowing background gradients */}
-                <div className="absolute top-0 right-0 w-24 h-24 bg-amber-400/20 rounded-full blur-2xl pointer-events-none" />
-                <div className="absolute bottom-0 left-0 w-24 h-24 bg-amber-400/20 rounded-full blur-2xl pointer-events-none" />
 
-                {/* Floating typographic quotes */}
-                <span className="absolute left-6 top-12 text-7xl font-serif text-amber-500/10 leading-none pointer-events-none select-none">“</span>
-                <span className="absolute right-6 bottom-12 text-7xl font-serif text-amber-500/10 leading-none pointer-events-none select-none">”</span>
 
-                <div className="w-full flex justify-between items-center border-b border-amber-500/10 pb-2 relative z-10">
-                  <span className="text-[9px] font-mono text-amber-700 tracking-widest uppercase font-bold flex items-center gap-1">
-                    <Sparkles className="w-3 h-3 text-amber-600 animate-pulse" />
-                    Daily Wisdom
-                  </span>
-                  <span className="text-[9px] font-mono text-amber-600/60 uppercase font-bold">ACTIVE FOR 24H</span>
-                </div>
-
-                <div className="my-auto py-6 relative z-10">
-                  <p className="text-base md:text-lg font-medium italic leading-relaxed text-neutral-900 font-clash">
-                    "{quotesList[new Date().getDate() % quotesList.length]?.text}"
-                  </p>
-                  <span className="block text-right text-[10px] text-amber-700 font-mono mt-2 mr-4 font-bold tracking-wider">
-                    — {quotesList[new Date().getDate() % quotesList.length]?.author}
-                  </span>
-                </div>
-              </div>
-
-            {/* Official Portfolio Valuation (Admin Certified) */}
-            {existingClientData && (
+            {/* Official Portfolio Valuation (Admin Certified or Active Portfolio) */}
+            {(hasExistingClientData || hasActivePortfolioData) && (
               <div className="bg-gradient-to-br from-white/50 via-white/35 to-amber-500/5 backdrop-blur-2xl border border-amber-500/20 shadow-[0_20px_50px_rgba(245,158,11,0.08)] rounded-3xl p-6 space-y-6 animate-in fade-in duration-300 relative overflow-hidden">
                   {/* Decorative glowing background gradients */}
                   <div className="absolute top-0 right-0 w-32 h-32 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
@@ -1674,9 +1683,9 @@ export default function ClientDashboard() {
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-amber-500/10 pb-4 gap-3 relative z-10">
                     <div className="space-y-0.5">
                       <div className="flex items-center gap-2">
-                        {existingClientData.pan && (
+                        {(existingClientData?.pan || userData?.pan) && (
                           <span className="text-[10px] font-mono text-neutral-400">
-                            PAN Match: {existingClientData.pan}
+                            PAN Match: {existingClientData?.pan || userData?.pan}
                           </span>
                         )}
                       </div>
@@ -1702,22 +1711,20 @@ export default function ClientDashboard() {
                     <div className="p-5 sm:p-6 bg-white/60 border border-white/30 rounded-2xl shadow-sm space-y-1.5">
                       <span className="text-[10px] text-neutral-500 block uppercase font-mono tracking-wider">AUM (Current Value)</span>
                       <div className="text-lg sm:text-xl font-bold font-mono text-neutral-900 whitespace-nowrap overflow-hidden text-ellipsis">
-                        ₹{(existingClientData.aum || existingClientData.currentValue || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        ₹{currentVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </div>
                     </div>
 
                     <div className="p-5 sm:p-6 bg-white/60 border border-white/30 rounded-2xl shadow-sm space-y-1.5">
                       <span className="text-[10px] text-neutral-500 block uppercase font-mono tracking-wider">Total Invested</span>
                       <div className="text-lg sm:text-xl font-bold font-mono text-neutral-900 whitespace-nowrap overflow-hidden text-ellipsis">
-                        ₹{(existingClientData.purchaseValue || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        ₹{investedVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </div>
                     </div>
 
                     <div className="p-5 sm:p-6 bg-white/60 border border-white/30 rounded-2xl shadow-sm space-y-1.5">
                       <span className="text-[10px] text-neutral-500 block uppercase font-mono tracking-wider">Total Return</span>
                       {(() => {
-                        const currentVal = existingClientData.aum || existingClientData.currentValue || 0;
-                        const investedVal = existingClientData.purchaseValue || 0;
                         const totalGain = currentVal - investedVal;
                         const totalGainPercent = investedVal > 0 ? (totalGain / investedVal) * 100 : 0;
                         const isProfit = totalGain >= 0;
@@ -1735,18 +1742,18 @@ export default function ClientDashboard() {
                   </div>
 
                   {/* Scheme Holdings */}
-                  {existingClientData.folios && existingClientData.folios.length > 0 && (
+                  {unifiedFolios && unifiedFolios.length > 0 && (
                     <div className="space-y-4 pt-2 relative z-10">
                       <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-800 flex items-center gap-1.5 font-mono">
                         <Wallet className="w-4 h-4 text-primary" />
-                        Mutual Fund Scheme Holdings ({existingClientData.folios.length})
+                        Mutual Fund Scheme Holdings ({unifiedFolios.length})
                       </h4>
 
                       {(() => {
                         const groupedMap: Record<string, { schemeName: string, invested: number, current: number, units: number }> = {};
                         const categoryMap: Record<string, { name: string, value: number }> = {};
 
-                        existingClientData.folios.forEach((f: any) => {
+                        unifiedFolios.forEach((f: any) => {
                           const name = f.schemeName || 'Unknown Scheme';
                           if (!groupedMap[name]) {
                             groupedMap[name] = { schemeName: name, invested: 0, current: 0, units: 0 };
@@ -2165,7 +2172,7 @@ export default function ClientDashboard() {
                             {comparison.funds.length === 0 ? (
                               <div className="p-8 text-center space-y-2 bg-emerald-50/20">
                                 <div className="text-2xl text-emerald-600 font-bold">🏆</div>
-                                <span className="font-semibold block text-neutral-900 text-xs">Optimal Performance Achieved!</span>
+                  <span className="font-semibold block text-neutral-900 text-xs">Optimal Performance Achieved!</span>
                                 <p className="text-[10px] text-neutral-500 max-w-sm mx-auto leading-relaxed">
                                   Your current selection of mutual funds is fully outperforming or matching the historical 1-year returns of top-tier active category leaders. You have no growth gap!
                                 </p>
@@ -2175,36 +2182,76 @@ export default function ClientDashboard() {
                                 <table className="w-full text-left border-collapse">
                                   <thead>
                                     <tr className="bg-neutral-50 border-b border-border/20 text-neutral-500 font-mono text-[9px] uppercase tracking-wider">
-                                      <th className="py-2.5 px-4 font-semibold">Allocation Category</th>
-                                      <th className="py-2.5 px-4 font-semibold text-right">Invested</th>
-                                      <th className="py-2.5 px-4 font-semibold text-center">1Y Return (Cur vs Best)</th>
-                                      <th className="py-2.5 px-4 font-semibold text-center">1Y Est. Profit (Cur vs Best)</th>
-                                      <th className="py-2.5 px-4 font-semibold text-right">Growth Gap</th>
+                                      <th className="py-2.5 px-4 font-semibold">Fund Name</th>
+                                      <th className="py-2.5 px-4 font-semibold text-center">Tenure Return</th>
+                                      <th className="py-2.5 px-4 font-semibold text-right">Benchmark Option</th>
                                     </tr>
                                   </thead>
                                   <tbody className="divide-y divide-border/10 text-neutral-700">
                                     {comparison.funds.map((f: any, idx: number) => {
-                                      const categoryLabel = f.category.replace('_', ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+                                      const detectCategory = (name: string): string => {
+                                        const n = name.toLowerCase();
+                                        if (n.includes('liquid') || n.includes('overnight') || n.includes('money market')) return 'liquid';
+                                        if (n.includes('small cap') || n.includes('smallcap') || n.includes('small-cap')) return 'small_cap';
+                                        if (n.includes('mid cap') || n.includes('midcap') || n.includes('mid-cap')) return 'mid_cap';
+                                        if (n.includes('large cap') || n.includes('largecap') || n.includes('large-cap') || n.includes('bluechip') || n.includes('blue chip') || n.includes('top 100') || n.includes('top 200')) return 'large_cap';
+                                        if (n.includes('flexi cap') || n.includes('flexicap') || n.includes('flexi-cap') || n.includes('multicap') || n.includes('multi cap') || n.includes('multi-cap')) return 'flexi_cap';
+                                        if (n.includes('elss') || n.includes('tax') || n.includes('tax saver') || n.includes('tax saving')) return 'elss';
+                                        if (n.includes('balanced') || n.includes('hybrid') || n.includes('aggressive') || n.includes('conservative') || n.includes('dynamic asset') || n.includes('equity saving')) return 'balanced';
+                                        if (n.includes('debt') || n.includes('bond') || n.includes('gilt') || n.includes('corporate') || n.includes('short duration') || n.includes('medium duration') || n.includes('long duration') || n.includes('credit risk') || n.includes('banking & psu') || n.includes('fixed maturity') || n.includes('ultra short') || n.includes('low duration') || n.includes('floater')) return 'debt';
+                                        if (n.includes('index') || n.includes('nifty') || n.includes('sensex') || n.includes('etf')) return 'index';
+                                        return 'flexi_cap';
+                                      };
+
+                                      const CATEGORY_TOP_FUNDS: Record<string, string> = {
+                                        'large_cap': 'HDFC Top 100 Fund Growth',
+                                        'mid_cap': 'Motilal Oswal Midcap Fund Growth',
+                                        'small_cap': 'Nippon India Small Cap Fund Growth',
+                                        'flexi_cap': 'Parag Parikh Flexi Cap Fund Growth',
+                                        'multi_cap': 'Parag Parikh Flexi Cap Fund Growth',
+                                        'elss': 'SBI Long Term Equity Fund Growth (ELSS)',
+                                        'balanced': 'ICICI Prudential Equity & Debt Fund Growth',
+                                        'debt': 'HDFC Medium Term Debt Fund Growth',
+                                        'index': 'UTI Nifty 50 Index Fund Growth',
+                                        'liquid': 'SBI Liquid Fund Growth',
+                                        'default': 'Parag Parikh Flexi Cap Fund Growth',
+                                      };
+
+                                      const matchingRow = activePortfolio?.rows?.find((row: any) => 
+                                        f.fundName ? row.fundName === f.fundName : detectCategory(row.fundName) === f.category
+                                      );
+                                      const matchingFolio = unifiedFolios?.find((fol: any) => 
+                                        f.fundName ? fol.schemeName === f.fundName : detectCategory(fol.schemeName) === f.category
+                                      );
+                                      
+                                      const investedAmt = matchingRow?.invested || matchingFolio?.purchaseValue || f.invested || 0;
+                                      const currentValAmt = matchingRow?.currentValue || matchingFolio?.aum || 0;
+                                      
+                                      const tenureReturn = (matchingRow || matchingFolio) 
+                                        ? (investedAmt > 0 ? ((currentValAmt - investedAmt) / investedAmt) * 100 : 0)
+                                        : (typeof f.tenureReturn === 'number' ? f.tenureReturn : f.currentReturn);
+                                      const isProfit = tenureReturn >= 0;
+                                      
+                                      const actualFundName = matchingRow?.fundName || matchingFolio?.schemeName || f.fundName || (f.category.replace('_', ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()) + ' Fund');
+                                      const bestFundName = f.bestFundName || CATEGORY_TOP_FUNDS[f.category] || CATEGORY_TOP_FUNDS['default'];
+
                                       return (
                                         <tr key={idx} className="hover:bg-white/10 transition-colors">
-                                          <td className="py-3 px-4 font-semibold text-neutral-900">{categoryLabel} Fund</td>
-                                          <td className="py-3 px-4 text-right font-mono">₹{f.invested.toLocaleString('en-IN')}</td>
-                                          <td className="py-3 px-4 text-center font-mono font-medium">
-                                            <span className={f.currentReturn >= 0 ? "text-emerald-600 font-medium" : "text-red-500"}>{f.currentReturn.toFixed(1)}%</span>
-                                            <span className="text-neutral-400 mx-1.5">&rarr;</span>
-                                            <span className={f.bestReturn >= 0 ? "text-emerald-600 font-bold" : "text-red-500 font-bold"}>{f.bestReturn.toFixed(1)}%</span>
+                                          <td className="py-3.5 px-4 font-semibold text-neutral-900 leading-snug">
+                                            {actualFundName}
                                           </td>
-                                          <td className="py-3 px-4 text-center font-mono">
-                                            <span className={f.currentProfit >= 0 ? "text-neutral-700" : "text-red-500"}>
-                                              {f.currentProfit < 0 ? "-" : ""}₹{Math.abs(Math.round(f.currentProfit)).toLocaleString('en-IN')}
-                                            </span>
-                                            <span className="text-neutral-400 mx-1.5">&rarr;</span>
-                                            <span className={f.achievableProfit >= 0 ? "text-emerald-600 font-semibold" : "text-red-500 font-semibold"}>
-                                              {f.achievableProfit < 0 ? "-" : ""}₹{Math.abs(Math.round(f.achievableProfit)).toLocaleString('en-IN')}
+                                          <td className="py-3.5 px-4 text-center font-mono font-bold">
+                                            <span className={isProfit ? "text-emerald-600" : "text-rose-600"}>
+                                              {isProfit ? '+' : ''}{tenureReturn.toFixed(2)}%
                                             </span>
                                           </td>
-                                          <td className="py-3 px-4 text-right font-mono font-bold text-amber-700">
-                                            + ₹{Math.round(f.gap).toLocaleString('en-IN')}
+                                          <td className="py-3.5 px-4 text-right">
+                                            <div className="font-semibold text-neutral-900 leading-snug">
+                                              {bestFundName}
+                                            </div>
+                                            <div className="text-[10px] text-emerald-600 font-mono font-bold mt-0.5">
+                                              {f.bestReturn.toFixed(1)}% Return
+                                            </div>
                                           </td>
                                         </tr>
                                       );
@@ -2223,7 +2270,7 @@ export default function ClientDashboard() {
             )}
 
             {/* Current Investments / Holdings Card */}
-            {activePortfolio && activePortfolio.rows && activePortfolio.rows.length > 0 && (
+            {activePortfolio && activePortfolio.rows && activePortfolio.rows.length > 0 && !hasActivePortfolioData && (
               <div className="bg-white/50 backdrop-blur-xl border border-white/40 shadow-xl rounded-3xl p-6 space-y-4 animate-in fade-in duration-300">
                   <div className="flex justify-between items-center border-b border-border/20 pb-2">
                     <h3 className="text-sm font-bold font-clash text-neutral-800 flex items-center gap-1.5">
@@ -2386,6 +2433,34 @@ export default function ClientDashboard() {
                       </div>
                     )}
                   </div>
+                </div>
+              </div>
+
+            {/* Daily Wisdom card */}
+            <div className="w-full p-8 rounded-3xl bg-gradient-to-br from-amber-100/40 via-white/30 to-amber-500/10 backdrop-blur-2xl border border-amber-500/30 shadow-[0_20px_50px_rgba(245,158,11,0.12)] flex flex-col justify-between items-center text-center overflow-hidden relative min-h-[220px] animate-in fade-in duration-300">
+                {/* Decorative glowing background gradients */}
+                <div className="absolute top-0 right-0 w-24 h-24 bg-amber-400/20 rounded-full blur-2xl pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-24 h-24 bg-amber-400/20 rounded-full blur-2xl pointer-events-none" />
+
+                {/* Floating typographic quotes */}
+                <span className="absolute left-6 top-12 text-7xl font-serif text-amber-500/10 leading-none pointer-events-none select-none">“</span>
+                <span className="absolute right-6 bottom-12 text-7xl font-serif text-amber-500/10 leading-none pointer-events-none select-none">”</span>
+
+                <div className="w-full flex justify-between items-center border-b border-amber-500/10 pb-2 relative z-10">
+                  <span className="text-[9px] font-mono text-amber-700 tracking-widest uppercase font-bold flex items-center gap-1">
+                    <Sparkles className="w-3 h-3 text-amber-600 animate-pulse" />
+                    Daily Wisdom
+                  </span>
+                  <span className="text-[9px] font-mono text-amber-600/60 uppercase font-bold">ACTIVE FOR 24H</span>
+                </div>
+
+                <div className="my-auto py-6 relative z-10">
+                  <p className="text-base md:text-lg font-medium italic leading-relaxed text-neutral-900 font-clash">
+                    "{quotesList[new Date().getDate() % quotesList.length]?.text}"
+                  </p>
+                  <span className="block text-right text-[10px] text-amber-700 font-mono mt-2 mr-4 font-bold tracking-wider">
+                    — {quotesList[new Date().getDate() % quotesList.length]?.author}
+                  </span>
                 </div>
               </div>
           </div>

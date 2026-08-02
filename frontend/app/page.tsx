@@ -689,12 +689,12 @@ export default function Home() {
                                     { title: "PMS", desc: "Portfolio Management Services for customized asset allocation." },
                                     { title: "Lumpsum", desc: "Compounding one-time principal investments over any tenure." }
                                   ].map((sub, i) => (
-                                    <div key={i} className="p-3.5 rounded-xl border border-amber-500/25 bg-gradient-to-br from-amber-500/10 via-white/45 to-amber-500/5 text-left">
+                                    <div key={i} className="p-4 rounded-xl border border-amber-500/25 bg-gradient-to-br from-amber-500/10 via-white/45 to-amber-500/5 text-left">
                                       <span className="text-[7px] font-mono text-amber-800 tracking-wider uppercase font-bold bg-amber-500/20 px-1.5 py-0.5 rounded-full">
                                         Growth
                                       </span>
-                                      <h5 className="text-xs font-bold text-primary font-clash mt-1.5 mb-0.5">{sub.title}</h5>
-                                      <p className="text-[10px] text-muted-foreground font-sans leading-tight">{sub.desc}</p>
+                                      <h5 className="text-sm font-bold text-primary font-clash mt-2 mb-1">{sub.title}</h5>
+                                      <p className="text-xs text-muted-foreground leading-normal font-sans font-medium">{sub.desc}</p>
                                     </div>
                                   ))}
                                 </div>
@@ -712,7 +712,7 @@ export default function Home() {
                           Risk Mitigation
                         </span>
                         <h4 className="text-sm font-bold text-primary font-clash mt-2.5 mb-1 text-left">
-                          Life & General Insurance
+                          Life Insurance
                         </h4>
                         <p className="text-xs text-muted-foreground leading-relaxed font-sans font-medium text-left">
                           Protecting your family's future, health, and properties.
@@ -895,19 +895,19 @@ export default function Home() {
                                 ? "opacity-100 scale-100 max-h-[500px] translate-y-0"
                                 : "opacity-0 scale-95 max-h-0 -translate-y-4 overflow-hidden pointer-events-none"
                             }`}>
-                              <div className="grid grid-cols-2 gap-4 w-[360px]">
+                              <div className="grid grid-cols-2 gap-4 w-[460px]">
                                 {[
                                   { title: "SIP", desc: "Systematic investments for long-term compound growth." },
                                   { title: "SIF", desc: "Specialized Investment Funds with hurdle targets." },
                                   { title: "PMS", desc: "Portfolio Management Services for customized asset allocation." },
                                   { title: "Lumpsum", desc: "Compounding one-time principal investments over any tenure." }
                                 ].map((sub, i) => (
-                                  <div key={i} className="p-4 rounded-2xl border border-amber-500/25 bg-gradient-to-br from-amber-500/10 via-white/45 to-amber-500/5 shadow-[0_15px_30px_rgba(245,158,11,0.1)] backdrop-blur-2xl text-left relative overflow-hidden">
+                                  <div key={i} className="p-5 rounded-2xl border border-amber-500/25 bg-gradient-to-br from-amber-500/10 via-white/45 to-amber-500/5 shadow-[0_15px_30px_rgba(245,158,11,0.1)] backdrop-blur-2xl text-left relative overflow-hidden">
                                     <span className="text-[8px] font-mono text-amber-800 tracking-wider uppercase font-bold bg-amber-500/20 px-2 py-0.5 rounded-full w-fit">
                                       Growth
                                     </span>
-                                    <h5 className="text-xs font-bold text-primary font-clash mt-2 mb-1">{sub.title}</h5>
-                                    <p className="text-[10px] text-muted-foreground font-sans leading-tight">{sub.desc}</p>
+                                    <h5 className="text-sm font-bold text-primary font-clash mt-2.5 mb-1">{sub.title}</h5>
+                                    <p className="text-xs text-muted-foreground leading-normal font-sans font-medium">{sub.desc}</p>
                                   </div>
                                 ))}
                               </div>
@@ -925,7 +925,7 @@ export default function Home() {
                             Risk Mitigation
                           </span>
                           <h4 className="text-lg font-bold text-primary font-clash mt-3 mb-1.5">
-                            Life & General Insurance
+                            Life Insurance
                           </h4>
                           <p className="text-xs text-muted-foreground leading-relaxed font-sans font-medium">
                             Protecting your family's future, health, and properties.

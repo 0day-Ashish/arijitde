@@ -982,6 +982,10 @@ export default function AdminDashboard() {
     (user.leads || []).map((lead: any) => ({ ...lead, user }))
   ).sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
+  // Filter advisory sessions by user role
+  const clientAdvisorySessions = advisorySessions.filter(s => s.user?.role === 'CLIENT');
+  const visitorAdvisorySessions = advisorySessions.filter(s => s.user?.role !== 'CLIENT');
+
   // Filtered AUM Schemes
   const filteredSchemes = (aumData?.schemes || []).filter((scheme: any) =>
     (scheme.schemeName || '').toLowerCase().includes(aumSearchQuery.toLowerCase())
@@ -1198,6 +1202,11 @@ export default function AdminDashboard() {
               }`}
           >
             Visitors Session Queue
+            {visitorAdvisorySessions.filter(s => s.status === 'PENDING').length > 0 && (
+              <span className="px-2 py-0.5 text-[10px] bg-primary text-white rounded-full font-bold animate-pulse">
+                {visitorAdvisorySessions.filter(s => s.status === 'PENDING').length}
+              </span>
+            )}
           </button>
 
           <button
@@ -1219,9 +1228,9 @@ export default function AdminDashboard() {
               }`}
           >
             Existing Clients Session Queue
-            {advisorySessions.filter(s => s.status === 'PENDING').length > 0 && (
+            {clientAdvisorySessions.filter(s => s.status === 'PENDING').length > 0 && (
               <span className="px-2 py-0.5 text-[10px] bg-primary text-white rounded-full font-bold animate-pulse">
-                {advisorySessions.filter(s => s.status === 'PENDING').length}
+                {clientAdvisorySessions.filter(s => s.status === 'PENDING').length}
               </span>
             )}
           </button>
@@ -1435,91 +1444,203 @@ export default function AdminDashboard() {
 
           {activeTab === 'consultations' && (
             <div className="space-y-4">
-              <h2 className="text-sm font-bold font-clash text-neutral-500 uppercase tracking-wider mb-2">
-                Distribution & Consultation Leads ({allLeadsList.length})
-              </h2>
+              {/* Visitor Live Portfolio Review Sessions */}
+              <div>
+                <h2 className="text-sm font-bold font-clash text-neutral-500 uppercase tracking-wider mb-4 text-left flex items-center gap-2">
+                  <span>Visitor Live Portfolio Review Bookings ({visitorAdvisorySessions.length})</span>
+                </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {allLeadsList.length === 0 ? (
-                  <div className="col-span-2 border border-dashed border-neutral-200 rounded-2xl p-12 text-center text-sm text-neutral-500 bg-neutral-50 font-mono">
-                    <PhoneCall className="w-12 h-12 text-neutral-400 mx-auto mb-4" />
-                    No booked distribution calls found.
+                {loadingAdvisory ? (
+                  <div className="flex flex-col items-center justify-center p-12 text-center bg-white border border-neutral-200 rounded-2xl">
+                    <Loader2 className="w-10 h-10 text-primary animate-spin mb-4" />
+                    <p className="text-neutral-500 text-xs font-mono">Fetching visitor sessions telemetry...</p>
+                  </div>
+                ) : visitorAdvisorySessions.length === 0 ? (
+                  <div className="border border-dashed border-neutral-200 rounded-2xl p-12 text-center text-sm text-neutral-500 bg-neutral-50 font-mono">
+                    <Calendar className="w-12 h-12 text-neutral-400 mx-auto mb-4" />
+                    No live portfolio review bookings from new visitors.
                   </div>
                 ) : (
-                  allLeadsList.map((lead) => (
-                    <div
-                      key={lead.id}
-                      className="border border-neutral-200 bg-white rounded-2xl p-6 flex flex-col gap-4 shadow-sm hover:shadow-md transition duration-300 text-neutral-900"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-semibold text-neutral-900 text-sm">
-                            {lead.name}
-                          </h3>
-                          <p className="text-xs text-neutral-500 font-mono">Account: {lead.user?.name || 'Anonymous'} ({lead.user?.email || 'N/A'})</p>
-                          <p className="text-xs text-neutral-600 font-semibold font-mono mt-1 flex items-center gap-1">
-                            <PhoneCall className="w-3.5 h-3.5 text-neutral-400" />
-                            <span>Phone: {lead.phone}</span>
-                          </p>
-                          <span className="text-[10px] text-neutral-400 font-mono mt-1 block">
-                            Booked: {new Date(lead.createdAt).toLocaleString()}
-                          </span>
-                        </div>
-                        <div className="text-right flex flex-col items-end gap-1.5">
-                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider ${lead.status === 'NEW' ? 'bg-blue-500/10 text-blue-700 border border-blue-500/20' :
-                              lead.status === 'CONTACTED' ? 'bg-amber-500/10 text-amber-700 border border-amber-500/20' :
-                                'bg-emerald-500/10 text-emerald-700 border border-emerald-500/20'
-                            }`}>
-                            {lead.status}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="border border-neutral-200 bg-neutral-50 rounded-xl p-4 space-y-3">
-                        <div className="flex items-start gap-2">
-                          <Calendar className="w-4 h-4 text-neutral-400 shrink-0 mt-0.5" />
-                          <div>
-                            <span className="text-[10px] text-neutral-500 block uppercase font-mono">Scheduled Time Slot</span>
-                            <span className="text-xs font-semibold text-neutral-950">
-                              {lead.slot ? new Date(lead.slot).toLocaleString(undefined, {
-                                weekday: 'short',
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              }) : 'No slot selected'}
-                            </span>
-                          </div>
-                        </div>
-
-                        {lead.notes && (
-                          <div className="border-t border-neutral-200/60 pt-2 flex items-start gap-2">
-                            <FileText className="w-4 h-4 text-neutral-400 shrink-0 mt-0.5" />
+                  <div className="grid grid-cols-1 gap-6">
+                    {visitorAdvisorySessions.map((session: any) => {
+                      const isEditing = editingSessionId === session.id;
+                      const defaultMeetLink = session.googleMeetLink || `https://meet.google.com/abc-defg-hij`;
+                      
+                      return (
+                        <div
+                          key={session.id}
+                          className="border border-neutral-200 bg-white rounded-3xl p-6 md:p-8 flex flex-col gap-6 shadow-sm hover:shadow-md transition duration-300 text-neutral-900"
+                        >
+                          {/* Session Title Bar */}
+                          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-neutral-100 pb-4">
                             <div>
-                              <span className="text-[10px] text-neutral-500 block uppercase font-mono">Distributor Notes</span>
-                              <p className="text-xs text-neutral-700 font-sans italic">"{lead.notes}"</p>
+                              <div className="flex items-center gap-2.5">
+                                <h3 className="font-bold text-neutral-950 text-base">
+                                  {session.user?.name || "Visitor"}
+                                </h3>
+                                <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold font-mono uppercase tracking-wider ${
+                                  session.status === "CONFIRMED" ? "bg-emerald-500/10 text-emerald-700 border border-emerald-500/20" :
+                                  session.status === "COMPLETED" ? "bg-blue-500/10 text-blue-700 border border-blue-500/20" :
+                                  session.status === "REFUNDED" ? "bg-red-500/10 text-red-700 border border-red-500/20" :
+                                  "bg-amber-500/10 text-amber-700 border border-amber-500/20"
+                                }`}>
+                                  {session.status}
+                                </span>
+                              </div>
+                              <p className="text-xs text-neutral-500 font-mono mt-0.5">
+                                Email: {session.user?.email || "N/A"} | Phone: {session.user?.phone || "N/A"}
+                              </p>
                             </div>
                           </div>
-                        )}
-                      </div>
 
-                      <div className="flex gap-3 mt-1">
-                        <button
-                          onClick={() => {
-                            selectUserForDetails(lead.user);
-                            setSelectedLeadId(lead.id);
-                            setLeadStatus(lead.status);
-                            setLeadNotes(lead.notes || '');
-                          }}
-                          className="flex-1 py-2.5 bg-neutral-900 text-white text-xs font-bold rounded-xl hover:bg-neutral-800 transition duration-200 cursor-pointer flex items-center justify-center gap-1.5"
-                        >
-                          <User className="w-3.5 h-3.5 text-amber-400" />
-                          Manage Lead & Audit User
-                        </button>
-                      </div>
-                    </div>
-                  ))
+                          {/* Session Preference and Confirmation Grid */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                            <div className="space-y-4 col-span-1">
+                              {/* Preferred slots proposed by user */}
+                              <div className="bg-neutral-50 border border-neutral-100 rounded-2xl p-5 space-y-3">
+                                <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-widest block font-bold">Visitor's Proposed Slots</span>
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-between bg-white border border-neutral-100 p-2.5 rounded-xl text-xs font-mono">
+                                    <span className="text-neutral-500">Option 1:</span>
+                                    <span className="text-neutral-900 font-bold">
+                                      {new Date(session.preferredSlot1).getTime() > 0 
+                                        ? new Date(session.preferredSlot1).toLocaleString() 
+                                        : "Not submitted"}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center justify-between bg-white border border-neutral-100 p-2.5 rounded-xl text-xs font-mono">
+                                    <span className="text-neutral-500">Option 2:</span>
+                                    <span className="text-neutral-900 font-bold">
+                                      {new Date(session.preferredSlot2).getTime() > 0 
+                                        ? new Date(session.preferredSlot2).toLocaleString() 
+                                        : "Not submitted"}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center justify-between bg-white border border-neutral-100 p-2.5 rounded-xl text-xs font-mono">
+                                    <span className="text-neutral-500">Option 3:</span>
+                                    <span className="text-neutral-900 font-bold">
+                                      {new Date(session.preferredSlot3).getTime() > 0 
+                                        ? new Date(session.preferredSlot3).toLocaleString() 
+                                        : "Not submitted"}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Active Confirmed slot details */}
+                              {session.confirmedSlot && (
+                                <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-5 space-y-2">
+                                  <span className="text-[10px] font-mono text-emerald-600 uppercase tracking-widest block font-bold">Confirmed Meeting Schedule</span>
+                                  <div className="text-xs font-semibold text-emerald-950 font-mono">
+                                    ⏰ {new Date(session.confirmedSlot).toLocaleString()}
+                                  </div>
+                                  {session.googleMeetLink && (
+                                    <a
+                                      href={session.googleMeetLink}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-xs font-mono text-emerald-600 underline hover:text-emerald-700 block"
+                                    >
+                                      🔗 {session.googleMeetLink}
+                                    </a>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Meeting confirmations inputs / editing form */}
+                            <div className="space-y-4 col-span-1">
+                              {session.status !== "REFUNDED" && session.status !== "COMPLETED" && (
+                                <div className="bg-neutral-50 border border-neutral-100 rounded-2xl p-5 space-y-4">
+                                  <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest block font-bold">
+                                    {session.status === "CONFIRMED" ? "Reschedule / Confirm Slot" : "Confirm Slot Booking"}
+                                  </span>
+                                  
+                                  <div className="space-y-3">
+                                    <div className="space-y-1">
+                                      <label className="text-[10px] font-semibold text-neutral-500">Select Date & Time *</label>
+                                      <select
+                                        value={editingSessionId === session.id ? confirmedSlotInput : ""}
+                                        onChange={(e) => {
+                                          setEditingSessionId(session.id);
+                                          setConfirmedSlotInput(e.target.value);
+                                          if (!meetLinkInput) setMeetLinkInput(defaultMeetLink);
+                                          setPortfolioNotesInput(session.notes || "");
+                                        }}
+                                        className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-2 text-xs text-neutral-900 focus:outline-none focus:border-primary font-mono"
+                                      >
+                                        <option value="">-- Choose Slot --</option>
+                                        {new Date(session.preferredSlot1).getTime() > 0 && (
+                                          <option value={new Date(session.preferredSlot1).toISOString()}>
+                                            Option 1 ({new Date(session.preferredSlot1).toLocaleString()})
+                                          </option>
+                                        )}
+                                        {new Date(session.preferredSlot2).getTime() > 0 && (
+                                          <option value={new Date(session.preferredSlot2).toISOString()}>
+                                            Option 2 ({new Date(session.preferredSlot2).toLocaleString()})
+                                          </option>
+                                        )}
+                                        {new Date(session.preferredSlot3).getTime() > 0 && (
+                                          <option value={new Date(session.preferredSlot3).toISOString()}>
+                                            Option 3 ({new Date(session.preferredSlot3).toLocaleString()})
+                                          </option>
+                                        )}
+                                        <option value={new Date().toISOString()}>Custom (Right Now)</option>
+                                      </select>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                      <label className="text-[10px] font-semibold text-neutral-500">Google Meet Link *</label>
+                                      <input
+                                        type="url"
+                                        placeholder="https://meet.google.com/..."
+                                        value={editingSessionId === session.id ? meetLinkInput : (session.googleMeetLink || "")}
+                                        onChange={(e) => {
+                                          setEditingSessionId(session.id);
+                                          setMeetLinkInput(e.target.value);
+                                        }}
+                                        className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-2 text-xs text-neutral-950 font-mono focus:outline-none focus:border-primary"
+                                      />
+                                    </div>
+
+                                    <button
+                                      onClick={() => handleConfirmSlot(session.id)}
+                                      disabled={updatingSession || editingSessionId !== session.id || !confirmedSlotInput || !meetLinkInput}
+                                      className="w-full py-2.5 bg-neutral-900 hover:bg-neutral-800 text-white font-bold text-xs rounded-xl transition duration-200 disabled:opacity-40 cursor-pointer"
+                                    >
+                                      {updatingSession ? "Processing..." : "Confirm Schedule & Send Email"}
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Portfolio Notes Editor Card */}
+                              <div className="bg-neutral-50 border border-neutral-100 rounded-2xl p-5 space-y-3">
+                                <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest block font-bold">Portfolio Distribution Notes</span>
+                                <textarea
+                                  rows={3}
+                                  placeholder="Write portfolio audits, rebalancing advice, or general consulting notes..."
+                                  value={editingSessionId === session.id ? portfolioNotesInput : (session.notes || "")}
+                                  onChange={(e) => {
+                                    setEditingSessionId(session.id);
+                                    setPortfolioNotesInput(e.target.value);
+                                  }}
+                                  className="w-full bg-white border border-neutral-200 rounded-xl p-3 text-xs text-neutral-900 focus:outline-none focus:border-primary font-sans leading-relaxed"
+                                />
+                                <button
+                                  onClick={() => handleUpdatePortfolioNotes(session.id)}
+                                  disabled={updatingSession || editingSessionId !== session.id || !portfolioNotesInput.trim()}
+                                  className="w-full py-2 bg-primary hover:bg-primary/95 text-white font-bold text-xs rounded-xl transition duration-200 disabled:opacity-40 cursor-pointer"
+                                >
+                                  Save Distributor Notes
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
             </div>
@@ -1528,7 +1649,7 @@ export default function AdminDashboard() {
           {activeTab === 'liveSessions' && (
             <div className="space-y-4 text-left">
               <h2 className="text-sm font-bold font-clash text-neutral-500 uppercase tracking-wider mb-2">
-                Live Portfolio Review Discussions Queue ({advisorySessions.length})
+                Live Portfolio Review Discussions Queue ({clientAdvisorySessions.length})
               </h2>
 
               {loadingAdvisory ? (
@@ -1536,14 +1657,14 @@ export default function AdminDashboard() {
                   <Loader2 className="w-10 h-10 text-primary animate-spin mb-4" />
                   <p className="text-neutral-500 text-xs font-mono">Fetching premium sessions telemetry...</p>
                 </div>
-              ) : advisorySessions.length === 0 ? (
+              ) : clientAdvisorySessions.length === 0 ? (
                 <div className="border border-dashed border-neutral-200 rounded-2xl p-12 text-center text-sm text-neutral-500 bg-neutral-50 font-mono">
                   <Calendar className="w-12 h-12 text-neutral-400 mx-auto mb-4" />
-                  No paid live portfolio review discussions in the database.
+                  No live portfolio review discussions for existing clients.
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-6">
-                  {advisorySessions.map((session: any) => {
+                  {clientAdvisorySessions.map((session: any) => {
                     const isEditing = editingSessionId === session.id;
                     const defaultMeetLink = session.googleMeetLink || `https://meet.google.com/abc-defg-hij`;
                     
@@ -2223,10 +2344,10 @@ export default function AdminDashboard() {
           />
 
           {/* Drawer container */}
-          <div className="relative z-10 w-full max-w-2xl bg-white border-l border-neutral-200 h-full shadow-2xl overflow-y-auto flex flex-col p-6 md:p-8 animate-in slide-in-from-right duration-350 ease-out text-neutral-900">
+          <div className="relative z-10 w-full max-w-2xl bg-white border-l border-neutral-200 h-screen max-h-screen shadow-2xl flex flex-col p-6 md:p-8 animate-in slide-in-from-right duration-350 ease-out text-neutral-900">
 
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-neutral-200 pb-4 mb-6">
+            <div className="flex items-center justify-between border-b border-neutral-200 pb-4 mb-6 shrink-0">
               <div>
                 <span className="text-[10px] text-neutral-500 font-mono uppercase tracking-wider">Audit Details</span>
                 <h2 className="text-xl font-semibold font-clash text-neutral-900 mt-0.5">
@@ -2242,7 +2363,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Profile Overview */}
-            <div className="space-y-6 flex-1">
+            <div data-lenis-prevent className="space-y-6 flex-1 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-neutral-200 overscroll-contain touch-pan-y">
 
               {/* Account Meta Section */}
               <div className="border border-neutral-200 bg-neutral-50 rounded-2xl p-5 space-y-3 font-sans">

@@ -310,7 +310,7 @@ router.get('/admin/sessions', authMiddleware, adminMiddleware, async (req: Authe
     const sessions = await prisma.advisorySession.findMany({
       include: {
         user: {
-          select: { name: true, phone: true, email: true },
+          select: { name: true, phone: true, email: true, role: true },
         },
       },
       orderBy: { createdAt: 'desc' },

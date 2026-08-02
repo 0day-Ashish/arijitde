@@ -70,7 +70,7 @@ export default function Navbar({ isLoaded = true, activePath = '/' }: NavbarProp
           <div className="w-full px-6 py-3.5 flex items-center justify-between">
             {/* Left: Brand Name & Logo */}
             <div className="flex items-center gap-3">
-              <a href="/" className="flex items-center gap-2.5 text-xl font-bold tracking-wider text-primary font-instrument-serif select-none hover:opacity-90">
+              <a href="/" className="flex items-center gap-2.5 text-xl font-bold tracking-wider text-primary font-chillax select-none hover:opacity-90">
                 <img
                   src="/image.png"
                   alt="FinAnalysis Logo"

@@ -82,6 +82,8 @@ export async function scoreDimension(
         benchmarkReturn,
         bestReturn,
         invested: row.invested,
+        currentValue: row.currentValue,
+        bestFundName: topPerformer.name,
       };
     });
 
@@ -129,6 +131,8 @@ export async function scoreDimension(
         // Only include in the opportunity gap list if there's actual positive headroom
         if (bestReturn > currentReturn && gap > 0.01) {
           fundComparisons.push({
+            fundName: fr.fundName,
+            bestFundName: fr.bestFundName,
             category: fr.category,
             invested: fr.invested,
             currentReturn,
@@ -136,6 +140,7 @@ export async function scoreDimension(
             currentProfit,
             achievableProfit,
             gap,
+            tenureReturn: fr.invested > 0 ? ((fr.currentValue - fr.invested) / fr.invested) * 100 : 0,
           });
         }
 

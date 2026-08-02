@@ -68,17 +68,17 @@ const CATEGORY_BENCHMARKS: Record<string, number> = {
 // ── Category Top Performing Fund Codes ──
 // High-performing representative funds for each category
 export const CATEGORY_TOP_PERFORMERS: Record<string, { code: number; name: string }> = {
-  'large_cap': { code: 118768, name: 'Top Large Cap Fund' },
-  'mid_cap': { code: 127039, name: 'Top Mid Cap Fund' },
-  'small_cap': { code: 120828, name: 'Top Small Cap Fund' },
-  'flexi_cap': { code: 122639, name: 'Top Flexi Cap Fund' },
-  'multi_cap': { code: 122639, name: 'Top Flexi Cap Fund' },
-  'elss': { code: 120843, name: 'Top ELSS Fund' },
-  'balanced': { code: 119047, name: 'Top Hybrid Fund' },
-  'debt': { code: 119018, name: 'Top Debt Fund' },
-  'index': { code: 120716, name: 'Top Index Fund' },
-  'liquid': { code: 119062, name: 'Top Liquid Fund' },
-  'default': { code: 122639, name: 'Top Flexi Cap Fund' },
+  'large_cap': { code: 118768, name: 'HDFC Top 100 Fund Growth' },
+  'mid_cap': { code: 127039, name: 'Motilal Oswal Midcap Fund Growth' },
+  'small_cap': { code: 120828, name: 'Nippon India Small Cap Fund Growth' },
+  'flexi_cap': { code: 122639, name: 'Parag Parikh Flexi Cap Fund Growth' },
+  'multi_cap': { code: 122639, name: 'Parag Parikh Flexi Cap Fund Growth' },
+  'elss': { code: 120843, name: 'SBI Long Term Equity Fund Growth (ELSS)' },
+  'balanced': { code: 119047, name: 'ICICI Prudential Equity & Debt Fund Growth' },
+  'debt': { code: 119018, name: 'HDFC Medium Term Debt Fund Growth' },
+  'index': { code: 120716, name: 'UTI Nifty 50 Index Fund Growth' },
+  'liquid': { code: 119062, name: 'SBI Liquid Fund Growth' },
+  'default': { code: 122639, name: 'Parag Parikh Flexi Cap Fund Growth' },
 };
 
 // ── Fund Category Detection ──

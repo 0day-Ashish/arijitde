@@ -188,7 +188,7 @@ export default function UserDashboard() {
     invested: number;
     currentValue: number;
     startDate: string;
-    type: "LUMPSUM" | "SIP";
+    type: "LUMPSUM" | "SIP" | "";
     sipAmount: number;
   }>>([]);
   const [showGrowwGuide, setShowGrowwGuide] = useState(false);
@@ -731,6 +731,10 @@ export default function UserDashboard() {
     }
 
     for (const f of pendingFunds) {
+      if (!f.type) {
+        setError(`Please choose type of investment for ${f.fundName}`);
+        return;
+      }
       if (!f.startDate) {
         setError(`Please enter a start date for ${f.fundName}`);
         return;
@@ -1578,7 +1582,7 @@ export default function UserDashboard() {
                   </div>
 
                   <form onSubmit={handleDateFormSubmit} className="space-y-6">
-                    <div data-lenis-prevent className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
+                    <div className="space-y-4 pr-1">
                       {pendingFunds.map((fund, idx) => (
                         <div key={idx} className="p-4 bg-white/40 border border-border/20 rounded-2xl space-y-3 text-left">
                           <div className="flex justify-between items-start gap-2">
@@ -1611,17 +1615,19 @@ export default function UserDashboard() {
                             <div className="space-y-1">
                               <label className="block text-[9px] font-mono uppercase tracking-wider text-neutral-500">Investment Type</label>
                               <select
+                                required
                                 value={fund.type}
                                 onChange={(e) => {
                                   const updated = [...pendingFunds];
-                                  updated[idx].type = e.target.value as "LUMPSUM" | "SIP";
-                                  if (e.target.value === "LUMPSUM") {
+                                  updated[idx].type = e.target.value as "LUMPSUM" | "SIP" | "";
+                                  if (e.target.value === "LUMPSUM" || e.target.value === "") {
                                     updated[idx].sipAmount = 0;
                                   }
                                   setPendingFunds(updated);
                                 }}
                                 className="w-full bg-white/50 border border-border/30 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-primary"
                               >
+                                <option value="">Choose type of investment</option>
                                 <option value="LUMPSUM">Lumpsum</option>
                                 <option value="SIP">Systematic SIP</option>
                               </select>
@@ -1975,8 +1981,6 @@ export default function UserDashboard() {
 
                 <div className="w-full md:w-auto shrink-0 flex flex-col items-center justify-center p-6 bg-white/40 border border-white/30 rounded-2xl md:min-w-[240px] text-center font-sans">
                   <div className="text-4xl font-semibold font-chillax text-neutral-900 mt-1">FREE</div>
-                  <span className="text-[9px] font-mono text-neutral-400 uppercase tracking-widest mt-1">Limited Time Offer</span>
-
                   <button
                     onClick={() => {
                       setDashboardStage("BOOKING");
@@ -2123,14 +2127,6 @@ export default function UserDashboard() {
                   <div className="flex justify-between items-center">
                     <span className="text-neutral-500 font-mono uppercase tracking-wider text-[10px]">Status:</span>
                     <span className="px-2 py-0.5 rounded bg-amber-100 border border-amber-500/20 text-amber-700 font-mono text-[9px] font-bold">Pending Review</span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-neutral-500 font-mono uppercase tracking-wider text-[10px]">Transaction ID:</span>
-                    <span className="text-neutral-800 font-mono text-[11px]">{payments[0]?.utrId || "N/A"}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-neutral-500 font-mono uppercase tracking-wider text-[10px]">Amount:</span>
-                    <span className="text-neutral-800 font-medium font-mono">₹{payments[0]?.amount || "499"}</span>
                   </div>
                 </div>
 
