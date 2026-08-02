@@ -278,6 +278,10 @@ export default function Home() {
 
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [expandedOption, setExpandedOption] = useState<string | null>(null);
+  const [activeHoverLevel1, setActiveHoverLevel1] = useState<string | null>(null);
+  const [activeHoverLevel2, setActiveHoverLevel2] = useState<string | null>(null);
+  const [mobileActiveLevel1, setMobileActiveLevel1] = useState<string | null>(null);
+  const [mobileActiveLevel2, setMobileActiveLevel2] = useState<string | null>(null);
   // Services scroll sync tracking
   const [activeService, setActiveService] = useState(0);
   const serviceRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -564,21 +568,157 @@ export default function Home() {
                 <div className={`grid md:hidden transition-all duration-350 ease-in-out overflow-hidden text-sm text-foreground font-bold ${expandedOption === "services" ? "grid-rows-[1fr] mt-2.5 opacity-100" : "grid-rows-[0fr] opacity-0"
                   }`}>
                   <div className="overflow-hidden space-y-4 font-sans pr-4 leading-relaxed font-bold text-foreground text-sm">
-                    <div className="grid grid-cols-1 gap-4 mt-2">
-                      {servicesList.map((service, idx) => (
-                        <div key={idx} className="p-5 rounded-2xl border border-amber-500/20 bg-gradient-to-br from-white/50 via-white/35 to-amber-500/5 shadow-[0_15px_35px_rgba(245,158,11,0.06)] backdrop-blur-2xl flex flex-col text-left relative overflow-hidden">
+                    <div className="flex flex-col gap-4 mt-2 w-full">
+                      
+                      {/* Level 1: Investments (Tap to expand) */}
+                      <div className="flex flex-col w-full">
+                        <button
+                          onClick={() => {
+                            setMobileActiveLevel1(mobileActiveLevel1 === "investments" ? null : "investments");
+                            setMobileActiveLevel2(null);
+                          }}
+                          className={`w-full p-5 rounded-2xl border text-left flex flex-col justify-between transition-all duration-300 relative overflow-hidden cursor-pointer ${
+                            mobileActiveLevel1 === "investments"
+                              ? "bg-amber-500/10 border-amber-500/40 shadow-md"
+                              : "border-amber-500/20 bg-gradient-to-br from-white/50 via-white/35 to-amber-500/5 shadow-[0_10px_25px_rgba(245,158,11,0.04)]"
+                          }`}
+                        >
                           <div className="absolute top-0 right-0 w-12 h-12 bg-amber-400/5 rounded-full blur-lg pointer-events-none" />
-                          <span className="text-[8px] font-mono text-amber-700 tracking-wider uppercase font-bold bg-amber-500/10 px-2 py-0.5 rounded-full w-fit">
-                            {service.tag}
-                          </span>
+                          <div className="flex justify-between items-center w-full">
+                            <span className="text-[8px] font-mono text-amber-700 tracking-wider uppercase font-bold bg-amber-500/10 px-2 py-0.5 rounded-full">
+                              Wealth & Growth
+                            </span>
+                            <span className="text-xs font-mono text-amber-600 font-bold uppercase tracking-wider">
+                              {mobileActiveLevel1 === "investments" ? "Tap to Collapse ▲" : "Tap to Expand ▼"}
+                            </span>
+                          </div>
                           <h4 className="text-sm font-bold text-primary font-clash mt-2.5 mb-1 text-left">
-                            {service.title}
+                            Investments
                           </h4>
                           <p className="text-xs text-muted-foreground leading-relaxed font-sans font-medium text-left">
-                            {service.desc}
+                            Systematic wealth creation & capital protection.
                           </p>
+                        </button>
+
+                        {/* Level 2: Under Investments (FD & MF) */}
+                        <div className={`transition-all duration-500 ease-in-out overflow-hidden ${
+                          mobileActiveLevel1 === "investments" ? "max-h-[1500px] opacity-100 mt-3" : "max-h-0 opacity-0 pointer-events-none"
+                        }`}>
+                          <div className="pl-4 border-l border-amber-500/20 flex flex-col gap-4">
+                            
+                            {/* FD */}
+                            <div className="flex flex-col w-full">
+                              <button
+                                onClick={() => setMobileActiveLevel2(mobileActiveLevel2 === "fd" ? null : "fd")}
+                                className={`w-full p-4 rounded-xl border text-left flex flex-col justify-between transition-all duration-300 cursor-pointer ${
+                                  mobileActiveLevel2 === "fd"
+                                    ? "bg-amber-500/10 border-amber-500/40"
+                                    : "border-amber-500/20 bg-gradient-to-br from-white/50 via-white/35 to-amber-500/5"
+                                }`}
+                              >
+                                <div className="flex justify-between items-center w-full">
+                                  <span className="text-[8px] font-mono text-amber-700 tracking-wider uppercase font-bold bg-amber-500/10 px-2 py-0.5 rounded-full">
+                                    Capital Protection
+                                  </span>
+                                  <span className="text-[9px] font-mono text-amber-600 font-bold">
+                                    {mobileActiveLevel2 === "fd" ? "▲" : "▼"}
+                                  </span>
+                                </div>
+                                <h4 className="text-xs font-bold text-primary font-clash mt-2 mb-1">
+                                  Fixed Deposits
+                                </h4>
+                                <p className="text-[11px] text-muted-foreground leading-tight font-sans font-medium">
+                                  Secure, stable high-yield options.
+                                </p>
+                              </button>
+
+                              {/* Level 3: Under FD */}
+                              <div className={`transition-all duration-350 ease-in-out overflow-hidden ${
+                                mobileActiveLevel2 === "fd" ? "max-h-[200px] opacity-100 mt-2" : "max-h-0 opacity-0 pointer-events-none"
+                              }`}>
+                                <div className="pl-4 border-l-2 border-amber-500/30">
+                                  <div className="p-3.5 rounded-xl border border-amber-500/25 bg-gradient-to-br from-amber-500/10 via-white/45 to-amber-500/5 text-left">
+                                    <span className="text-[7px] font-mono text-amber-800 tracking-wider uppercase font-bold bg-amber-500/20 px-1.5 py-0.5 rounded-full">
+                                      Fixed Return
+                                    </span>
+                                    <h5 className="text-xs font-bold text-primary font-clash mt-1.5 mb-0.5">
+                                      Company Deposit
+                                    </h5>
+                                    <p className="text-[10px] text-muted-foreground font-sans leading-tight">
+                                      Corporate deposits with secure, verified high yields.
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* MF */}
+                            <div className="flex flex-col w-full">
+                              <button
+                                onClick={() => setMobileActiveLevel2(mobileActiveLevel2 === "mf" ? null : "mf")}
+                                className={`w-full p-4 rounded-xl border text-left flex flex-col justify-between transition-all duration-300 cursor-pointer ${
+                                  mobileActiveLevel2 === "mf"
+                                    ? "bg-amber-500/10 border-amber-500/40"
+                                    : "border-amber-500/20 bg-gradient-to-br from-white/50 via-white/35 to-amber-500/5"
+                                }`}
+                              >
+                                <div className="flex justify-between items-center w-full">
+                                  <span className="text-[8px] font-mono text-amber-700 tracking-wider uppercase font-bold bg-amber-500/10 px-2 py-0.5 rounded-full">
+                                    Active Growth
+                                  </span>
+                                  <span className="text-[9px] font-mono text-amber-600 font-bold">
+                                    {mobileActiveLevel2 === "mf" ? "▲" : "▼"}
+                                  </span>
+                                </div>
+                                <h4 className="text-xs font-bold text-primary font-clash mt-2 mb-1">
+                                  Mutual Funds
+                                </h4>
+                                <p className="text-[11px] text-muted-foreground leading-tight font-sans font-medium">
+                                  Market-linked growth with diversification.
+                                </p>
+                              </button>
+
+                              {/* Level 3: Under MF */}
+                              <div className={`transition-all duration-500 ease-in-out overflow-hidden ${
+                                mobileActiveLevel2 === "mf" ? "max-h-[500px] opacity-100 mt-2" : "max-h-0 opacity-0 pointer-events-none"
+                              }`}>
+                                <div className="pl-4 border-l-2 border-amber-500/30 grid grid-cols-1 gap-2.5">
+                                  {[
+                                    { title: "SIP", desc: "Systematic investments for long-term compound growth." },
+                                    { title: "SIF", desc: "Specialized Investment Funds with hurdle targets." },
+                                    { title: "PMS", desc: "Portfolio Management Services for customized asset allocation." },
+                                    { title: "Lumpsum", desc: "Compounding one-time principal investments over any tenure." }
+                                  ].map((sub, i) => (
+                                    <div key={i} className="p-3.5 rounded-xl border border-amber-500/25 bg-gradient-to-br from-amber-500/10 via-white/45 to-amber-500/5 text-left">
+                                      <span className="text-[7px] font-mono text-amber-800 tracking-wider uppercase font-bold bg-amber-500/20 px-1.5 py-0.5 rounded-full">
+                                        Growth
+                                      </span>
+                                      <h5 className="text-xs font-bold text-primary font-clash mt-1.5 mb-0.5">{sub.title}</h5>
+                                      <p className="text-[10px] text-muted-foreground font-sans leading-tight">{sub.desc}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+
+                          </div>
                         </div>
-                      ))}
+                      </div>
+
+                      {/* Level 1: Life Insurance */}
+                      <div className="w-full p-5 rounded-2xl border border-amber-500/20 bg-gradient-to-br from-white/50 via-white/35 to-amber-500/5 shadow-[0_10px_25px_rgba(245,158,11,0.04)] text-left relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-12 h-12 bg-amber-400/5 rounded-full blur-lg pointer-events-none" />
+                        <span className="text-[8px] font-mono text-amber-700 tracking-wider uppercase font-bold bg-amber-500/10 px-2 py-0.5 rounded-full w-fit">
+                          Risk Mitigation
+                        </span>
+                        <h4 className="text-sm font-bold text-primary font-clash mt-2.5 mb-1 text-left">
+                          Life & General Insurance
+                        </h4>
+                        <p className="text-xs text-muted-foreground leading-relaxed font-sans font-medium text-left">
+                          Protecting your family's future, health, and properties.
+                        </p>
+                      </div>
+
                     </div>
                   </div>
                 </div>
@@ -631,24 +771,168 @@ export default function Home() {
 
                 {/* 02: Services */}
                 <div className={`col-start-1 row-start-1 transition-all duration-500 ease-in-out ${expandedOption === "services" ? "opacity-100 pointer-events-auto scale-100 translate-y-0" : "opacity-0 pointer-events-none scale-95 -translate-y-2"}`}>
-                  <div className="flex flex-col items-center justify-center gap-6 max-w-5xl mx-auto text-center w-full">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mt-2">
-                      {servicesList.map((service, idx) => (
-                        <div key={idx} className="p-6 rounded-3xl border border-amber-500/20 bg-gradient-to-br from-white/50 via-white/35 to-amber-500/5 shadow-[0_20px_50px_rgba(245,158,11,0.08)] backdrop-blur-2xl flex flex-col justify-between text-left hover:border-amber-500/45 hover:scale-[1.02] transition-all duration-300 relative group overflow-hidden">
-                          <div className="absolute top-0 right-0 w-16 h-16 bg-amber-400/5 rounded-full blur-xl pointer-events-none group-hover:bg-amber-400/10 transition-colors duration-300" />
-                          <div>
-                            <span className="text-[9px] font-mono text-amber-700 tracking-wider uppercase font-bold bg-amber-500/10 px-2 py-0.5 rounded-full w-fit">
-                              {service.tag}
-                            </span>
-                            <h4 className="text-base font-bold text-primary font-clash mt-3 mb-1.5 group-hover:text-amber-700 transition-colors duration-300 text-left">
-                              {service.title}
-                            </h4>
-                            <p className="text-xs text-muted-foreground leading-relaxed font-sans font-medium text-left">
-                              {service.desc}
-                            </p>
-                          </div>
+                  <div className="flex flex-col items-center justify-start gap-8 max-w-5xl mx-auto text-center w-full min-h-[520px]">
+                    <div className="flex flex-row justify-center items-start gap-12 w-full mt-4">
+                      
+                      {/* Investments Branch container (wraps Level 1, 2, and 3) */}
+                      <div
+                        className="flex flex-col items-center animate-in fade-in duration-300"
+                        onMouseEnter={() => setActiveHoverLevel1("investments")}
+                        onMouseLeave={() => {
+                          setActiveHoverLevel1(null);
+                          setActiveHoverLevel2(null);
+                        }}
+                      >
+                        {/* Level 1 Investments Box */}
+                        <div className={`p-6 w-80 rounded-3xl border transition-all duration-300 text-left relative overflow-hidden select-none cursor-pointer ${
+                          activeHoverLevel1 === "investments"
+                            ? "bg-amber-500/10 border-amber-500/40 shadow-lg scale-[1.02]"
+                            : "border-amber-500/20 bg-gradient-to-br from-white/50 via-white/35 to-amber-500/5 shadow-[0_20px_50px_rgba(245,158,11,0.08)] hover:scale-[1.01]"
+                        }`}>
+                          <div className="absolute top-0 right-0 w-16 h-16 bg-amber-400/5 rounded-full blur-xl pointer-events-none" />
+                          <span className="text-[9px] font-mono text-amber-700 tracking-wider uppercase font-bold bg-amber-500/10 px-2 py-0.5 rounded-full w-fit">
+                            Wealth & Growth
+                          </span>
+                          <h4 className="text-lg font-bold text-primary font-clash mt-3 mb-1.5">
+                            Investments
+                          </h4>
+                          <p className="text-xs text-muted-foreground leading-relaxed font-sans font-medium">
+                            Systematic wealth creation & capital protection.
+                          </p>
                         </div>
-                      ))}
+
+                        {/* Level 2 Connector line (drawn under parent card) */}
+                        <div className={`w-0.5 transition-all duration-500 ease-in-out bg-gradient-to-b from-amber-500/30 to-amber-500/10 ${
+                          activeHoverLevel1 === "investments" ? "h-8 opacity-100" : "h-0 opacity-0 pointer-events-none"
+                        }`} />
+
+                        {/* Level 2 Grid Container */}
+                        <div className={`grid grid-cols-2 gap-8 transition-all duration-500 ease-in-out transform origin-top ${
+                          activeHoverLevel1 === "investments"
+                            ? "opacity-100 scale-100 max-h-[1000px] translate-y-0"
+                            : "opacity-0 scale-95 max-h-0 -translate-y-4 overflow-hidden pointer-events-none"
+                        }`}>
+                          
+                          {/* Fixed Deposits child branch */}
+                          <div
+                            className="flex flex-col items-center"
+                            onMouseEnter={() => setActiveHoverLevel2("fd")}
+                            onMouseLeave={() => setActiveHoverLevel2(null)}
+                          >
+                            {/* FD Box */}
+                            <div className={`p-6 w-72 rounded-3xl border transition-all duration-300 text-left relative overflow-hidden select-none cursor-pointer ${
+                              activeHoverLevel2 === "fd"
+                                ? "bg-amber-500/10 border-amber-500/40 shadow-md scale-[1.02]"
+                                : "border-amber-500/20 bg-gradient-to-br from-white/50 via-white/35 to-amber-500/5 shadow-[0_15px_35px_rgba(245,158,11,0.06)] hover:scale-[1.01]"
+                            }`}>
+                              <span className="text-[9px] font-mono text-amber-700 tracking-wider uppercase font-bold bg-amber-500/10 px-2 py-0.5 rounded-full w-fit">
+                                Capital Protection
+                              </span>
+                              <h4 className="text-base font-bold text-primary font-clash mt-3 mb-1.5">
+                                Fixed Deposits
+                              </h4>
+                              <p className="text-xs text-muted-foreground leading-relaxed font-sans font-medium">
+                                Secure, stable high-yield options.
+                              </p>
+                            </div>
+
+                            {/* Level 3 Connector (FD) */}
+                            <div className={`w-0.5 transition-all duration-500 ease-in-out bg-gradient-to-b from-amber-500/30 to-amber-500/10 ${
+                              activeHoverLevel2 === "fd" ? "h-8 opacity-100" : "h-0 opacity-0 pointer-events-none"
+                            }`} />
+
+                            {/* Level 3 Content (FD) */}
+                            <div className={`transition-all duration-500 ease-in-out transform origin-top ${
+                              activeHoverLevel2 === "fd"
+                                ? "opacity-100 scale-100 max-h-[300px] translate-y-0"
+                                : "opacity-0 scale-95 max-h-0 -translate-y-4 overflow-hidden pointer-events-none"
+                            }`}>
+                              <div className="p-5 w-64 rounded-2xl border border-amber-500/25 bg-gradient-to-br from-amber-500/10 via-white/45 to-amber-500/5 shadow-[0_15px_30px_rgba(245,158,11,0.1)] backdrop-blur-2xl text-left relative overflow-hidden">
+                                <span className="text-[8px] font-mono text-amber-800 tracking-wider uppercase font-bold bg-amber-500/20 px-2 py-0.5 rounded-full w-fit">
+                                  Fixed Return
+                                </span>
+                                <h5 className="text-sm font-bold text-primary font-clash mt-2.5 mb-1">
+                                  Company Deposit
+                                </h5>
+                                <p className="text-xs text-muted-foreground leading-normal font-sans font-medium">
+                                  Corporate deposits with secure, verified high yields.
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Mutual Funds child branch */}
+                          <div
+                            className="flex flex-col items-center"
+                            onMouseEnter={() => setActiveHoverLevel2("mf")}
+                            onMouseLeave={() => setActiveHoverLevel2(null)}
+                          >
+                            {/* MF Box */}
+                            <div className={`p-6 w-72 rounded-3xl border transition-all duration-300 text-left relative overflow-hidden select-none cursor-pointer ${
+                              activeHoverLevel2 === "mf"
+                                ? "bg-amber-500/10 border-amber-500/40 shadow-md scale-[1.02]"
+                                : "border-amber-500/20 bg-gradient-to-br from-white/50 via-white/35 to-amber-500/5 shadow-[0_15px_35px_rgba(245,158,11,0.06)] hover:scale-[1.01]"
+                            }`}>
+                              <span className="text-[9px] font-mono text-amber-700 tracking-wider uppercase font-bold bg-amber-500/10 px-2 py-0.5 rounded-full w-fit">
+                                Active Growth
+                              </span>
+                              <h4 className="text-base font-bold text-primary font-clash mt-3 mb-1.5">
+                                Mutual Funds
+                              </h4>
+                              <p className="text-xs text-muted-foreground leading-relaxed font-sans font-medium">
+                                Market-linked growth with diversification.
+                              </p>
+                            </div>
+
+                            {/* Level 3 Connector (MF) */}
+                            <div className={`w-0.5 transition-all duration-500 ease-in-out bg-gradient-to-b from-amber-500/30 to-amber-500/10 ${
+                              activeHoverLevel2 === "mf" ? "h-8 opacity-100" : "h-0 opacity-0 pointer-events-none"
+                            }`} />
+
+                            {/* Level 3 Content (MF - 4 boxes) */}
+                            <div className={`transition-all duration-500 ease-in-out transform origin-top ${
+                              activeHoverLevel2 === "mf"
+                                ? "opacity-100 scale-100 max-h-[500px] translate-y-0"
+                                : "opacity-0 scale-95 max-h-0 -translate-y-4 overflow-hidden pointer-events-none"
+                            }`}>
+                              <div className="grid grid-cols-2 gap-4 w-[360px]">
+                                {[
+                                  { title: "SIP", desc: "Systematic investments for long-term compound growth." },
+                                  { title: "SIF", desc: "Specialized Investment Funds with hurdle targets." },
+                                  { title: "PMS", desc: "Portfolio Management Services for customized asset allocation." },
+                                  { title: "Lumpsum", desc: "Compounding one-time principal investments over any tenure." }
+                                ].map((sub, i) => (
+                                  <div key={i} className="p-4 rounded-2xl border border-amber-500/25 bg-gradient-to-br from-amber-500/10 via-white/45 to-amber-500/5 shadow-[0_15px_30px_rgba(245,158,11,0.1)] backdrop-blur-2xl text-left relative overflow-hidden">
+                                    <span className="text-[8px] font-mono text-amber-800 tracking-wider uppercase font-bold bg-amber-500/20 px-2 py-0.5 rounded-full w-fit">
+                                      Growth
+                                    </span>
+                                    <h5 className="text-xs font-bold text-primary font-clash mt-2 mb-1">{sub.title}</h5>
+                                    <p className="text-[10px] text-muted-foreground font-sans leading-tight">{sub.desc}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+
+                        </div>
+                      </div>
+
+                      {/* Life Insurance Box Branch (Level 1 only) */}
+                      <div className="flex flex-col items-center">
+                        <div className="p-6 w-80 rounded-3xl border border-amber-500/20 bg-gradient-to-br from-white/50 via-white/35 to-amber-500/5 shadow-[0_20px_50px_rgba(245,158,11,0.08)] backdrop-blur-2xl text-left relative overflow-hidden select-none cursor-default hover:scale-[1.01] transition-transform duration-300">
+                          <div className="absolute top-0 right-0 w-16 h-16 bg-amber-400/5 rounded-full blur-xl pointer-events-none" />
+                          <span className="text-[9px] font-mono text-amber-700 tracking-wider uppercase font-bold bg-amber-500/10 px-2 py-0.5 rounded-full w-fit">
+                            Risk Mitigation
+                          </span>
+                          <h4 className="text-lg font-bold text-primary font-clash mt-3 mb-1.5">
+                            Life & General Insurance
+                          </h4>
+                          <p className="text-xs text-muted-foreground leading-relaxed font-sans font-medium">
+                            Protecting your family's future, health, and properties.
+                          </p>
+                        </div>
+                      </div>
+
                     </div>
                   </div>
                 </div>
