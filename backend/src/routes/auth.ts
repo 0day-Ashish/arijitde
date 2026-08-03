@@ -123,7 +123,7 @@ router.post('/otp/verify', authLimiter, async (req, res, next) => {
     const refCode = await generateUniqueReferralCode();
 
     // Upsert user in database
-    const user = await prisma.user.upsert({
+    let user = await prisma.user.upsert({
       where: { email: formattedEmail },
       update: {
         name: name || undefined,
@@ -138,6 +138,37 @@ router.post('/otp/verify', authLimiter, async (req, res, next) => {
         referrerId: referrerId || null,
       },
     });
+
+    // Auto-promote to CLIENT if email matches an ExistingClient record
+    if (user.role !== 'ADMIN') {
+      const clientRecord = await prisma.existingClient.findFirst({
+        where: {
+          email: { equals: formattedEmail, mode: 'insensitive' },
+        },
+      });
+
+      if (clientRecord && user.role !== 'CLIENT') {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            role: 'CLIENT',
+            name: user.name || clientRecord.name || null,
+          },
+        });
+
+        // Ensure a Client record exists for dashboard access
+        await prisma.client.upsert({
+          where: { userId: user.id },
+          update: {},
+          create: {
+            userId: user.id,
+            activePlan: 'PREMIUM',
+            advisorNotes: 'Logged in via OTP',
+            activatedAt: new Date(),
+          },
+        });
+      }
+    }
 
     const token = signToken({
       userId: user.id,

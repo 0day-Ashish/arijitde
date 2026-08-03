@@ -247,6 +247,8 @@ export default function Home() {
         const user = JSON.parse(userStr);
         if (user.role === "ADMIN") {
           setDashboardUrl("/dashboard/admin");
+        } else if (user.role === "CLIENT") {
+          setDashboardUrl("/dashboard/client");
         } else {
           setDashboardUrl("/dashboard/user");
         }

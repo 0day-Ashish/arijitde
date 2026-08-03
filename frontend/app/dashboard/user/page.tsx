@@ -211,8 +211,17 @@ export default function UserDashboard() {
     }
 
     try {
-      setToken(savedToken);
       const userObj = JSON.parse(savedUser);
+      if (userObj.role === "CLIENT") {
+        window.location.href = "/dashboard/client";
+        return;
+      }
+      if (userObj.role === "ADMIN") {
+        window.location.href = "/dashboard/admin";
+        return;
+      }
+
+      setToken(savedToken);
       setUserData(userObj);
       if (userObj.dob) {
         const computedAge = calculateAge(userObj.dob);
@@ -307,6 +316,15 @@ export default function UserDashboard() {
       if (!meRes.ok) throw new Error("Auth verify failed");
 
       const currentRole = meData.data?.role || "GUEST";
+      if (currentRole === "CLIENT") {
+        window.location.href = "/dashboard/client";
+        return;
+      }
+      if (currentRole === "ADMIN") {
+        window.location.href = "/dashboard/admin";
+        return;
+      }
+
       const currentPhone = meData.data?.phone;
 
       // Update local storage user just in case role changed
