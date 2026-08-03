@@ -710,9 +710,9 @@ export default function Home() {
                                 <div className="pl-4 border-l-2 border-amber-500/30 grid grid-cols-1 gap-2.5">
                                   {[
                                     { title: "SIP", desc: "Systematic investments for long-term compound growth." },
+                                    { title: "Lumpsum", desc: "Compounding one-time principal investments over any tenure." },
                                     { title: "SIF", desc: "Specialized Investment Funds with hurdle targets." },
-                                    { title: "PMS", desc: "Portfolio Management Services for customized asset allocation." },
-                                    { title: "Lumpsum", desc: "Compounding one-time principal investments over any tenure." }
+                                    { title: "PMS", desc: "Portfolio Management Services for customized asset allocation." }
                                   ].map((sub, i) => (
                                     <div 
                                       key={i} 
@@ -933,9 +933,9 @@ export default function Home() {
                               <div className="grid grid-cols-4 gap-3 w-[900px]">
                                 {[
                                   { title: "SIP", desc: "Systematic investments for long-term compound growth." },
+                                  { title: "Lumpsum", desc: "Compounding one-time principal investments over any tenure." },
                                   { title: "SIF", desc: "Specialized Investment Funds with hurdle targets." },
-                                  { title: "PMS", desc: "Portfolio Management Services for customized asset allocation." },
-                                  { title: "Lumpsum", desc: "Compounding one-time principal investments over any tenure." }
+                                  { title: "PMS", desc: "Portfolio Management Services for customized asset allocation." }
                                 ].map((sub, i) => (
                                   <div 
                                     key={i} 
