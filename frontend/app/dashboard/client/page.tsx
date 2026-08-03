@@ -2146,30 +2146,6 @@ export default function ClientDashboard() {
                         <div className="space-y-4 pt-4 border-t border-border/20 text-left animate-in fade-in duration-300">
                           <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-widest block font-bold text-neutral-800">Growth Gap & Achievable Performance</span>
                           
-                          {/* Metrics summary cards */}
-                          <div className="w-full">
-                            <div className="p-4 rounded-2xl border border-primary/10 bg-white/40 shadow-sm flex flex-col gap-2 relative overflow-hidden">
-                              <span className="text-[9px] text-neutral-500 uppercase font-mono tracking-wider">Weighted Annual Return (XIRR)</span>
-                              <div className="flex justify-between items-baseline">
-                                <span className="text-xl font-bold text-neutral-900 font-clash">
-                                  {comparison.currentXirr.toFixed(1)}%
-                                </span>
-                                <span className="text-xs text-neutral-500 font-medium font-sans">Current Avg</span>
-                              </div>
-                              <div className="w-full h-1.5 bg-neutral-100 rounded-full overflow-hidden relative">
-                                <div className="h-full bg-amber-500 rounded-full absolute left-0 top-0" style={{ width: `${Math.min(100, (comparison.currentXirr / 30) * 100)}%` }} />
-                                <div className="h-full bg-emerald-500 rounded-full absolute left-0 top-0 opacity-40" style={{ width: `${Math.min(100, (comparison.achievableXirr / 30) * 100)}%` }} />
-                              </div>
-                              <div className="flex justify-between items-baseline mt-1 font-sans">
-                                <span className="text-xs text-emerald-600 font-bold font-mono">
-                                  {comparison.achievableXirr.toFixed(1)}% Achievable
-                                </span>
-                                <span className="text-[10px] text-emerald-600 font-medium">
-                                  +{(comparison.achievableXirr - comparison.currentXirr).toFixed(1)}% gap
-                                </span>
-                              </div>
-                            </div>
-                          </div>
 
                           {/* Detail Table */}
                           <div className="border border-border/30 bg-white/40 rounded-2xl overflow-hidden font-sans text-[11px] mt-4">
