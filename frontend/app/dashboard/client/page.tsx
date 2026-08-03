@@ -2133,30 +2133,6 @@ export default function ClientDashboard() {
                       </div>
                     </div>
 
-                    {/* Insights list */}
-                    {(() => {
-                      const textInsights = Array.isArray(scoreReport.insights)
-                        ? scoreReport.insights
-                        : scoreReport.insights?.textInsights || [];
-                      
-                      if (textInsights.length === 0) return null;
-
-                      return (
-                        <div className="space-y-2 pt-2 border-t border-border/20 text-left">
-                          <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-widest block">Anomalies Detected</span>
-                          <div className="space-y-1.5">
-                            {textInsights.map((insight: string, idx: number) => (
-                              <div key={idx} className="p-2.5 bg-white border border-border/50 rounded-xl flex items-start gap-2 text-neutral-700 leading-normal text-[11px]">
-                                <span className="w-4 h-4 rounded bg-neutral-100 flex items-center justify-center font-mono text-[9px] text-neutral-500 shrink-0 mt-0.5">
-                                  0{idx + 1}
-                                </span>
-                                <span>{insight}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })()}
 
                     {/* Fund Comparison / Gap Analysis Telemetry */}
                     {(() => {
