@@ -28,7 +28,8 @@ import {
   Home,
   Briefcase,
   TrendingUp,
-  Star
+  Star,
+  Shield
 } from "lucide-react";
 import SoftBoxBlurBg from "@/components/SoftBoxBlurBg";
 import GradualBlur from "@/components/GradualBlur";
@@ -433,7 +434,7 @@ export default function ClientDashboard() {
 
     try {
       const parsedUser = JSON.parse(savedUser);
-      if (parsedUser.role !== "CLIENT") {
+      if (parsedUser.role !== "CLIENT" && parsedUser.role !== "ADMIN") {
         window.location.href = "/dashboard/user";
         return;
       }
@@ -547,7 +548,7 @@ export default function ClientDashboard() {
         return;
       }
       const meData = await meRes.json();
-      if (meRes.ok && meData.data?.role === "CLIENT") {
+      if (meRes.ok && (meData.data?.role === "CLIENT" || meData.data?.role === "ADMIN")) {
         const uObj = meData.data;
         setUserData(uObj);
         localStorage.setItem("user", JSON.stringify(uObj));
@@ -1205,6 +1206,15 @@ export default function ClientDashboard() {
                 <User className="w-3.5 h-3.5 text-primary" />
                 <span>{userData.name || userData.email}</span>
               </div>
+              {userData.role === "ADMIN" && (
+                <a
+                  href="/dashboard/admin"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary text-xs font-semibold transition duration-200 cursor-pointer"
+                >
+                  <Shield className="w-3.5 h-3.5" />
+                  <span>Admin Panel</span>
+                </a>
+              )}
               <button
                 onClick={() => setShowLogoutWarning(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border hover:border-red-500/30 bg-white/40 hover:bg-red-500/10 text-neutral-600 hover:text-red-600 text-xs font-semibold transition duration-200 cursor-pointer"

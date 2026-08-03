@@ -33,7 +33,8 @@ import {
   Save,
   Eye,
   HelpCircle,
-  Bell
+  Bell,
+  LayoutGrid
 } from 'lucide-react';
 
 // Goal Mapping helper
@@ -1265,6 +1266,14 @@ export default function AdminDashboard() {
               </div>
             )}
           </div>
+
+          <a
+            href="/dashboard/client"
+            className="flex items-center gap-2 px-4 py-2 border border-primary/20 bg-primary/5 rounded-xl hover:bg-primary/10 transition-all duration-200 text-xs font-semibold cursor-pointer text-primary"
+          >
+            <LayoutGrid className="w-3.5 h-3.5" />
+            My Client View
+          </a>
 
           <button
             onClick={() => {

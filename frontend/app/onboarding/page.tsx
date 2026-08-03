@@ -33,6 +33,7 @@ export default function Onboarding() {
   const [clientEmail, setClientEmail] = useState("");
   const [clientOtp, setClientOtp] = useState("");
   const [clientSuccessMsg, setClientSuccessMsg] = useState("");
+  const [rememberMe, setRememberMe] = useState(true);
 
   const backendUrl = process.env.NEXT_PUBLIC_API_URL;
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
