@@ -337,9 +337,16 @@ export default function ClientDashboard() {
   const hasActivePortfolioData = !!(activePortfolio && activePortfolio.rows && activePortfolio.rows.length > 0);
   
   const currentVal = (() => {
+    // 1. Use client-level aum/currentValue if available
     if (hasExistingClientData) {
       return existingClientData.aum || existingClientData.currentValue || 0;
     }
+    // 2. Sum aum from all associated folios
+    if (existingClientData && existingClientData.folios && existingClientData.folios.length > 0) {
+      const folioTotal = existingClientData.folios.reduce((sum: number, f: any) => sum + (f.aum || 0), 0);
+      if (folioTotal > 0) return folioTotal;
+    }
+    // 3. Fall back to active portfolio rows
     if (hasActivePortfolioData) {
       return activePortfolio.rows.reduce((sum: number, r: any) => sum + (r.currentValue || 0), 0);
     }
@@ -347,9 +354,16 @@ export default function ClientDashboard() {
   })();
 
   const investedVal = (() => {
+    // 1. Use client-level purchaseValue if available
     if (existingClientData && (existingClientData.purchaseValue || 0) > 0) {
       return existingClientData.purchaseValue;
     }
+    // 2. Sum purchaseValue from all associated folios
+    if (existingClientData && existingClientData.folios && existingClientData.folios.length > 0) {
+      const folioTotal = existingClientData.folios.reduce((sum: number, f: any) => sum + (f.purchaseValue || 0), 0);
+      if (folioTotal > 0) return folioTotal;
+    }
+    // 3. Fall back to active portfolio rows
     if (hasActivePortfolioData) {
       return activePortfolio.rows.reduce((sum: number, r: any) => sum + (r.invested || 0), 0);
     }
