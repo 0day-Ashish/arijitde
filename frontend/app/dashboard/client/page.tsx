@@ -1764,7 +1764,7 @@ export default function ClientDashboard() {
                         return (
                           <div className={`text-lg sm:text-xl font-bold font-mono ${isProfit ? 'text-emerald-600' : 'text-rose-600'} whitespace-nowrap`}>
                             {isProfit ? '+' : ''}₹{totalGain.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            <span className="text-[10px] font-sans font-semibold block mt-0.5">
+                            <span className="text-[10px] font-mono font-semibold block mt-0.5">
                               ({isProfit ? '+' : ''}{totalGainPercent.toFixed(2)}%)
                             </span>
                           </div>
@@ -1966,11 +1966,11 @@ export default function ClientDashboard() {
                                               ₹{scheme.current.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                             </span>
                                             {scheme.invested > 0 ? (
-                                              <span className={`text-[10px] font-sans font-bold ${isProfit ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                              <span className={`text-[10px] font-mono font-bold ${isProfit ? 'text-emerald-600' : 'text-rose-600'}`}>
                                                 ({isProfit ? '+' : ''}{profitLossPercent.toFixed(2)}%)
                                               </span>
                                             ) : (
-                                              <span className="text-[10px] font-sans font-medium text-neutral-400">
+                                              <span className="text-[10px] font-mono font-medium text-neutral-400">
                                                 (—)
                                               </span>
                                             )}
