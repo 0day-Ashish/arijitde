@@ -896,7 +896,7 @@ export default function Home() {
 
                           {/* Mutual Funds child branch */}
                           <div
-                            className="flex flex-col items-center"
+                            className="flex flex-col items-center relative"
                             onMouseEnter={() => setActiveHoverLevel2("mf")}
                             onMouseLeave={() => setActiveHoverLevel2(null)}
                           >
@@ -923,12 +923,12 @@ export default function Home() {
                             }`} />
 
                             {/* Level 3 Content (MF - 4 boxes) */}
-                            <div className={`transition-all duration-500 ease-in-out transform origin-top ${
+                            <div className={`absolute top-full left-1/2 -translate-x-1/2 z-20 transition-all duration-500 ease-in-out transform origin-top ${
                               activeHoverLevel2 === "mf"
                                 ? "opacity-100 scale-100 max-h-[500px] translate-y-0"
                                 : "opacity-0 scale-95 max-h-0 -translate-y-4 overflow-hidden pointer-events-none"
                             }`}>
-                              <div className="grid grid-cols-2 gap-4 w-[580px]">
+                              <div className="grid grid-cols-4 gap-3 w-[900px]">
                                 {[
                                   { title: "SIP", desc: "Systematic investments for long-term compound growth." },
                                   { title: "SIF", desc: "Specialized Investment Funds with hurdle targets." },
@@ -937,14 +937,14 @@ export default function Home() {
                                 ].map((sub, i) => (
                                   <div 
                                     key={i} 
-                                    className="p-5 min-h-[145px] rounded-3xl border border-amber-500/25 bg-gradient-to-br from-amber-500/10 via-white/45 to-amber-500/5 shadow-[0_15px_30px_rgba(245,158,11,0.1)] backdrop-blur-2xl text-left relative overflow-hidden select-none cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
+                                    className="p-5 min-h-[150px] rounded-3xl border border-amber-500/25 bg-gradient-to-br from-amber-500/10 via-white/45 to-amber-500/5 shadow-[0_15px_30px_rgba(245,158,11,0.08)] backdrop-blur-2xl text-left relative overflow-hidden select-none cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
                                     onClick={scrollToFaq}
                                   >
                                     <span className="text-[8px] font-mono text-amber-800 tracking-wider uppercase font-bold bg-amber-500/20 px-2 py-0.5 rounded-full w-fit">
                                       Growth
                                     </span>
                                     <h5 className="text-base font-bold text-primary font-clash mt-3 mb-1">{sub.title}</h5>
-                                    <p className="text-xs text-muted-foreground leading-relaxed font-sans font-medium">{sub.desc}</p>
+                                    <p className="text-xs text-muted-foreground leading-normal font-sans font-medium">{sub.desc}</p>
                                   </div>
                                 ))}
                               </div>
