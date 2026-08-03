@@ -12,6 +12,7 @@ import { GoArrowDownRight } from "react-icons/go";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ChatbotWidget from "@/components/ChatbotWidget";
+import BookCallModal from "@/components/BookCallModal";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -150,6 +151,7 @@ const servicesList = [
 export default function Home() {
   const [count, setCount] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [preloaderGone, setPreloaderGone] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const scrollVideoContainerRef = useRef<HTMLDivElement | null>(null);
@@ -267,6 +269,17 @@ export default function Home() {
     setDailyQuote(quotesList[day % quotesList.length] || quotesList[0]);
 
 
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("book") === "true") {
+        setIsBookingModalOpen(true);
+        // Clean up the URL search params so reloading doesn't re-open it
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
   }, []);
 
   // Cookie Acceptance State
@@ -490,7 +503,7 @@ export default function Home() {
         <SoftBoxBlurBg />
       </div>
 
-      <Navbar isLoaded={isLoaded} />
+      <Navbar isLoaded={isLoaded} onBookCallClick={() => setIsBookingModalOpen(true)} />
 
       <SvgScrollWipe
         screen1={
@@ -1601,14 +1614,12 @@ export default function Home() {
                 </h3>
 
                 {/* Booking Link */}
-                <a
-                  href="https://wa.me/919831093297"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full block py-4 px-6 rounded-2xl bg-primary text-primary-foreground font-semibold text-center hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 shadow-md cursor-pointer relative z-10"
+                <button
+                  onClick={() => setIsBookingModalOpen(true)}
+                  className="w-full block py-4 px-6 rounded-2xl bg-primary text-primary-foreground font-semibold text-center hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 shadow-md cursor-pointer relative z-10 font-clash"
                 >
                   Book a call
-                </a>
+                </button>
 
                 {/* Divider Line */}
                 <div className="w-full h-[1px] bg-border my-8 relative z-10" />
@@ -1760,7 +1771,9 @@ export default function Home() {
         </ScrollBlurReveal>
       </div>
 
-      <Footer footerRef={footerRef} />
+      <Footer footerRef={footerRef} onBookCallClick={() => setIsBookingModalOpen(true)} />
+
+      <BookCallModal isOpen={isBookingModalOpen} onClose={() => setIsBookingModalOpen(false)} />
 
       {/* Preloader Overlay Screen (Slides down smoothly) */}
       {!preloaderGone && (

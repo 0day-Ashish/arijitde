@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 import { z } from 'zod';
 import fs from 'fs';
 import path from 'path';
@@ -232,6 +232,15 @@ const bookSessionSchema = z.object({
   slot3: z.string().refine((val) => !isNaN(Date.parse(val)), { message: 'Invalid slot 3 format' }).transform((val) => new Date(val)),
 });
 
+const bookSessionPublicSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  phone: z.string().min(5, 'Phone number must be at least 5 characters'),
+  email: z.string().email('Invalid email address'),
+  slot1: z.string().refine((val) => !isNaN(Date.parse(val)), { message: 'Invalid slot 1 format' }).transform((val) => new Date(val)),
+  slot2: z.string().refine((val) => !isNaN(Date.parse(val)), { message: 'Invalid slot 2 format' }).transform((val) => new Date(val)),
+  slot3: z.string().refine((val) => !isNaN(Date.parse(val)), { message: 'Invalid slot 3 format' }).transform((val) => new Date(val)),
+});
+
 const adminConfirmSessionSchema = z.object({
   confirmedSlot: z.string().refine((val) => !isNaN(Date.parse(val)), { message: 'Invalid confirmed slot format' }).transform((val) => new Date(val)),
   googleMeetLink: z.string().url('Invalid Google Meet URL format'),
@@ -275,6 +284,61 @@ router.post('/book-session', authMiddleware, async (req: AuthenticatedRequest, r
         },
       });
     }
+
+    res.json({
+      success: true,
+      data: session,
+      message: 'Slots registered. Arijit will confirm your schedule soon.',
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 6.5. POST /api/leads/book-session-public (public route to book preferred slots directly)
+router.post('/book-session-public', async (req: Request, res: Response, next) => {
+  try {
+    const { name, phone, email, slot1, slot2, slot3 } = bookSessionPublicSchema.parse(req.body);
+
+    const emailNormalized = email.trim().toLowerCase();
+
+    // Find or create User with role GUEST
+    let user = await prisma.user.findUnique({
+      where: { email: emailNormalized },
+    });
+
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          email: emailNormalized,
+          name: name.trim(),
+          phone: phone.trim(),
+          role: 'GUEST',
+        },
+      });
+    } else {
+      // Update missing phone/name fields on existing user
+      const updateData: any = {};
+      if (!user.name) updateData.name = name.trim();
+      if (!user.phone) updateData.phone = phone.trim();
+      if (Object.keys(updateData).length > 0) {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: updateData,
+        });
+      }
+    }
+
+    // Create a new AdvisorySession linked to the user
+    const session = await prisma.advisorySession.create({
+      data: {
+        userId: user.id,
+        preferredSlot1: slot1,
+        preferredSlot2: slot2,
+        preferredSlot3: slot3,
+        status: 'PENDING',
+      },
+    });
 
     res.json({
       success: true,

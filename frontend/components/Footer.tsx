@@ -4,9 +4,10 @@ import React, { useState, useEffect } from 'react';
 
 interface FooterProps {
   footerRef?: React.RefObject<HTMLDivElement | null>;
+  onBookCallClick?: () => void;
 }
 
-export default function Footer({ footerRef }: FooterProps) {
+export default function Footer({ footerRef, onBookCallClick }: FooterProps) {
   const [currentTime, setCurrentTime] = useState('');
   const [isVisible, setIsVisible] = useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -70,9 +71,21 @@ export default function Footer({ footerRef }: FooterProps) {
             <a href="mailto:arijit1504@gmail.com" className="text-muted-foreground hover:text-primary transition duration-200 underline decoration-primary/30 underline-offset-4 font-normal">
               arijit1504@gmail.com
             </a>
-            <a href="https://wa.me/919831093297" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition duration-200 underline decoration-primary/30 underline-offset-4 font-normal">
-              Book a call
-            </a>
+            {onBookCallClick ? (
+              <button
+                onClick={onBookCallClick}
+                className="text-muted-foreground hover:text-primary transition duration-200 underline decoration-primary/30 underline-offset-4 font-normal cursor-pointer bg-transparent border-none p-0 text-left font-clash"
+              >
+                Book a call
+              </button>
+            ) : (
+              <a
+                href="/?book=true"
+                className="text-muted-foreground hover:text-primary transition duration-200 underline decoration-primary/30 underline-offset-4 font-normal"
+              >
+                Book a call
+              </a>
+            )}
           </div>
 
           {/* Visit us */}

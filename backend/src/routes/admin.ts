@@ -364,8 +364,17 @@ router.post('/folios/upload', upload.single('file'), async (req: AuthenticatedRe
       return;
     }
 
+    // Clean keys of BOM and whitespaces
+    const normalizedRows = rawRows.map(row => {
+      const newRow: Record<string, any> = {};
+      for (const key of Object.keys(row)) {
+        newRow[key.trim().replace(/^\uFEFF/, '')] = row[key];
+      }
+      return newRow;
+    });
+
     // Validate if at least key headers are present
-    const firstRowKeys = Object.keys(rawRows[0] || {});
+    const firstRowKeys = Object.keys(normalizedRows[0] || {});
     const requiredKeys = ['Client Name', 'Folio Number', 'Scheme Name'];
     const missingKeys = requiredKeys.filter(key => !firstRowKeys.includes(key));
     if (missingKeys.length > 0) {
@@ -377,7 +386,7 @@ router.post('/folios/upload', upload.single('file'), async (req: AuthenticatedRe
     }
 
     // Parse all rows
-    const parsedFolios = rawRows.map(row => ({
+    const parsedFolios = normalizedRows.map(row => ({
       clientName: String(row["Client Name"] || '').trim() || null,
       clientPan: String(row["Client PAN"] || '').trim() || null,
       clientAadhaar: String(row["Client Aadhaar"] || '').trim() || null,
@@ -641,8 +650,17 @@ router.post('/existing-clients/upload', upload.single('file'), async (req: Authe
       return;
     }
 
+    // Clean keys of BOM and whitespaces
+    const normalizedRows = rawRows.map(row => {
+      const newRow: Record<string, any> = {};
+      for (const key of Object.keys(row)) {
+        newRow[key.trim().replace(/^\uFEFF/, '')] = row[key];
+      }
+      return newRow;
+    });
+
     // Validate if at least key headers are present
-    const firstRowKeys = Object.keys(rawRows[0] || {});
+    const firstRowKeys = Object.keys(normalizedRows[0] || {});
     const requiredKeys = ['Name', 'PAN'];
     const missingKeys = requiredKeys.filter(key => !firstRowKeys.includes(key));
     if (missingKeys.length > 0) {
@@ -654,7 +672,7 @@ router.post('/existing-clients/upload', upload.single('file'), async (req: Authe
     }
 
     // Parse all rows
-    const parsedClients = rawRows.map(row => ({
+    const parsedClients = normalizedRows.map(row => ({
       title: String(row["Title (Mr./Mrs./Ms.)"] || row["Title"] || '').trim() || null,
       name: String(row["Name"] || '').trim() || null,
       pan: String(row["PAN"] || '').trim() || null,
@@ -860,8 +878,17 @@ router.post('/portfolio-valuations/upload', upload.single('file'), async (req: A
       return;
     }
 
+    // Clean keys of BOM and whitespaces
+    const normalizedRows = rawRows.map(row => {
+      const newRow: Record<string, any> = {};
+      for (const key of Object.keys(row)) {
+        newRow[key.trim().replace(/^\uFEFF/, '')] = row[key];
+      }
+      return newRow;
+    });
+
     // Validate if key headers are present
-    const firstRowKeys = Object.keys(rawRows[0] || {});
+    const firstRowKeys = Object.keys(normalizedRows[0] || {});
     const requiredKeys = ['Client Name', 'PAN Number'];
     const missingKeys = requiredKeys.filter(key => !firstRowKeys.includes(key));
     if (missingKeys.length > 0) {
@@ -873,7 +900,7 @@ router.post('/portfolio-valuations/upload', upload.single('file'), async (req: A
     }
 
     // Parse all rows
-    const parsedValuations = rawRows.map(row => ({
+    const parsedValuations = normalizedRows.map(row => ({
       clientName: String(row["Client Name"] || '').trim() || null,
       iwellCode: String(row["IWELL Code"] || '').trim() || null,
       iwellCode2: String(row["IWELL Code 2"] || '').trim() || null,
