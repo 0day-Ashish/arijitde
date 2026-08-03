@@ -512,7 +512,9 @@ router.post('/folios/upload', upload.single('file'), async (req: AuthenticatedRe
         }
       }
 
-      let insertedCount = 0;
+      // 3. Find which rows require creating a new client, and collect unique new clients to prevent duplicates
+      const newClientsToInsertMap = new Map<string, any>();
+
       for (const row of parsedFolios) {
         let match = null;
         if (row.clientPan) {
@@ -528,63 +530,168 @@ router.post('/folios/upload', upload.single('file'), async (req: AuthenticatedRe
           match = clientByName.get(row.nameAsPerFolio.trim().toLowerCase());
         }
 
-        let existingClientId = null;
-        if (match) {
-          existingClientId = match.id;
-        } else {
-          // Create new client first
-          const newClient = await tx.existingClient.create({
-            data: {
-              name: row.clientName || row.nameAsPerFolio,
-              pan: row.clientPan ? row.clientPan.trim().toUpperCase() : (row.panAsPerFolio ? row.panAsPerFolio.trim().toUpperCase() : null),
-              email: row.email,
-              mobile: row.mobile,
-              dob: row.dob,
-              address1: row.address1,
-              address2: row.address2,
-              address3: row.address3,
-              aadhaar: row.clientAadhaar,
-              nominee1Name: row.nominee1Name,
-              nominee1Relation: row.nominee1Relation,
-              nominee1Percentage: row.nominee1Percentage,
-              nominee2Name: row.nominee2Name,
-              nominee2Relation: row.nominee2Relation,
-              nominee2Percentage: row.nominee2Percentage,
-              nominee3Name: row.nominee3Name,
-              nominee3Relation: row.nominee3Relation,
-              nominee3Percentage: row.nominee3Percentage,
-              appCode: row.appCode,
-              iwellCode: row.iwellCode,
-              iwellCode2: row.iwellCode2,
-              familyHead: row.familyHead,
-              dpId: row.dpId,
-              aum: row.aum,
+        if (!match) {
+          const name = row.clientName || row.nameAsPerFolio;
+          if (name) {
+            const pan = row.clientPan ? row.clientPan.trim().toUpperCase() : (row.panAsPerFolio ? row.panAsPerFolio.trim().toUpperCase() : null);
+            const key = pan ? `pan:${pan}` : `name:${name.trim().toLowerCase()}`;
+            if (!newClientsToInsertMap.has(key)) {
+              newClientsToInsertMap.set(key, {
+                name: name,
+                pan: pan,
+                email: row.email,
+                mobile: row.mobile,
+                dob: row.dob,
+                address1: row.address1,
+                address2: row.address2,
+                address3: row.address3,
+                aadhaar: row.clientAadhaar,
+                nominee1Name: row.nominee1Name,
+                nominee1Relation: row.nominee1Relation,
+                nominee1Percentage: row.nominee1Percentage,
+                nominee2Name: row.nominee2Name,
+                nominee2Relation: row.nominee2Relation,
+                nominee2Percentage: row.nominee2Percentage,
+                nominee3Name: row.nominee3Name,
+                nominee3Relation: row.nominee3Relation,
+                nominee3Percentage: row.nominee3Percentage,
+                appCode: row.appCode,
+                iwellCode: row.iwellCode,
+                iwellCode2: row.iwellCode2,
+                familyHead: row.familyHead,
+                dpId: row.dpId,
+                aum: row.aum,
+              });
             }
-          });
-
-          existingClientId = newClient.id;
-
-          // Put into maps so subsequent records match this client
-          if (newClient.pan) {
-            clientByPan.set(newClient.pan.trim().toUpperCase(), newClient);
-          }
-          if (newClient.name) {
-            clientByName.set(newClient.name.trim().toLowerCase(), newClient);
           }
         }
-
-        // Create Folio record linked to client
-        await tx.folio.create({
-          data: {
-            ...row,
-            existingClientId,
-          } as any
-        });
-        insertedCount++;
       }
+
+      // 4. Bulk insert new clients in chunks
+      const newClients = Array.from(newClientsToInsertMap.values());
+      if (newClients.length > 0) {
+        const chunkSize = 500;
+        for (let i = 0; i < newClients.length; i += chunkSize) {
+          await tx.existingClient.createMany({
+            data: newClients.slice(i, i + chunkSize)
+          });
+        }
+      }
+
+      // 5. Re-fetch all clients to rebuild maps containing newly created clients
+      const allClients = await tx.existingClient.findMany({});
+      clientByPan.clear();
+      clientByName.clear();
+      for (const c of allClients) {
+        if (c.pan) {
+          clientByPan.set(c.pan.trim().toUpperCase(), c);
+        }
+        if (c.name) {
+          clientByName.set(c.name.trim().toLowerCase(), c);
+        }
+      }
+
+      // 6. Map each folio to its matched client ID
+      const foliosToInsert = parsedFolios.map(row => {
+        let match = null;
+        if (row.clientPan) {
+          match = clientByPan.get(row.clientPan.trim().toUpperCase());
+        }
+        if (!match && row.panAsPerFolio) {
+          match = clientByPan.get(row.panAsPerFolio.trim().toUpperCase());
+        }
+        if (!match && row.clientName) {
+          match = clientByName.get(row.clientName.trim().toLowerCase());
+        }
+        if (!match && row.nameAsPerFolio) {
+          match = clientByName.get(row.nameAsPerFolio.trim().toLowerCase());
+        }
+
+        return {
+          clientName: row.clientName,
+          clientPan: row.clientPan,
+          clientAadhaar: row.clientAadhaar,
+          nameAsPerFolio: row.nameAsPerFolio,
+          panAsPerFolio: row.panAsPerFolio,
+          folioNumber: row.folioNumber,
+          schemeName: row.schemeName,
+          units: row.units,
+          aum: row.aum,
+          purchaseValue: row.purchaseValue,
+          email: row.email,
+          mobile: row.mobile,
+          dob: row.dob,
+          holding: row.holding,
+          taxStatus: row.taxStatus,
+          comments: row.comments,
+          freezeDate: row.freezeDate,
+          address1: row.address1,
+          address2: row.address2,
+          address3: row.address3,
+          bankName: row.bankName,
+          bankAddress: row.bankAddress,
+          accountNumber: row.accountNumber,
+          ifscCode: row.ifscCode,
+          accountType: row.accountType,
+          jointHolder1Name: row.jointHolder1Name,
+          jointHolder1Pan: row.jointHolder1Pan,
+          jointHolder1Kyc: row.jointHolder1Kyc,
+          jointHolder1Aadhaar: row.jointHolder1Aadhaar,
+          jointHolder2Name: row.jointHolder2Name,
+          jointHolder2Pan: row.jointHolder2Pan,
+          jointHolder2Kyc: row.jointHolder2Kyc,
+          jointHolder2Aadhaar: row.jointHolder2Aadhaar,
+          guardianName: row.guardianName,
+          guardianPan: row.guardianPan,
+          guardianKyc: row.guardianKyc,
+          guardianAadhaar: row.guardianAadhaar,
+          nomineeOpted: row.nomineeOpted,
+          nominee1Name: row.nominee1Name,
+          nominee1Relation: row.nominee1Relation,
+          nominee1Percentage: row.nominee1Percentage,
+          nominee2Name: row.nominee2Name,
+          nominee2Relation: row.nominee2Relation,
+          nominee2Percentage: row.nominee2Percentage,
+          nominee3Name: row.nominee3Name,
+          nominee3Relation: row.nominee3Relation,
+          nominee3Percentage: row.nominee3Percentage,
+          ftFolio: row.ftFolio,
+          folioType: row.folioType,
+          clientDematId: row.clientDematId,
+          dpId: row.dpId,
+          appCode: row.appCode,
+          equityCode: row.equityCode,
+          familyHead: row.familyHead,
+          iwellCode: row.iwellCode,
+          iwellCode2: row.iwellCode2,
+          nomineeDetails: row.nomineeDetails,
+          nomineeDetails2: row.nomineeDetails2,
+          nomineeDetails3: row.nomineeDetails3,
+          operations: row.operations,
+          operationsCode: row.operationsCode,
+          relationshipManager: row.relationshipManager,
+          relationshipManager2: row.relationshipManager2,
+          subBroker: row.subBroker,
+          subBrokerCode: row.subBrokerCode,
+          lastUsedArn: row.lastUsedArn,
+          existingClientId: match ? match.id : null
+        };
+      });
+
+      // 7. Bulk insert folios in chunks
+      let insertedCount = 0;
+      const chunkSize = 500;
+      for (let i = 0; i < foliosToInsert.length; i += chunkSize) {
+        const chunk = foliosToInsert.slice(i, i + chunkSize);
+        const result = await tx.folio.createMany({
+          data: chunk as any
+        });
+        insertedCount += result.count;
+      }
+
       return insertedCount;
     }, {
-      timeout: 60000 // 60 seconds timeout for larger transactions
+      timeout: 120000 // 120 seconds timeout for larger transactions
     });
 
     res.status(201).json({
@@ -892,6 +999,23 @@ router.delete('/existing-clients/clear', async (req: AuthenticatedRequest, res: 
   }
 });
 
+// DELETE /api/admin/existing-clients/:id
+router.delete('/existing-clients/:id', async (req: AuthenticatedRequest, res: Response, next) => {
+  try {
+    const { id } = req.params;
+    const deletedClient = await prisma.existingClient.delete({
+      where: { id }
+    });
+    res.json({
+      success: true,
+      message: `Successfully deleted existing client ${deletedClient.name || id}.`,
+      data: deletedClient
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // 11. POST /api/admin/portfolio-valuations/upload
 router.post('/portfolio-valuations/upload', upload.single('file'), async (req: AuthenticatedRequest, res: Response, next) => {
   try {
@@ -999,7 +1123,9 @@ router.post('/portfolio-valuations/upload', upload.single('file'), async (req: A
         }
       }
 
-      let updatedCount = 0;
+      const clientsToUpdate: Array<{ id: string; data: any }> = [];
+      const clientsToCreateMap = new Map<string, any>();
+      
       for (const row of parsedValuations) {
         let match = null;
         if (row.pan) {
@@ -1008,10 +1134,10 @@ router.post('/portfolio-valuations/upload', upload.single('file'), async (req: A
         if (!match && row.clientName) {
           match = clientByName.get(row.clientName.trim().toLowerCase());
         }
-
+      
         if (match) {
-          await tx.existingClient.update({
-            where: { id: match.id },
+          clientsToUpdate.push({
+            id: match.id,
             data: {
               balanceUnits: row.balanceUnits,
               purchaseValue: row.purchaseValue,
@@ -1027,31 +1153,64 @@ router.post('/portfolio-valuations/upload', upload.single('file'), async (req: A
               iwellCode2: row.iwellCode2 || match.iwellCode2,
             }
           });
-          updatedCount++;
         } else {
-          // Create a new client record
-          await tx.existingClient.create({
-            data: {
-              name: row.clientName,
-              pan: row.pan ? row.pan.trim().toUpperCase() : null,
-              iwellCode: row.iwellCode,
-              iwellCode2: row.iwellCode2,
-              balanceUnits: row.balanceUnits,
-              purchaseValue: row.purchaseValue,
-              currentValue: row.currentValue,
-              oneDayChange: row.oneDayChange,
-              dividend: row.dividend,
-              averageHoldingDays: row.averageHoldingDays,
-              gain: row.gain,
-              absoluteReturn: row.absoluteReturn,
-              cagr: row.cagr,
-              xirr: row.xirr,
+          const name = row.clientName;
+          if (name) {
+            const pan = row.pan ? row.pan.trim().toUpperCase() : null;
+            const key = pan ? `pan:${pan}` : `name:${name.trim().toLowerCase()}`;
+            if (!clientsToCreateMap.has(key)) {
+              clientsToCreateMap.set(key, {
+                name: name,
+                pan: pan,
+                iwellCode: row.iwellCode,
+                iwellCode2: row.iwellCode2,
+                balanceUnits: row.balanceUnits,
+                purchaseValue: row.purchaseValue,
+                currentValue: row.currentValue,
+                oneDayChange: row.oneDayChange,
+                dividend: row.dividend,
+                averageHoldingDays: row.averageHoldingDays,
+                gain: row.gain,
+                absoluteReturn: row.absoluteReturn,
+                cagr: row.cagr,
+                xirr: row.xirr,
+              });
             }
-          });
-          updatedCount++;
+          }
         }
       }
+      
+      let updatedCount = 0;
+      
+      // 1. Batch updates in chunks using Promise.all to run parallel queries
+      const updateChunkSize = 100;
+      for (let i = 0; i < clientsToUpdate.length; i += updateChunkSize) {
+        const chunk = clientsToUpdate.slice(i, i + updateChunkSize);
+        await Promise.all(chunk.map(c => 
+          tx.existingClient.update({
+            where: { id: c.id },
+            data: c.data
+          })
+        ));
+        updatedCount += chunk.length;
+      }
+      
+      // 2. Batch inserts of new clients
+      const newClients = Array.from(clientsToCreateMap.values());
+      if (newClients.length > 0) {
+        const createChunkSize = 500;
+        for (let i = 0; i < newClients.length; i += createChunkSize) {
+          const chunk = newClients.slice(i, i + createChunkSize);
+          const result = await tx.existingClient.createMany({
+            data: chunk
+          });
+          updatedCount += result.count;
+        }
+      }
+      
       return updatedCount;
+    }, {
+      timeout: 120000 // 120 seconds timeout for larger transactions
     });
 
     res.status(201).json({

@@ -182,6 +182,7 @@ export default function AdminDashboard() {
   const [fetchingExistingClients, setFetchingExistingClients] = useState(false);
   const [selectedExistingClient, setSelectedExistingClient] = useState<any>(null);
   const [uploadingExistingClientFile, setUploadingExistingClientFile] = useState(false);
+  const [deletingClient, setDeletingClient] = useState(false);
   // Portfolio Valuation state variables
   const [portfolioValuationsList, setPortfolioValuationsList] = useState<any[]>([]);
   const [portfolioValuationsPagination, setPortfolioValuationsPagination] = useState({
@@ -450,6 +451,38 @@ export default function AdminDashboard() {
       alert(err.message || 'An unexpected error occurred while fetching existing clients');
     } finally {
       setFetchingExistingClients(false);
+    }
+  };
+
+  const handleDeleteExistingClient = async (id: string) => {
+    if (!token) return;
+    if (!window.confirm("Are you sure you want to delete this existing client and all associated folios? This action is permanent.")) {
+      return;
+    }
+
+    try {
+      setDeletingClient(true);
+      const headers = { 'Authorization': `Bearer ${token}` };
+      const res = await fetch(`${backendUrl}/api/admin/existing-clients/${id}`, {
+        method: 'DELETE',
+        headers
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to delete client');
+      }
+
+      const resData = await res.json();
+      alert(resData.message || 'Client successfully deleted.');
+      setSelectedExistingClient(null); // Close the drawer
+      // Refresh the existing clients list
+      fetchExistingClients(existingClientsPage, existingClientsSearchQuery);
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'An unexpected error occurred while deleting the client.');
+    } finally {
+      setDeletingClient(false);
     }
   };
 
@@ -2986,12 +3019,22 @@ export default function AdminDashboard() {
                 </h2>
                 <p className="text-xs text-neutral-500 font-mono mt-0.5">PAN: {selectedExistingClient.pan || 'N/A'}</p>
               </div>
-              <button
-                onClick={() => setSelectedExistingClient(null)}
-                className="p-2 border border-neutral-200 hover:bg-neutral-100 rounded-xl transition cursor-pointer"
-              >
-                <X className="w-4 h-4 text-neutral-500" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleDeleteExistingClient(selectedExistingClient.id)}
+                  disabled={deletingClient}
+                  className="px-3 py-2 border border-red-200 hover:bg-red-50 text-red-600 rounded-xl transition cursor-pointer flex items-center gap-1.5 text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>Delete Client</span>
+                </button>
+                <button
+                  onClick={() => setSelectedExistingClient(null)}
+                  className="p-2 border border-neutral-200 hover:bg-neutral-100 rounded-xl transition cursor-pointer"
+                >
+                  <X className="w-4 h-4 text-neutral-500" />
+                </button>
+              </div>
             </div>
 
             {/* Scrollable details view */}
