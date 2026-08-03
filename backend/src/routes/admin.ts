@@ -911,6 +911,9 @@ router.post('/existing-clients/upload', upload.single('file'), async (req: Authe
 
     // Save using a transaction with chunking to prevent PostgreSQL parameter limits
     const count = await prisma.$transaction(async (tx) => {
+      // Clean existing folio database first to prevent foreign-key constraint violations
+      await tx.folio.deleteMany({});
+
       // Clean existing client database before import
       await tx.existingClient.deleteMany({});
 
