@@ -58,6 +58,19 @@ router.post('/', authMiddleware, async (req: AuthenticatedRequest, res: Response
       },
     });
 
+    if (req.user!.role === 'CLIENT') {
+      const bookingSlot = validated.slot || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      await prisma.advisorySession.create({
+        data: {
+          userId,
+          preferredSlot1: bookingSlot,
+          preferredSlot2: bookingSlot,
+          preferredSlot3: bookingSlot,
+          status: 'PENDING',
+        }
+      });
+    }
+
     // Send confirmation email via Nodemailer
     try {
       const email = req.user!.email;
