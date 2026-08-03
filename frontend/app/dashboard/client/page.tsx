@@ -2087,10 +2087,21 @@ export default function ClientDashboard() {
                 {/* Score Report breakdown details view (if toggled) */}
                 {scoreReport && viewFullReport && (
                   <div className="space-y-6 p-5 bg-white/40 border border-white/20 rounded-2xl animate-in fade-in duration-300 font-sans text-xs">
-                    <div className="text-center max-w-sm mx-auto space-y-1">
-                      <span className="text-[9px] font-mono text-neutral-500 uppercase tracking-widest">Diagnostics Level</span>
-                      <div className="text-lg font-bold text-neutral-900">{getTagLabel(scoreReport.tag)}</div>
-                      <p className="text-[10px] text-neutral-500 leading-normal">{getTagDesc(scoreReport.tag)}</p>
+                    <div className="text-center max-w-sm mx-auto space-y-3">
+                      {/* Large Score Display */}
+                      <div className="flex flex-col items-center justify-center space-y-0.5">
+                        <div className="text-5xl font-bold font-mono tracking-tight text-neutral-900 flex items-baseline gap-0.5">
+                          <span>{scoreReport.total}</span>
+                          <span className="text-neutral-400 text-sm font-sans font-semibold">/100</span>
+                        </div>
+                        <span className="text-[8px] font-mono text-neutral-400 uppercase tracking-widest block font-semibold">Overall Score</span>
+                      </div>
+
+                      <div className="pt-3 border-t border-border/20 space-y-1">
+                        <span className="text-[9px] font-mono text-neutral-500 uppercase tracking-widest">Diagnostics Level</span>
+                        <div className="text-lg font-bold text-neutral-900">{getTagLabel(scoreReport.tag)}</div>
+                        <p className="text-[10px] text-neutral-500 leading-normal">{getTagDesc(scoreReport.tag)}</p>
+                      </div>
                     </div>
 
                     {/* Gauges */}
