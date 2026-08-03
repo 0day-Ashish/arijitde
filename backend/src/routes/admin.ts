@@ -1002,7 +1002,7 @@ router.delete('/existing-clients/clear', async (req: AuthenticatedRequest, res: 
 // DELETE /api/admin/existing-clients/:id
 router.delete('/existing-clients/:id', async (req: AuthenticatedRequest, res: Response, next) => {
   try {
-    const { id } = req.params;
+    const { id } = z.object({ id: z.string().uuid('Invalid client ID format') }).parse(req.params);
     const deletedClient = await prisma.existingClient.delete({
       where: { id }
     });
