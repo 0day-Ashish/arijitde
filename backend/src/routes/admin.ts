@@ -928,6 +928,8 @@ router.post('/existing-clients/upload', upload.single('file'), async (req: Authe
         insertedCount += result.count;
       }
       return insertedCount;
+    }, {
+      timeout: 120000 // 120 seconds timeout for larger transactions
     });
 
     res.status(201).json({
