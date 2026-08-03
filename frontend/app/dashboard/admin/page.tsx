@@ -1302,25 +1302,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Stats Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 text-left">
-
-          {/* Card 1: Total AUM */}
-          <div
-            onClick={() => setActiveTab('aum')}
-            className={`border rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition duration-300 cursor-pointer ${activeTab === 'aum' ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white border-neutral-200 text-neutral-900'
-              }`}
-          >
-            <div className="flex items-start sm:items-center justify-between gap-2 mb-3">
-              <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-wider font-clash leading-tight ${activeTab === 'aum' ? 'text-neutral-300' : 'text-neutral-500'}`}>Total Assets Under Management</span>
-              <div className={`p-1.5 sm:p-2 rounded-xl shrink-0 ${activeTab === 'aum' ? 'bg-neutral-800' : 'bg-neutral-100'}`}>
-                <TrendingUp className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${activeTab === 'aum' ? 'text-white' : 'text-neutral-900'}`} />
-              </div>
-            </div>
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight font-clash">
-              ₹{stats.totalAUM ? stats.totalAUM.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : '0.00'}
-            </h3>
-            <p className={`text-[10px] font-mono mt-1 ${activeTab === 'aum' ? 'text-neutral-400' : 'text-neutral-500'}`}>Aggregated assets value</p>
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 text-left">
 
           {/* Card 4: Consultations */}
           <div
