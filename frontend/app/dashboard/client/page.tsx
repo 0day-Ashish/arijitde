@@ -1956,15 +1956,24 @@ export default function ClientDashboard() {
                                             )}
                                           </td>
                                           <td className="px-4 py-3.5 text-right font-mono text-neutral-600">
-                                            ₹{scheme.invested.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            {scheme.invested > 0 
+                                              ? `₹${scheme.invested.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                              : '—'
+                                            }
                                           </td>
                                           <td className="px-4 py-3.5 text-right font-mono">
                                             <span className="font-semibold text-neutral-900 mr-2">
                                               ₹{scheme.current.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                             </span>
-                                            <span className={`text-[10px] font-sans font-bold ${isProfit ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                              ({isProfit ? '+' : ''}{profitLossPercent.toFixed(2)}%)
-                                            </span>
+                                            {scheme.invested > 0 ? (
+                                              <span className={`text-[10px] font-sans font-bold ${isProfit ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                                ({isProfit ? '+' : ''}{profitLossPercent.toFixed(2)}%)
+                                              </span>
+                                            ) : (
+                                              <span className="text-[10px] font-sans font-medium text-neutral-400">
+                                                (—)
+                                              </span>
+                                            )}
                                           </td>
                                         </tr>
                                       );

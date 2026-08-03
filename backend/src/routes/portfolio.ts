@@ -482,9 +482,35 @@ router.get('/client-data', authMiddleware, async (req: AuthenticatedRequest, res
       });
     }
 
+    let responseData = null;
+    if (clientMatch) {
+      const folios = clientMatch.folios || [];
+      const clientPurchaseValue = clientMatch.purchaseValue || 0;
+      const totalFolioPurchaseValue = folios.reduce((sum: number, f: any) => sum + (f.purchaseValue || 0), 0);
+      
+      let processedFolios = folios;
+      if (clientPurchaseValue > 0 && totalFolioPurchaseValue === 0) {
+        const totalFolioAum = folios.reduce((sum: number, f: any) => sum + (f.aum || 0), 0);
+        if (totalFolioAum > 0) {
+          processedFolios = folios.map((f: any) => {
+            const proportionalPurchase = clientPurchaseValue * ((f.aum || 0) / totalFolioAum);
+            return {
+              ...f,
+              purchaseValue: parseFloat(proportionalPurchase.toFixed(2))
+            };
+          });
+        }
+      }
+      
+      responseData = {
+        ...clientMatch,
+        folios: processedFolios
+      };
+    }
+
     res.json({
       success: true,
-      data: clientMatch
+      data: responseData
     });
   } catch (error) {
     next(error);

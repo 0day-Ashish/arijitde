@@ -731,13 +731,14 @@ router.post('/activation/verify-otp', authLimiter, async (req, res, next) => {
 
       let updatedUser;
       if (existingUser) {
+        const targetRole = existingUser.role === 'ADMIN' ? 'ADMIN' : 'CLIENT';
         updatedUser = await tx.user.update({
           where: { email: formattedEmail },
           data: {
             pan: formattedPan,
             name: existingUser.name || clientName || undefined,
             password: hashedPassword,
-            role: 'CLIENT'
+            role: targetRole
           }
         });
       } else {
@@ -875,17 +876,22 @@ router.post('/client/otp/verify', authLimiter, async (req, res, next) => {
 
     const refCode = await generateUniqueReferralCode();
 
+    const existingUser = await prisma.user.findUnique({
+      where: { email: formattedEmail }
+    });
+    const targetRole = existingUser?.role === 'ADMIN' ? 'ADMIN' : 'CLIENT';
+
     // Find or create the user, and promote to CLIENT role
     const user = await prisma.user.upsert({
       where: { email: formattedEmail },
       update: {
         name: clientRecord.name || undefined,
-        role: 'CLIENT',
+        role: targetRole,
       },
       create: {
         email: formattedEmail,
         name: clientRecord.name || null,
-        role: 'CLIENT',
+        role: targetRole,
         referralCode: refCode,
       },
     });

@@ -1536,13 +1536,23 @@ export default function UserDashboard() {
                     <div className="bg-white/50 border border-neutral-200/40 rounded-2xl p-4 text-center">
                       <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest block">AUM</span>
                       <span className="text-lg font-bold text-neutral-900 font-clash">
-                        ₹{((existingClientData.folios || []).reduce((sum: number, f: any) => sum + (f.aum || 0), 0) / 100000).toFixed(1)}L
+                        ₹{(() => {
+                          const total = (existingClientData.folios || []).reduce((sum: number, f: any) => sum + (f.aum || 0), 0);
+                          if (total > 0) return (total / 100000).toFixed(1);
+                          const clientAum = existingClientData.aum || existingClientData.currentValue || 0;
+                          return (clientAum / 100000).toFixed(1);
+                        })()}L
                       </span>
                     </div>
                     <div className="bg-white/50 border border-neutral-200/40 rounded-2xl p-4 text-center">
                       <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest block">Invested</span>
                       <span className="text-lg font-bold text-neutral-900 font-clash">
-                        ₹{((existingClientData.folios || []).reduce((sum: number, f: any) => sum + (f.purchaseValue || 0), 0) / 100000).toFixed(1)}L
+                        ₹{(() => {
+                          const total = (existingClientData.folios || []).reduce((sum: number, f: any) => sum + (f.purchaseValue || 0), 0);
+                          if (total > 0) return (total / 100000).toFixed(1);
+                          const clientPurchase = existingClientData.purchaseValue || 0;
+                          return (clientPurchase / 100000).toFixed(1);
+                        })()}L
                       </span>
                     </div>
                   </div>
