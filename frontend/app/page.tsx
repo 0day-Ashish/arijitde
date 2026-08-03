@@ -75,7 +75,7 @@ const faqData = [
   },
   {
     question: "What format do I need to upload my portfolio in?",
-    answer: "We use a fixed Excel template with six fields: Fund Name, Investment Type, Start Date, Monthly SIP Amount, Total Invested, and Current Value. You can download the template directly from the platform. This ensures your analysis is accurate and fast."
+    answer: "We use a fixed Excel template with six fields: Fund Name, Investment Type, Start Date, Monthly SIP Amount, Total Invested, and Current Value."
   },
   {
     question: "Is my data safe?",

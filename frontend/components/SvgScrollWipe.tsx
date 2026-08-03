@@ -170,7 +170,7 @@ export default function SvgScrollWipe({ screen1, screen2 }: SvgScrollWipeProps) 
       </div>
 
       {/* Screen 2 wrapper */}
-      <div className="w-full flex items-center justify-center mt-20 sm:mt-28 md:mt-36 lg:mt-48">
+      <div id="about" className="w-full flex items-center justify-center mt-20 sm:mt-28 md:mt-36 lg:mt-48">
         {screen2}
       </div>
     </div>
