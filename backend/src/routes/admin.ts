@@ -1477,6 +1477,23 @@ router.patch('/queries/:id', async (req: AuthenticatedRequest, res: Response, ne
   }
 });
 
+// 20. DELETE /api/admin/queries/:id
+router.delete('/queries/:id', async (req: AuthenticatedRequest, res: Response, next) => {
+  try {
+    const { id } = z.object({ id: z.string().uuid('Invalid query ID format') }).parse(req.params);
+    const deletedQuery = await prisma.supportQuery.delete({
+      where: { id }
+    });
+    res.json({
+      success: true,
+      message: `Successfully deleted query.`,
+      data: deletedQuery
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;
 
 

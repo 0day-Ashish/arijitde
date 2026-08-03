@@ -487,6 +487,60 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleDeleteAdvisorySession = async (id: string) => {
+    if (!token) return;
+    if (!window.confirm("Are you sure you want to delete this session booking? This action is permanent.")) {
+      return;
+    }
+
+    try {
+      const headers = { 'Authorization': `Bearer ${token}` };
+      const res = await fetch(`${backendUrl}/api/leads/admin/sessions/${id}`, {
+        method: 'DELETE',
+        headers
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to delete session');
+      }
+
+      const resData = await res.json();
+      alert(resData.message || 'Session successfully deleted.');
+      fetchAdvisorySessions();
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'An unexpected error occurred while deleting the session.');
+    }
+  };
+
+  const handleDeleteQuery = async (id: string) => {
+    if (!token) return;
+    if (!window.confirm("Are you sure you want to delete this query? This action is permanent.")) {
+      return;
+    }
+
+    try {
+      const headers = { 'Authorization': `Bearer ${token}` };
+      const res = await fetch(`${backendUrl}/api/admin/queries/${id}`, {
+        method: 'DELETE',
+        headers
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to delete query');
+      }
+
+      const resData = await res.json();
+      alert(resData.message || 'Query successfully deleted.');
+      fetchAllQueries();
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'An unexpected error occurred while deleting the query.');
+    }
+  };
+
   useEffect(() => {
     if (activeTab === 'existingClients') {
       fetchExistingClients(existingClientsPage, existingClientsSearchQuery);
@@ -1633,7 +1687,7 @@ export default function AdminDashboard() {
                           className="border border-neutral-200 bg-white rounded-3xl p-6 md:p-8 flex flex-col gap-6 shadow-sm hover:shadow-md transition duration-300 text-neutral-900"
                         >
                           {/* Session Title Bar */}
-                          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-neutral-100 pb-4">
+                          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-neutral-100 pb-4 w-full">
                             <div>
                               <div className="flex items-center gap-2.5">
                                 <h3 className="font-bold text-neutral-950 text-base">
@@ -1651,6 +1705,13 @@ export default function AdminDashboard() {
                                 Email: {session.user?.email || "N/A"} | Phone: {session.user?.phone || "N/A"}
                               </p>
                             </div>
+                            <button
+                              onClick={() => handleDeleteAdvisorySession(session.id)}
+                              className="p-2 text-rose-600 hover:bg-rose-50 border border-rose-100 hover:border-rose-200 transition rounded-xl cursor-pointer"
+                              title="Delete Session"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           </div>
 
                           {/* Session Preference and Confirmation Grid */}
@@ -1834,7 +1895,7 @@ export default function AdminDashboard() {
                         className="border border-neutral-200 bg-white rounded-3xl p-6 md:p-8 flex flex-col gap-6 shadow-sm hover:shadow-md transition duration-300 text-neutral-900"
                       >
                         {/* Session Title Bar */}
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-neutral-100 pb-4">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-neutral-100 pb-4 w-full">
                           <div>
                             <div className="flex items-center gap-2.5">
                               <h3 className="font-bold text-neutral-950 text-base">
@@ -1844,7 +1905,7 @@ export default function AdminDashboard() {
                                   session.status === "COMPLETED" ? "bg-blue-500/10 text-blue-700 border border-blue-500/20" :
                                     session.status === "REFUNDED" ? "bg-red-500/10 text-red-700 border border-red-500/20" :
                                       "bg-amber-500/10 text-amber-700 border border-amber-500/20"
-                                }`}>
+                                  }`}>
                                 {session.status}
                               </span>
                             </div>
@@ -1852,6 +1913,13 @@ export default function AdminDashboard() {
                               Email: {session.user?.email || "N/A"} | Phone: {session.user?.phone || "N/A"}
                             </p>
                           </div>
+                          <button
+                            onClick={() => handleDeleteAdvisorySession(session.id)}
+                            className="p-2 text-rose-600 hover:bg-rose-50 border border-rose-100 hover:border-rose-200 transition rounded-xl cursor-pointer"
+                            title="Delete Session"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
 
                         {/* Session Preference and Confirmation Grid */}
@@ -2466,8 +2534,8 @@ export default function AdminDashboard() {
                                 {query.status}
                               </span>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap align-top text-right">
-                              {query.status === 'PENDING' ? (
+                            <td className="px-6 py-4 whitespace-nowrap align-top text-right flex items-center justify-end gap-2">
+                              {query.status === 'PENDING' && (
                                 <button
                                   onClick={() => handleResolveQuery(query.id)}
                                   disabled={resolvingQueryId === query.id}
@@ -2475,9 +2543,14 @@ export default function AdminDashboard() {
                                 >
                                   {resolvingQueryId === query.id ? 'Resolving...' : 'Resolve'}
                                 </button>
-                              ) : (
-                                <span className="text-[10px] text-neutral-400 font-mono font-medium">No actions</span>
                               )}
+                              <button
+                                onClick={() => handleDeleteQuery(query.id)}
+                                className="p-1.5 text-rose-600 hover:bg-rose-50 border border-rose-100 hover:border-rose-200 transition rounded-lg cursor-pointer"
+                                title="Delete Query"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
                             </td>
                           </tr>
                         ))

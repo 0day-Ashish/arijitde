@@ -53,7 +53,7 @@ export default function Footer({ footerRef, onBookCallClick }: FooterProps) {
       <div className="w-full max-w-5xl mx-auto px-6 mb-20 flex flex-col items-center gap-12 text-center">
         {/* Big "Good buy." title */}
         <h2 className="font-instrument-serif text-7xl sm:text-7xl md:text-[8rem] lg:text-[12rem] font-normal text-primary tracking-tight leading-none drop-shadow-sm select-none">
-          Invest Better
+          Invest Better.
         </h2>
         
         {/* Paragraph description */}

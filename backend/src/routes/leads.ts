@@ -542,4 +542,22 @@ router.post('/admin/sessions/:id/refund', authMiddleware, adminMiddleware, async
   }
 });
 
+// 12. DELETE /api/leads/admin/sessions/:id (delete slot, admin only)
+router.delete('/admin/sessions/:id', authMiddleware, adminMiddleware, async (req: AuthenticatedRequest, res: Response, next) => {
+  try {
+    const id = req.params.id as string;
+    const deletedSession = await prisma.advisorySession.delete({
+      where: { id },
+    });
+
+    res.json({
+      success: true,
+      message: `Successfully deleted advisory session.`,
+      data: deletedSession,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;
