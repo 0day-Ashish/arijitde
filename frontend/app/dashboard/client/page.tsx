@@ -2147,7 +2147,7 @@ export default function ClientDashboard() {
                           <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-widest block font-bold text-neutral-800">Growth Gap & Achievable Performance</span>
                           
                           {/* Metrics summary cards */}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="w-full">
                             <div className="p-4 rounded-2xl border border-primary/10 bg-white/40 shadow-sm flex flex-col gap-2 relative overflow-hidden">
                               <span className="text-[9px] text-neutral-500 uppercase font-mono tracking-wider">Weighted Annual Return (XIRR)</span>
                               <div className="flex justify-between items-baseline">
@@ -2167,19 +2167,6 @@ export default function ClientDashboard() {
                                 <span className="text-[10px] text-emerald-600 font-medium">
                                   +{(comparison.achievableXirr - comparison.currentXirr).toFixed(1)}% gap
                                 </span>
-                              </div>
-                            </div>
-
-                            <div className="p-4 rounded-2xl border border-primary/10 bg-white/40 shadow-sm flex flex-col gap-2 relative overflow-hidden">
-                              <span className="text-[9px] text-neutral-500 uppercase font-mono tracking-wider">Annual Profit Opportunity Gap</span>
-                              <div className="flex justify-between items-baseline">
-                                <span className="text-xl font-bold text-amber-700 font-clash">
-                                  ₹{Math.round(comparison.totalGap).toLocaleString('en-IN')}
-                                </span>
-                                <span className="text-xs text-amber-700 font-medium font-sans font-semibold">Underperforming Value</span>
-                              </div>
-                              <div className="text-[10px] text-neutral-500 leading-normal font-sans">
-                                By switching underperforming assets to category leaders, your estimated 1-year profits could increase from <span className="font-semibold text-neutral-800">{comparison.totalCurrentProfit < 0 ? "-" : ""}₹{Math.abs(Math.round(comparison.totalCurrentProfit)).toLocaleString('en-IN')}</span> to <span className="font-semibold text-emerald-600">{comparison.totalAchievableProfit < 0 ? "-" : ""}₹{Math.abs(Math.round(comparison.totalAchievableProfit)).toLocaleString('en-IN')}</span>.
                               </div>
                             </div>
                           </div>
@@ -2263,10 +2250,7 @@ export default function ClientDashboard() {
                                             </span>
                                           </td>
                                           <td className="py-3.5 px-4 text-right">
-                                            <div className="font-semibold text-neutral-900 leading-snug">
-                                              {bestFundName}
-                                            </div>
-                                            <div className="text-[10px] text-emerald-600 font-mono font-bold mt-0.5">
+                                            <div className="text-xs text-emerald-600 font-mono font-bold">
                                               {f.bestReturn.toFixed(1)}% Return
                                             </div>
                                           </td>
