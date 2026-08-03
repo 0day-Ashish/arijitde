@@ -237,6 +237,19 @@ export default function UserDashboard() {
 
     setIsLoaded(true);
   }, []);
+
+  // Auto-scroll to View Scorecard Report button when client status stage is active
+  useEffect(() => {
+    if (dashboardStage === "CLIENT_STATUS") {
+      const scrollTimer = setTimeout(() => {
+        const btn = document.getElementById("view-scorecard-btn");
+        if (btn) {
+          btn.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 650);
+      return () => clearTimeout(scrollTimer);
+    }
+  }, [dashboardStage]);
   const fetchFreeSlots = async () => {
     try {
       setFetchingSlots(true);
@@ -2131,6 +2144,7 @@ export default function UserDashboard() {
 
                 {scoreReport && (
                   <button
+                    id="view-scorecard-btn"
                     onClick={() => setDashboardStage("REPORT")}
                     className="w-full py-3.5 bg-white/40 border border-border hover:bg-white/60 text-neutral-700 text-xs font-semibold rounded-xl transition cursor-pointer"
                   >
@@ -2164,6 +2178,7 @@ export default function UserDashboard() {
 
                 {scoreReport && (
                   <button
+                    id="view-scorecard-btn"
                     onClick={() => setDashboardStage("REPORT")}
                     className="w-full py-3.5 bg-white/40 border border-border hover:bg-white/60 text-neutral-700 text-xs font-semibold rounded-xl transition cursor-pointer"
                   >
