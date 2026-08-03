@@ -26,7 +26,8 @@ const upload = multer({
     fileSize: 10 * 1024 * 1024, // 10MB limit for bulk CSV
   },
   fileFilter: (_req, file, cb) => {
-    if (ALLOWED_MIMETYPES.includes(file.mimetype)) {
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (ALLOWED_MIMETYPES.includes(file.mimetype) || ext === '.csv' || ext === '.xlsx' || ext === '.xls') {
       cb(null, true);
     } else {
       cb(new Error('Only Excel (.xlsx/.xls) and CSV files are accepted'));
