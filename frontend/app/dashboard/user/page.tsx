@@ -1930,7 +1930,7 @@ export default function UserDashboard() {
                   {/* Efficiency */}
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-[11px] font-medium font-sans">
-                      <span className="text-neutral-500">Cost Efficiency</span>
+                      <span className="text-neutral-500">Efficiency Matrix</span>
                       <span className="text-neutral-800 font-mono">{scoreReport.efficiency} / 20</span>
                     </div>
                     <div className="w-full h-1.5 bg-neutral-200 rounded-full overflow-hidden">
