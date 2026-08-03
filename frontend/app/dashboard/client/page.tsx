@@ -1949,11 +1949,6 @@ export default function ClientDashboard() {
                                             <div className="font-semibold text-neutral-900 leading-snug">
                                               {scheme.schemeName}
                                             </div>
-                                            {scheme.units > 0 && (
-                                              <div className="text-[10px] text-neutral-500 font-mono mt-0.5">
-                                                Units: {scheme.units.toLocaleString()}
-                                              </div>
-                                            )}
                                           </td>
                                           <td className="px-4 py-3.5 text-right font-mono text-neutral-600">
                                             {scheme.invested > 0 

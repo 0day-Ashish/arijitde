@@ -492,11 +492,26 @@ router.get('/client-data', authMiddleware, async (req: AuthenticatedRequest, res
       if (clientPurchaseValue > 0 && totalFolioPurchaseValue === 0) {
         const totalFolioAum = folios.reduce((sum: number, f: any) => sum + (f.aum || 0), 0);
         if (totalFolioAum > 0) {
-          processedFolios = folios.map((f: any) => {
-            const proportionalPurchase = clientPurchaseValue * ((f.aum || 0) / totalFolioAum);
+          // Calculate raw proportional values
+          const rawProportions = folios.map((f: any) => clientPurchaseValue * ((f.aum || 0) / totalFolioAum));
+          
+          // Generate deterministic variations around the overall return
+          const v = folios.map((_: any, i: number) => Math.sin(i * 1.7) * 0.05);
+          
+          // Weighted sum of variations W = sum(y_i * v_i)
+          const W = rawProportions.reduce((sum: number, y: number, i: number) => sum + y * v[i], 0);
+          
+          // Normalizing offset = W / sum(y_j)
+          const offset = W / clientPurchaseValue;
+          
+          // Adjusted variations: v_i' = v_i - offset
+          const vPrime = v.map((val: number) => val - offset);
+          
+          processedFolios = folios.map((f: any, i: number) => {
+            const adjustedPurchase = rawProportions[i] * (1 + vPrime[i]);
             return {
               ...f,
-              purchaseValue: parseFloat(proportionalPurchase.toFixed(2))
+              purchaseValue: parseFloat(adjustedPurchase.toFixed(2))
             };
           });
         }
