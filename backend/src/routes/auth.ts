@@ -237,6 +237,37 @@ router.post('/google', authLimiter, async (req, res, next) => {
       }
     }
 
+    // Auto-promote to CLIENT if email matches an ExistingClient record
+    if (user.role !== 'ADMIN') {
+      const clientRecord = await prisma.existingClient.findFirst({
+        where: {
+          email: { equals: formattedEmail, mode: 'insensitive' },
+        },
+      });
+
+      if (clientRecord && user.role !== 'CLIENT') {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            role: 'CLIENT',
+            name: user.name || clientRecord.name || null,
+          },
+        });
+
+        // Ensure a Client record exists for dashboard access
+        await prisma.client.upsert({
+          where: { userId: user.id },
+          update: {},
+          create: {
+            userId: user.id,
+            activePlan: 'PREMIUM',
+            advisorNotes: 'Logged in via Google OAuth',
+            activatedAt: new Date(),
+          },
+        });
+      }
+    }
+
     const jwtToken = signToken({
       userId: user.id,
       email: user.email || '',
@@ -732,6 +763,138 @@ router.post('/activation/verify-otp', authLimiter, async (req, res, next) => {
 });
 
 
+// ─── CLIENT PASSWORDLESS LOGIN (Email OTP) ───────────────────────────────
+
+// POST /api/auth/client/otp/send
+const clientOtpSendSchema = z.object({
+  email: z.string().email('Invalid email address'),
+});
+
+router.post('/client/otp/send', authLimiter, async (req, res, next) => {
+  try {
+    const { email } = clientOtpSendSchema.parse(req.body);
+    const formattedEmail = email.toLowerCase();
+
+    // Verify the email exists in the ExistingClient table (admin-uploaded CSV)
+    const clientRecord = await prisma.existingClient.findFirst({
+      where: {
+        email: { equals: formattedEmail, mode: 'insensitive' },
+      },
+    });
+
+    if (!clientRecord) {
+      res.status(400).json({
+        success: false,
+        error: 'This email is not registered as a client. Please contact your advisor for assistance.',
+      });
+      return;
+    }
+
+    const otp = generateOTP();
+    saveOTP(formattedEmail, otp);
+
+    // Send OTP email in background
+    sendOTP(formattedEmail, otp).catch((err) =>
+      console.error('Failed to send client OTP in background:', err)
+    );
+
+    res.json({
+      success: true,
+      data: { message: 'Verification code sent to your email.' },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/auth/client/otp/verify
+const clientOtpVerifySchema = z.object({
+  email: z.string().email('Invalid email address'),
+  otp: z.string().length(6, 'OTP must be 6 digits'),
+});
+
+router.post('/client/otp/verify', authLimiter, async (req, res, next) => {
+  try {
+    const { email, otp } = clientOtpVerifySchema.parse(req.body);
+    const formattedEmail = email.toLowerCase();
+
+    const isValid = verifyOTP(formattedEmail, otp);
+    if (!isValid) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid or expired verification code.',
+      });
+      return;
+    }
+
+    // Re-verify client exists in ExistingClient table
+    const clientRecord = await prisma.existingClient.findFirst({
+      where: {
+        email: { equals: formattedEmail, mode: 'insensitive' },
+      },
+    });
+
+    if (!clientRecord) {
+      res.status(400).json({
+        success: false,
+        error: 'This email is not registered as a client.',
+      });
+      return;
+    }
+
+    const refCode = await generateUniqueReferralCode();
+
+    // Find or create the user, and promote to CLIENT role
+    const user = await prisma.user.upsert({
+      where: { email: formattedEmail },
+      update: {
+        name: clientRecord.name || undefined,
+        role: 'CLIENT',
+      },
+      create: {
+        email: formattedEmail,
+        name: clientRecord.name || null,
+        role: 'CLIENT',
+        referralCode: refCode,
+      },
+    });
+
+    // Ensure a Client record exists for dashboard access
+    await prisma.client.upsert({
+      where: { userId: user.id },
+      update: {},
+      create: {
+        userId: user.id,
+        activePlan: 'PREMIUM',
+        advisorNotes: 'Logged in via email OTP',
+        activatedAt: new Date(),
+      },
+    });
+
+    const token = signToken({
+      userId: user.id,
+      email: user.email || '',
+      role: user.role,
+    });
+
+    res.json({
+      success: true,
+      data: {
+        token,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          phone: user.phone,
+          pan: user.pan,
+        },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 
 export default router;
-

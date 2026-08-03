@@ -440,7 +440,22 @@ router.get('/client-data', authMiddleware, async (req: AuthenticatedRequest, res
     const user = req.user!;
     let clientMatch = null;
 
-    if (user.pan) {
+    // 1. Match by email first (most reliable since email is verified)
+    if (user.email) {
+      clientMatch = await prisma.existingClient.findFirst({
+        where: {
+          email: { equals: user.email.trim(), mode: 'insensitive' }
+        },
+        include: {
+          folios: {
+            orderBy: { createdAt: 'desc' }
+          }
+        }
+      });
+    }
+
+    // 2. Fallback: match by PAN
+    if (!clientMatch && user.pan) {
       clientMatch = await prisma.existingClient.findFirst({
         where: {
           pan: { equals: user.pan.trim(), mode: 'insensitive' }
@@ -453,6 +468,7 @@ router.get('/client-data', authMiddleware, async (req: AuthenticatedRequest, res
       });
     }
 
+    // 3. Fallback: match by name
     if (!clientMatch && user.name) {
       clientMatch = await prisma.existingClient.findFirst({
         where: {
