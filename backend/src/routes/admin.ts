@@ -37,12 +37,44 @@ const upload = multer({
 function parseExcelNumber(val: unknown): number | null {
   if (typeof val === 'number') return val;
   if (typeof val === 'string') {
-    const clean = val.replace(/,/g, '').trim();
+    const clean = val.replace(/,/g, '').replace(/[₹$%]/g, '').trim();
     if (clean === '') return null;
     const num = parseFloat(clean);
     return isNaN(num) ? null : num;
   }
   return null;
+}
+
+function getRowValue(row: Record<string, any>, aliases: string[]): any {
+  for (const alias of aliases) {
+    if (row[alias] !== undefined) return row[alias];
+    const cleanAlias = alias.trim().toLowerCase().replace(/\s+/g, '');
+    for (const key of Object.keys(row)) {
+      const cleanKey = key.trim().toLowerCase().replace(/\s+/g, '');
+      if (cleanKey === cleanAlias) {
+        return row[key];
+      }
+    }
+  }
+  return undefined;
+}
+
+function findHeaderRowIndex(worksheet: XLSX.WorkSheet, headerIndicators: string[]): number {
+  const rawSheets = XLSX.utils.sheet_to_json<any[]>(worksheet, { header: 1 });
+  for (let i = 0; i < rawSheets.length; i++) {
+    const row = rawSheets[i];
+    if (Array.isArray(row)) {
+      const rowStrings = row.map(cell => String(cell || '').trim().toLowerCase().replace(/\s+/g, ''));
+      const found = headerIndicators.some(indicator => {
+        const cleanIndicator = indicator.trim().toLowerCase().replace(/\s+/g, '');
+        return rowStrings.includes(cleanIndicator);
+      });
+      if (found) {
+        return i;
+      }
+    }
+  }
+  return 0;
 }
 
 function parseAvgHoldingDays(val: unknown): number | null {
@@ -357,26 +389,33 @@ router.post('/folios/upload', upload.single('file'), async (req: AuthenticatedRe
     }
 
     const worksheet = workbook.Sheets[sheetName];
-    const rawRows = XLSX.utils.sheet_to_json<Record<string, any>>(worksheet!, { defval: "" });
+    const headerRowIndex = findHeaderRowIndex(worksheet!, ['Client Name', 'Name']);
+    const rawRows = XLSX.utils.sheet_to_json<Record<string, any>>(worksheet!, { 
+      range: headerRowIndex,
+      defval: "" 
+    });
 
     if (rawRows.length === 0) {
       res.status(400).json({ success: false, error: 'File contains no data rows' });
       return;
     }
 
-    // Clean keys of BOM and whitespaces
-    const normalizedRows = rawRows.map(row => {
-      const newRow: Record<string, any> = {};
-      for (const key of Object.keys(row)) {
-        newRow[key.trim().replace(/^\uFEFF/, '')] = row[key];
-      }
-      return newRow;
-    });
+    // Validate required headers
+    const firstRow = rawRows[0] || {};
+    const requiredFields = [
+      { name: 'Client Name', aliases: ['Client Name', 'CLIENT NAME'] },
+      { name: 'Folio Number', aliases: ['Folio Number', 'Folio No', 'FOLIO NO', 'FOLIO NUMBER'] },
+      { name: 'Scheme Name', aliases: ['Scheme Name', 'SCHEME NAME'] }
+    ];
 
-    // Validate if at least key headers are present
-    const firstRowKeys = Object.keys(normalizedRows[0] || {});
-    const requiredKeys = ['Client Name', 'Folio Number', 'Scheme Name'];
-    const missingKeys = requiredKeys.filter(key => !firstRowKeys.includes(key));
+    const missingKeys = [];
+    for (const f of requiredFields) {
+      const val = getRowValue(firstRow, f.aliases);
+      if (val === undefined || String(val).trim() === '') {
+        missingKeys.push(f.name);
+      }
+    }
+
     if (missingKeys.length > 0) {
       res.status(400).json({
         success: false,
@@ -385,74 +424,74 @@ router.post('/folios/upload', upload.single('file'), async (req: AuthenticatedRe
       return;
     }
 
-    // Parse all rows
-    const parsedFolios = normalizedRows.map(row => ({
-      clientName: String(row["Client Name"] || '').trim() || null,
-      clientPan: String(row["Client PAN"] || '').trim() || null,
-      clientAadhaar: String(row["Client Aadhaar"] || '').trim() || null,
-      nameAsPerFolio: String(row["Name as per Folio"] || '').trim() || null,
-      panAsPerFolio: String(row["PAN as per Folio"] || '').trim() || null,
-      folioNumber: String(row["Folio Number"] || '').trim() || null,
-      schemeName: String(row["Scheme Name"] || '').trim() || null,
-      units: parseExcelNumber(row["Units"]),
-      aum: parseExcelNumber(row["AUM"]),
-      purchaseValue: parseExcelNumber(row["Purchase Value"] || row["Invested Amount"] || row["Purchase Amount"] || row["Invested Value"] || row["Invested"]),
-      email: String(row["Email"] || '').trim() || null,
-      mobile: String(row["Mobile"] || '').trim() || null,
-      dob: String(row["Date of Birth"] || '').trim() || null,
-      holding: String(row["Holding"] || '').trim() || null,
-      taxStatus: String(row["Tax Status"] || '').trim() || null,
-      comments: String(row["Comments"] || '').trim() || null,
-      freezeDate: String(row["Freeze Date"] || '').trim() || null,
-      address1: String(row["Address 1"] || '').trim() || null,
-      address2: String(row["Address 2"] || '').trim() || null,
-      address3: String(row["Address 3"] || '').trim() || null,
-      bankName: String(row["Bank Name"] || '').trim() || null,
-      bankAddress: String(row["Bank Address"] || '').trim() || null,
-      accountNumber: String(row["Account Number"] || '').trim() || null,
-      ifscCode: String(row["IFSC Code"] || '').trim() || null,
-      accountType: String(row["Account Type"] || '').trim() || null,
-      jointHolder1Name: String(row["Joint Holder 1 Name"] || '').trim() || null,
-      jointHolder1Pan: String(row["Joint Holder 1 PAN"] || '').trim() || null,
-      jointHolder1Kyc: String(row["Joint Holder 1 KYC"] || '').trim() || null,
-      jointHolder1Aadhaar: String(row["Joint Holder 1 Aadhaar"] || '').trim() || null,
-      jointHolder2Name: String(row["Joint Holder 2 Name"] || '').trim() || null,
-      jointHolder2Pan: String(row["Joint Holder 2 PAN"] || '').trim() || null,
-      jointHolder2Kyc: String(row["Joint Holder 2 KYC"] || '').trim() || null,
-      jointHolder2Aadhaar: String(row["Joint Holder 2 Aadhaar"] || '').trim() || null,
-      guardianName: String(row["Guardian Name"] || '').trim() || null,
-      guardianPan: String(row["Guardian PAN"] || '').trim() || null,
-      guardianKyc: String(row["Guardian KYC"] || '').trim() || null,
-      guardianAadhaar: String(row["Guardian Aadhaar"] || '').trim() || null,
-      nomineeOpted: String(row["Nominee Opted"] || '').trim() || null,
-      nominee1Name: String(row["Nominee 1 Name"] || '').trim() || null,
-      nominee1Relation: String(row["Nominee 1 Relation"] || '').trim() || null,
-      nominee1Percentage: String(row["Nominee 1 Percentage"] || '').trim() || null,
-      nominee2Name: String(row["Nominee 2 Name"] || '').trim() || null,
-      nominee2Relation: String(row["Nominee 2 Relation"] || '').trim() || null,
-      nominee2Percentage: String(row["Nominee 2 Percentage"] || '').trim() || null,
-      nominee3Name: String(row["Nominee 3 Name"] || '').trim() || null,
-      nominee3Relation: String(row["Nominee 3 Relation"] || '').trim() || null,
-      nominee3Percentage: String(row["Nominee 3 Percentage"] || '').trim() || null,
-      ftFolio: String(row["FT Folio"] || '').trim() || null,
-      folioType: String(row["Folio Type"] || '').trim() || null,
-      clientDematId: String(row["Client Demat ID"] || '').trim() || null,
-      dpId: String(row["DP ID"] || '').trim() || null,
-      appCode: String(row["App Code"] || '').trim() || null,
-      equityCode: String(row["Equity Code"] || '').trim() || null,
-      familyHead: String(row["Family Head"] || '').trim() || null,
-      iwellCode: String(row["IWELL Code"] || '').trim() || null,
-      iwellCode2: String(row["IWELL Code 2"] || '').trim() || null,
-      nomineeDetails: String(row["Nominee Details"] || '').trim() || null,
-      nomineeDetails2: String(row["Nominee Details 2"] || '').trim() || null,
-      nomineeDetails3: String(row["Nominee Details 3"] || '').trim() || null,
-      operations: String(row["Operations"] || '').trim() || null,
-      operationsCode: String(row["Operations Code"] || '').trim() || null,
-      relationshipManager: String(row["Relationship Manager"] || '').trim() || null,
-      relationshipManager2: String(row["Relationship Manager 2"] || '').trim() || null,
-      subBroker: String(row["Sub Broker"] || '').trim() || null,
-      subBrokerCode: String(row["Sub Broker Code"] || '').trim() || null,
-      lastUsedArn: String(row["Last Used ARN"] || '').trim() || null,
+    // Parse all rows using getRowValue and aliases
+    const parsedFolios = rawRows.map(row => ({
+      clientName: String(getRowValue(row, ['Client Name', 'CLIENT NAME']) || '').trim() || null,
+      clientPan: String(getRowValue(row, ['Client PAN', 'CLIENT PAN', 'ClientPan']) || '').trim() || null,
+      clientAadhaar: String(getRowValue(row, ['Client Aadhaar', 'CLIENT AADHAAR', 'ClientAadhaar']) || '').trim() || null,
+      nameAsPerFolio: String(getRowValue(row, ['Name as per Folio', 'Name as in Folio', 'NAME AS IN FOLIO', 'NAME AS PER FOLIO']) || '').trim() || null,
+      panAsPerFolio: String(getRowValue(row, ['PAN as per Folio', 'PAN as in Folio', 'PAN AS IN FOLIO', 'PAN AS PER FOLIO']) || '').trim() || null,
+      folioNumber: String(getRowValue(row, ['Folio Number', 'Folio No', 'FOLIO NO', 'FOLIO NUMBER']) || '').trim() || null,
+      schemeName: String(getRowValue(row, ['Scheme Name', 'SCHEME NAME']) || '').trim() || null,
+      units: parseExcelNumber(getRowValue(row, ['Units', 'UNITS'])),
+      aum: parseExcelNumber(getRowValue(row, ['AUM', 'Aum'])),
+      purchaseValue: parseExcelNumber(getRowValue(row, ['Purchase Value', 'PURCHASE VALUE', 'Invested Amount', 'Purchase Amount', 'Invested Value', 'Invested'])),
+      email: String(getRowValue(row, ['Email', 'EMAIL']) || '').trim() || null,
+      mobile: String(getRowValue(row, ['Mobile', 'MOBILE']) || '').trim() || null,
+      dob: String(getRowValue(row, ['Date of Birth', 'DATE OF BIRTH', 'DOB']) || '').trim() || null,
+      holding: String(getRowValue(row, ['Holding', 'HOLDING', 'Mode of Holding', 'MODE OF HOLDING']) || '').trim() || null,
+      taxStatus: String(getRowValue(row, ['Tax Status', 'TAX STATUS']) || '').trim() || null,
+      comments: String(getRowValue(row, ['Comments', 'COMMENTS']) || '').trim() || null,
+      freezeDate: String(getRowValue(row, ['Freeze Date', 'FREEZE DATE']) || '').trim() || null,
+      address1: String(getRowValue(row, ['Address 1', 'ADDRESS1']) || '').trim() || null,
+      address2: String(getRowValue(row, ['Address 2', 'ADDRESS2']) || '').trim() || null,
+      address3: String(getRowValue(row, ['Address 3', 'ADDRESS3']) || '').trim() || null,
+      bankName: String(getRowValue(row, ['Bank Name', 'BANK NAME']) || '').trim() || null,
+      bankAddress: String(getRowValue(row, ['Bank Address', 'BANK ADDRESS']) || '').trim() || null,
+      accountNumber: String(getRowValue(row, ['Account Number', 'Account No', 'ACCOUNT NO', 'ACCOUNT NUMBER']) || '').trim() || null,
+      ifscCode: String(getRowValue(row, ['IFSC Code', 'IFSC', 'Ifsc']) || '').trim() || null,
+      accountType: String(getRowValue(row, ['Account Type', 'ACCOUNT TYPE']) || '').trim() || null,
+      jointHolder1Name: String(getRowValue(row, ['Joint Holder 1 Name', 'Joint Holder 1', 'JOINT HOLDER 1', 'JOINT1 NAME']) || '').trim() || null,
+      jointHolder1Pan: String(getRowValue(row, ['Joint Holder 1 PAN', 'JOINT1 PAN']) || '').trim() || null,
+      jointHolder1Kyc: String(getRowValue(row, ['Joint Holder 1 KYC', 'JOINT1 KYC']) || '').trim() || null,
+      jointHolder1Aadhaar: String(getRowValue(row, ['Joint Holder 1 Aadhaar', 'JOINT1 AADHAAR']) || '').trim() || null,
+      jointHolder2Name: String(getRowValue(row, ['Joint Holder 2 Name', 'Joint Holder 2', 'JOINT HOLDER 2', 'JOINT2 NAME']) || '').trim() || null,
+      jointHolder2Pan: String(getRowValue(row, ['Joint Holder 2 PAN', 'JOINT2 PAN']) || '').trim() || null,
+      jointHolder2Kyc: String(getRowValue(row, ['Joint Holder 2 KYC', 'JOINT2 KYC']) || '').trim() || null,
+      jointHolder2Aadhaar: String(getRowValue(row, ['Joint Holder 2 Aadhaar', 'JOINT2 AADHAAR']) || '').trim() || null,
+      guardianName: String(getRowValue(row, ['Guardian Name', 'GUARDIAN NAME']) || '').trim() || null,
+      guardianPan: String(getRowValue(row, ['Guardian PAN', 'GUARDIAN PAN']) || '').trim() || null,
+      guardianKyc: String(getRowValue(row, ['Guardian KYC', 'GUARDIAN KYC']) || '').trim() || null,
+      guardianAadhaar: String(getRowValue(row, ['Guardian Aadhaar', 'GUARDIAN AADHAAR']) || '').trim() || null,
+      nomineeOpted: String(getRowValue(row, ['Nominee Opted', 'Nominee Opted Out', 'NOMINEE OPTED OUT']) || '').trim() || null,
+      nominee1Name: String(getRowValue(row, ['Nominee 1 Name', 'NOMINEE 1 NAME']) || '').trim() || null,
+      nominee1Relation: String(getRowValue(row, ['Nominee 1 Relation', 'NOMINEE 1 RELATION']) || '').trim() || null,
+      nominee1Percentage: String(getRowValue(row, ['Nominee 1 Percentage', 'NOMINEE 1 PERCENTAGE']) || '').trim() || null,
+      nominee2Name: String(getRowValue(row, ['Nominee 2 Name', 'NOMINEE 2 NAME']) || '').trim() || null,
+      nominee2Relation: String(getRowValue(row, ['Nominee 2 Relation', 'NOMINEE 2 RELATION']) || '').trim() || null,
+      nominee2Percentage: String(getRowValue(row, ['Nominee 2 Percentage', 'NOMINEE 2 PERCENTAGE']) || '').trim() || null,
+      nominee3Name: String(getRowValue(row, ['Nominee 3 Name', 'NOMINEE 3 NAME']) || '').trim() || null,
+      nominee3Relation: String(getRowValue(row, ['Nominee 3 Relation', 'NOMINEE 3 RELATION']) || '').trim() || null,
+      nominee3Percentage: String(getRowValue(row, ['Nominee 3 Percentage', 'NOMINEE 3 PERCENTAGE']) || '').trim() || null,
+      ftFolio: String(getRowValue(row, ['FT Folio', 'FT FOLIO']) || '').trim() || null,
+      folioType: String(getRowValue(row, ['Folio Type', 'FOLIO TYPE']) || '').trim() || null,
+      clientDematId: String(getRowValue(row, ['Client Demat ID', 'CLIENT DEMAT ID']) || '').trim() || null,
+      dpId: String(getRowValue(row, ['DP ID', 'DP ID']) || '').trim() || null,
+      appCode: String(getRowValue(row, ['App Code', 'APP CODE']) || '').trim() || null,
+      equityCode: String(getRowValue(row, ['Equity Code', 'EQUITY CODE']) || '').trim() || null,
+      familyHead: String(getRowValue(row, ['Family Head', 'FAMILY HEAD']) || '').trim() || null,
+      iwellCode: String(getRowValue(row, ['IWELL Code', 'IWELL CODE']) || '').trim() || null,
+      iwellCode2: String(getRowValue(row, ['IWELL Code 2', 'IWELLCODE2']) || '').trim() || null,
+      nomineeDetails: String(getRowValue(row, ['Nominee Details', 'NOMINEE DETAILS1']) || '').trim() || null,
+      nomineeDetails2: String(getRowValue(row, ['Nominee Details 2', 'NOMINEE DETAILS2']) || '').trim() || null,
+      nomineeDetails3: String(getRowValue(row, ['Nominee Details 3', 'NOMINEE DETAILS3']) || '').trim() || null,
+      operations: String(getRowValue(row, ['Operations', 'OPERATIONS']) || '').trim() || null,
+      operationsCode: String(getRowValue(row, ['Operations Code', 'OPERATIONS CODE']) || '').trim() || null,
+      relationshipManager: String(getRowValue(row, ['Relationship Manager', 'RELATIONSHIP  MANAGER']) || '').trim() || null,
+      relationshipManager2: String(getRowValue(row, ['Relationship Manager 2', 'RELATIONSHIP  MANAGER 2']) || '').trim() || null,
+      subBroker: String(getRowValue(row, ['Sub Broker', 'SUB  BROKER']) || '').trim() || null,
+      subBrokerCode: String(getRowValue(row, ['Sub Broker Code', 'SUB  BROKER CODE']) || '').trim() || null,
+      lastUsedArn: String(getRowValue(row, ['Last Used ARN', 'LAST USED ARN']) || '').trim() || null,
     }));
 
     // Save using a transaction with matching and linking to existing clients
@@ -643,26 +682,32 @@ router.post('/existing-clients/upload', upload.single('file'), async (req: Authe
     }
 
     const worksheet = workbook.Sheets[sheetName];
-    const rawRows = XLSX.utils.sheet_to_json<Record<string, any>>(worksheet!, { defval: "" });
+    const headerRowIndex = findHeaderRowIndex(worksheet!, ['Name', 'PAN']);
+    const rawRows = XLSX.utils.sheet_to_json<Record<string, any>>(worksheet!, { 
+      range: headerRowIndex,
+      defval: "" 
+    });
 
     if (rawRows.length === 0) {
       res.status(400).json({ success: false, error: 'File contains no data rows' });
       return;
     }
 
-    // Clean keys of BOM and whitespaces
-    const normalizedRows = rawRows.map(row => {
-      const newRow: Record<string, any> = {};
-      for (const key of Object.keys(row)) {
-        newRow[key.trim().replace(/^\uFEFF/, '')] = row[key];
-      }
-      return newRow;
-    });
+    // Validate required headers
+    const firstRow = rawRows[0] || {};
+    const requiredFields = [
+      { name: 'Name', aliases: ['Name', 'NAME'] },
+      { name: 'PAN', aliases: ['PAN', 'Pan'] }
+    ];
 
-    // Validate if at least key headers are present
-    const firstRowKeys = Object.keys(normalizedRows[0] || {});
-    const requiredKeys = ['Name', 'PAN'];
-    const missingKeys = requiredKeys.filter(key => !firstRowKeys.includes(key));
+    const missingKeys = [];
+    for (const f of requiredFields) {
+      const val = getRowValue(firstRow, f.aliases);
+      if (val === undefined || String(val).trim() === '') {
+        missingKeys.push(f.name);
+      }
+    }
+
     if (missingKeys.length > 0) {
       res.status(400).json({
         success: false,
@@ -671,90 +716,90 @@ router.post('/existing-clients/upload', upload.single('file'), async (req: Authe
       return;
     }
 
-    // Parse all rows
-    const parsedClients = normalizedRows.map(row => ({
-      title: String(row["Title (Mr./Mrs./Ms.)"] || row["Title"] || '').trim() || null,
-      name: String(row["Name"] || '').trim() || null,
-      pan: String(row["PAN"] || '').trim() || null,
-      appCode: String(row["App Code"] || '').trim() || null,
-      email: String(row["Email"] || '').trim() || null,
-      disableEmail: String(row["Disable Email"] || '').trim() || null,
-      secondaryEmail: String(row["Secondary Email"] || '').trim() || null,
-      iwellCode: String(row["IWELL Code"] || '').trim() || null,
-      username: String(row["Username"] || '').trim() || null,
-      mobile: String(row["Mobile"] || '').trim() || null,
-      landline: String(row["Landline"] || '').trim() || null,
-      dob: String(row["Date of Birth"] || '').trim() || null,
-      birthdayWish: String(row["Birthday Wish"] || '').trim() || null,
-      anniversary: String(row["Anniversary"] || '').trim() || null,
-      dateOfDeath: String(row["Date of Death"] || '').trim() || null,
-      familyHead: String(row["Family Head"] || '').trim() || null,
-      familyHeadIwellCode: String(row["Family Head IWELL Code"] || '').trim() || null,
-      referredBy: String(row["Referred By"] || '').trim() || null,
-      iwellCode2: String(row["IWELL Code 2"] || '').trim() || null,
-      familyHeadIwellCode2: String(row["Family Head IWELL Code 2"] || '').trim() || null,
-      address1: String(row["Address 1"] || '').trim() || null,
-      address2: String(row["Address 2"] || '').trim() || null,
-      address3: String(row["Address 3"] || '').trim() || null,
-      city: String(row["City"] || '').trim() || null,
-      state: String(row["State"] || '').trim() || null,
-      country: String(row["Country"] || '').trim() || null,
-      pinCode: String(row["PIN Code"] || '').trim() || null,
-      clientRating: String(row["Client Rating"] || '').trim() || null,
-      firstInvestmentDate: String(row["First Investment Date"] || '').trim() || null,
-      reviewFrequency: String(row["Review Frequency"] || '').trim() || null,
-      lastReviewDate: String(row["Last Review Date"] || '').trim() || null,
-      modelName: String(row["Model Name"] || '').trim() || null,
-      fileNumber: String(row["File Number"] || '').trim() || null,
-      tags: String(row["Tags"] || '').trim() || null,
-      updateLog: String(row["Update Log"] || '').trim() || null,
-      equityCode1: String(row["Equity Code 1"] || '').trim() || null,
-      equityCode2: String(row["Equity Code 2"] || '').trim() || null,
-      depository: String(row["Depository"] || '').trim() || null,
-      dpName: String(row["DP Name"] || '').trim() || null,
-      dpId: String(row["DP ID"] || '').trim() || null,
-      npsAccountNumber: String(row["NPS Account Number"] || '').trim() || null,
-      annualIncome: String(row["Annual Income"] || '').trim() || null,
-      profession: String(row["Profession"] || '').trim() || null,
-      billState: String(row["Bill State"] || '').trim() || null,
-      billGstin: String(row["Bill GSTIN"] || '').trim() || null,
-      aum: parseExcelNumber(row["AUM"]),
-      targetSipAmount: parseExcelNumber(row["Target SIP Amount"]),
-      targetElssAmount: parseExcelNumber(row["Target ELSS Amount"]),
-      targetEquityAllocation: parseExcelNumber(row["Target Equity Allocation (%)"]),
-      targetDebtAllocation: parseExcelNumber(row["Target Debt Allocation (%)"]),
-      preferredBillingMode: String(row["Preferred Billing Mode"] || '').trim() || null,
-      equityMfBilling: parseExcelNumber(row["Equity MF Billing (%)"]),
-      debtMfBilling: parseExcelNumber(row["Debt MF Billing (%)"]),
-      sharesBilling: parseExcelNumber(row["Shares Billing (%)"]),
-      bondsBilling: parseExcelNumber(row["Bonds Billing (%)"]),
-      fixedDepositBilling: parseExcelNumber(row["Fixed Deposit Billing (%)"]),
-      otherAssetBilling: parseExcelNumber(row["Other Asset Billing (%)"]),
-      remarks: String(row["Remarks"] || '').trim() || null,
-      bankDetails: String(row["Bank Details"] || '').trim() || null,
-      overseasAddress1: String(row["Overseas Address 1"] || '').trim() || null,
-      overseasAddress2: String(row["Overseas Address 2"] || '').trim() || null,
-      overseasAddress3: String(row["Overseas Address 3"] || '').trim() || null,
-      overseasCity: String(row["Overseas City"] || '').trim() || null,
-      overseasState: String(row["Overseas State"] || '').trim() || null,
-      overseasCountry: String(row["Overseas Country"] || '').trim() || null,
-      overseasPin: String(row["Overseas PIN"] || '').trim() || null,
-      overseasPhone: String(row["Overseas Phone"] || '').trim() || null,
-      overseasMobile: String(row["Overseas Mobile"] || '').trim() || null,
-      kycStatus: String(row["KYC Status"] || '').trim() || null,
-      aadhaar: String(row["Aadhaar"] || '').trim() || null,
-      nominee1Name: String(row["Nominee 1 Name"] || '').trim() || null,
-      nominee1Relation: String(row["Nominee 1 Relation"] || '').trim() || null,
-      nominee1Dob: String(row["Nominee 1 DOB"] || '').trim() || null,
-      nominee1Percentage: String(row["Nominee 1 Percentage"] || '').trim() || null,
-      nominee2Name: String(row["Nominee 2 Name"] || '').trim() || null,
-      nominee2Relation: String(row["Nominee 2 Relation"] || '').trim() || null,
-      nominee2Dob: String(row["Nominee 2 DOB"] || '').trim() || null,
-      nominee2Percentage: String(row["Nominee 2 Percentage"] || '').trim() || null,
-      nominee3Name: String(row["Nominee 3 Name"] || '').trim() || null,
-      nominee3Relation: String(row["Nominee 3 Relation"] || '').trim() || null,
-      nominee3Dob: String(row["Nominee 3 DOB"] || '').trim() || null,
-      nominee3Percentage: String(row["Nominee 3 Percentage"] || '').trim() || null,
+    // Parse all rows using getRowValue and aliases
+    const parsedClients = rawRows.map(row => ({
+      title: String(getRowValue(row, ['Title (Mr./Mrs./Ms.)', 'Title', 'TITLE']) || '').trim() || null,
+      name: String(getRowValue(row, ['Name', 'NAME']) || '').trim() || null,
+      pan: String(getRowValue(row, ['PAN', 'Pan']) || '').trim() || null,
+      appCode: String(getRowValue(row, ['App Code', 'APP CODE', 'APPCODE']) || '').trim() || null,
+      email: String(getRowValue(row, ['Email', 'EMAIL']) || '').trim() || null,
+      disableEmail: String(getRowValue(row, ['Disable Email', 'Disable Emails', 'DISABLE EMAIL', 'DISABLE EMAILS']) || '').trim() || null,
+      secondaryEmail: String(getRowValue(row, ['Secondary Email', 'SECONDARY EMAIL']) || '').trim() || null,
+      iwellCode: String(getRowValue(row, ['IWELL Code', 'IWELL CODE']) || '').trim() || null,
+      username: String(getRowValue(row, ['Username', 'USERNAME']) || '').trim() || null,
+      mobile: String(getRowValue(row, ['Mobile', 'MOBILE']) || '').trim() || null,
+      landline: String(getRowValue(row, ['Landline', 'LANDLINE']) || '').trim() || null,
+      dob: String(getRowValue(row, ['Date of Birth', 'DATE OF BIRTH', 'DOB']) || '').trim() || null,
+      birthdayWish: String(getRowValue(row, ['Birthday Wish', 'BIRTHDAY WISH']) || '').trim() || null,
+      anniversary: String(getRowValue(row, ['Anniversary', 'ANNIVERSARY']) || '').trim() || null,
+      dateOfDeath: String(getRowValue(row, ['Date of Death', 'DATE OF DEATH']) || '').trim() || null,
+      familyHead: String(getRowValue(row, ['Family Head', 'FAMILY HEAD']) || '').trim() || null,
+      familyHeadIwellCode: String(getRowValue(row, ['Family Head IWELL Code', 'FAMILY HEAD IWELL CODE']) || '').trim() || null,
+      referredBy: String(getRowValue(row, ['Referred By', 'Referred By']) || '').trim() || null,
+      iwellCode2: String(getRowValue(row, ['IWELL Code 2', 'IWELL CODE 2', 'IWELL CODE2']) || '').trim() || null,
+      familyHeadIwellCode2: String(getRowValue(row, ['Family Head IWELL Code 2', 'FAMILY HEAD IWELL CODE 2']) || '').trim() || null,
+      address1: String(getRowValue(row, ['Address 1', 'ADDRESS1']) || '').trim() || null,
+      address2: String(getRowValue(row, ['Address 2', 'ADDRESS2']) || '').trim() || null,
+      address3: String(getRowValue(row, ['Address 3', 'ADDRESS3']) || '').trim() || null,
+      city: String(getRowValue(row, ['City', 'CITY']) || '').trim() || null,
+      state: String(getRowValue(row, ['State', 'STATE']) || '').trim() || null,
+      country: String(getRowValue(row, ['Country', 'COUNTRY']) || '').trim() || null,
+      pinCode: String(getRowValue(row, ['PIN Code', 'PIN', 'PIN CODE']) || '').trim() || null,
+      clientRating: String(getRowValue(row, ['Client Rating', 'CLIENT RATING']) || '').trim() || null,
+      firstInvestmentDate: String(getRowValue(row, ['First Investment Date', 'First Investment Date']) || '').trim() || null,
+      reviewFrequency: String(getRowValue(row, ['Review Frequency', 'REVIEW FREQUENCY']) || '').trim() || null,
+      lastReviewDate: String(getRowValue(row, ['Last Review Date', 'LAST REVIEW DATE']) || '').trim() || null,
+      modelName: String(getRowValue(row, ['Model Name', 'MODEL NAME']) || '').trim() || null,
+      fileNumber: String(getRowValue(row, ['File Number', 'FILE NUMBER', 'FILE NO']) || '').trim() || null,
+      tags: String(getRowValue(row, ['Tags', 'TAGS']) || '').trim() || null,
+      updateLog: String(getRowValue(row, ['Update Log', 'UPDATE LOCK', 'UPDATE LOG']) || '').trim() || null,
+      equityCode1: String(getRowValue(row, ['Equity Code 1', 'EQUITY CODE1']) || '').trim() || null,
+      equityCode2: String(getRowValue(row, ['Equity Code 2', 'EQUITY CODE2']) || '').trim() || null,
+      depository: String(getRowValue(row, ['Depository', 'DEPOSITORY']) || '').trim() || null,
+      dpName: String(getRowValue(row, ['DP Name', 'DP NAME']) || '').trim() || null,
+      dpId: String(getRowValue(row, ['DP ID', 'DP ID']) || '').trim() || null,
+      npsAccountNumber: String(getRowValue(row, ['NPS Account Number', 'NPS A/c No', 'NPS ACCOUNT NUMBER']) || '').trim() || null,
+      annualIncome: String(getRowValue(row, ['Annual Income', 'ANNUAL INCOME']) || '').trim() || null,
+      profession: String(getRowValue(row, ['Profession', 'PROFESSION', 'OCCUPATION', 'Occupation']) || '').trim() || null,
+      billState: String(getRowValue(row, ['Bill State', 'Bill State']) || '').trim() || null,
+      billGstin: String(getRowValue(row, ['Bill GSTIN', 'Bill GSTIN']) || '').trim() || null,
+      aum: parseExcelNumber(getRowValue(row, ['AUM', 'Aum'])),
+      targetSipAmount: parseExcelNumber(getRowValue(row, ['Target SIP Amount', 'Target SIP Amout', 'Target SIP Amount'])),
+      targetElssAmount: parseExcelNumber(getRowValue(row, ['Target ELSS Amount', 'Target ELSS Amount'])),
+      targetEquityAllocation: parseExcelNumber(getRowValue(row, ['Target Equity Allocation (%)', 'Target Equity Allocation'])),
+      targetDebtAllocation: parseExcelNumber(getRowValue(row, ['Target Debt Allocation (%)', 'Target Debt Allocation'])),
+      preferredBillingMode: String(getRowValue(row, ['Preferred Billing Mode', 'Preferred Billing mode']) || '').trim() || null,
+      equityMfBilling: parseExcelNumber(getRowValue(row, ['Equity MF Billing (%)', 'Equity MF Billing'])),
+      debtMfBilling: parseExcelNumber(getRowValue(row, ['Debt MF Billing (%)', 'Debt MF Billing'])),
+      sharesBilling: parseExcelNumber(getRowValue(row, ['Shares Billing (%)', 'Shares Billing'])),
+      bondsBilling: parseExcelNumber(getRowValue(row, ['Bonds Billing (%)', 'Bonds Billing'])),
+      fixedDepositBilling: parseExcelNumber(getRowValue(row, ['Fixed Deposit Billing (%)', 'Fixed Income Billing (%)', 'Fixed Deposit Billing'])),
+      otherAssetBilling: parseExcelNumber(getRowValue(row, ['Other Asset Billing (%)', 'Other Assets Billing (%)', 'Other Asset Billing'])),
+      remarks: String(getRowValue(row, ['Remarks', 'REMARKS']) || '').trim() || null,
+      bankDetails: String(getRowValue(row, ['Bank Details', 'BANK DETAILS']) || '').trim() || null,
+      overseasAddress1: String(getRowValue(row, ['Overseas Address 1', 'OS ADDRESS1']) || '').trim() || null,
+      overseasAddress2: String(getRowValue(row, ['Overseas Address 2', 'OS ADDRESS2']) || '').trim() || null,
+      overseasAddress3: String(getRowValue(row, ['Overseas Address 3', 'OS ADDRESS3']) || '').trim() || null,
+      overseasCity: String(getRowValue(row, ['Overseas City', 'OVERSEAS CITY']) || '').trim() || null,
+      overseasState: String(getRowValue(row, ['Overseas State', 'OVERSEAS STATE']) || '').trim() || null,
+      overseasCountry: String(getRowValue(row, ['Overseas Country', 'OVERSEAS COUNTRY']) || '').trim() || null,
+      overseasPin: String(getRowValue(row, ['Overseas PIN', 'Overseas PIN', 'OVERSEAS PIN']) || '').trim() || null,
+      overseasPhone: String(getRowValue(row, ['Overseas Phone', 'OVERSEAS PHONE']) || '').trim() || null,
+      overseasMobile: String(getRowValue(row, ['Overseas Mobile', 'OVERSEAS MOBILE']) || '').trim() || null,
+      kycStatus: String(getRowValue(row, ['KYC Status', 'KYC STATUS', 'KYC']) || '').trim() || null,
+      aadhaar: String(getRowValue(row, ['Aadhaar', 'AADHAAR']) || '').trim() || null,
+      nominee1Name: String(getRowValue(row, ['Nominee 1 Name', 'NOMINEE 1 NAME', 'Nominee Details']) || '').trim() || null,
+      nominee1Relation: String(getRowValue(row, ['Nominee 1 Relation', 'NOMINEE 1 RELATION']) || '').trim() || null,
+      nominee1Dob: String(getRowValue(row, ['Nominee 1 DOB', 'NOMINEE 1 DOB', 'Nominee 1 Dob']) || '').trim() || null,
+      nominee1Percentage: String(getRowValue(row, ['Nominee 1 Percentage', 'NOMINEE 1 PERCENTAGE']) || '').trim() || null,
+      nominee2Name: String(getRowValue(row, ['Nominee 2 Name', 'NOMINEE 2 NAME']) || '').trim() || null,
+      nominee2Relation: String(getRowValue(row, ['Nominee 2 Relation', 'NOMINEE 2 RELATION']) || '').trim() || null,
+      nominee2Dob: String(getRowValue(row, ['Nominee 2 DOB', 'NOMINEE 2 DOB']) || '').trim() || null,
+      nominee2Percentage: String(getRowValue(row, ['Nominee 2 Percentage', 'NOMINEE 2 PERCENTAGE']) || '').trim() || null,
+      nominee3Name: String(getRowValue(row, ['Nominee 3 Name', 'NOMINEE 3 NAME']) || '').trim() || null,
+      nominee3Relation: String(getRowValue(row, ['Nominee 3 Relation', 'NOMINEE 3 RELATION']) || '').trim() || null,
+      nominee3Dob: String(getRowValue(row, ['Nominee 3 DOB', 'NOMINEE 3 DOB']) || '').trim() || null,
+      nominee3Percentage: String(getRowValue(row, ['Nominee 3 Percentage', 'NOMINEE 3 PERCENTAGE']) || '').trim() || null,
     }));
 
     // Save using a transaction with chunking to prevent PostgreSQL parameter limits
@@ -871,26 +916,32 @@ router.post('/portfolio-valuations/upload', upload.single('file'), async (req: A
     }
 
     const worksheet = workbook.Sheets[sheetName];
-    const rawRows = XLSX.utils.sheet_to_json<Record<string, any>>(worksheet!, { defval: "" });
+    const headerRowIndex = findHeaderRowIndex(worksheet!, ['Client Name', 'Name']);
+    const rawRows = XLSX.utils.sheet_to_json<Record<string, any>>(worksheet!, { 
+      range: headerRowIndex,
+      defval: "" 
+    });
 
     if (rawRows.length === 0) {
       res.status(400).json({ success: false, error: 'File contains no data rows' });
       return;
     }
 
-    // Clean keys of BOM and whitespaces
-    const normalizedRows = rawRows.map(row => {
-      const newRow: Record<string, any> = {};
-      for (const key of Object.keys(row)) {
-        newRow[key.trim().replace(/^\uFEFF/, '')] = row[key];
-      }
-      return newRow;
-    });
+    // Validate required headers
+    const firstRow = rawRows[0] || {};
+    const requiredFields = [
+      { name: 'Client Name', aliases: ['Client Name', 'CLIENT NAME'] },
+      { name: 'PAN Number', aliases: ['PAN Number', 'PAN', 'PAN NUMBER'] }
+    ];
 
-    // Validate if key headers are present
-    const firstRowKeys = Object.keys(normalizedRows[0] || {});
-    const requiredKeys = ['Client Name', 'PAN Number'];
-    const missingKeys = requiredKeys.filter(key => !firstRowKeys.includes(key));
+    const missingKeys = [];
+    for (const f of requiredFields) {
+      const val = getRowValue(firstRow, f.aliases);
+      if (val === undefined || String(val).trim() === '') {
+        missingKeys.push(f.name);
+      }
+    }
+
     if (missingKeys.length > 0) {
       res.status(400).json({
         success: false,
@@ -899,22 +950,22 @@ router.post('/portfolio-valuations/upload', upload.single('file'), async (req: A
       return;
     }
 
-    // Parse all rows
-    const parsedValuations = normalizedRows.map(row => ({
-      clientName: String(row["Client Name"] || '').trim() || null,
-      iwellCode: String(row["IWELL Code"] || '').trim() || null,
-      iwellCode2: String(row["IWELL Code 2"] || '').trim() || null,
-      pan: String(row["PAN Number"] || '').trim() || null,
-      balanceUnits: parseExcelNumber(row["Balance Units"]),
-      purchaseValue: parseExcelNumber(row["Purchase Value"]),
-      currentValue: parseExcelNumber(row["Current Value"]),
-      oneDayChange: parseExcelNumber(row["One-Day Change"]),
-      dividend: parseExcelNumber(row["Dividend"]),
-      averageHoldingDays: parseAvgHoldingDays(row["Average Holding Days"]),
-      gain: parseExcelNumber(row["Gain"]),
-      absoluteReturn: parseExcelNumber(row["Absolute Return (%)"]),
-      cagr: parseExcelNumber(row["CAGR (%)"]),
-      xirr: parseExcelNumber(row["XIRR (%)"] || row["XIRR"] || row["xirr"]),
+    // Parse all rows using getRowValue and aliases
+    const parsedValuations = rawRows.map(row => ({
+      clientName: String(getRowValue(row, ['Client Name', 'CLIENT NAME']) || '').trim() || null,
+      iwellCode: String(getRowValue(row, ['IWELL Code', 'IWELL CODE']) || '').trim() || null,
+      iwellCode2: String(getRowValue(row, ['IWELL Code 2', 'IWELLCODE2']) || '').trim() || null,
+      pan: String(getRowValue(row, ['PAN Number', 'PAN', 'PAN NUMBER']) || '').trim() || null,
+      balanceUnits: parseExcelNumber(getRowValue(row, ['Balance Units', 'BALANCE UNITS'])),
+      purchaseValue: parseExcelNumber(getRowValue(row, ['Purchase Value', 'PURCHASE VALUE'])),
+      currentValue: parseExcelNumber(getRowValue(row, ['Current Value', 'CURRENT VALUE'])),
+      oneDayChange: parseExcelNumber(getRowValue(row, ['One-Day Change', 'ONE DAY CHANGE'])),
+      dividend: parseExcelNumber(getRowValue(row, ['Dividend', 'DIVIDEND'])),
+      averageHoldingDays: parseAvgHoldingDays(getRowValue(row, ['Average Holding Days', 'AVG HOLDING DAYS'])),
+      gain: parseExcelNumber(getRowValue(row, ['Gain', 'GAIN'])),
+      absoluteReturn: parseExcelNumber(getRowValue(row, ['Absolute Return (%)', 'ABSOLUTE RETURN'])),
+      cagr: parseExcelNumber(getRowValue(row, ['CAGR (%)', 'CAGR'])),
+      xirr: parseExcelNumber(getRowValue(row, ['XIRR (%)', 'XIRR', 'xirr'])),
     }));
 
     // Save using a transaction with chunking to prevent PostgreSQL parameter limits

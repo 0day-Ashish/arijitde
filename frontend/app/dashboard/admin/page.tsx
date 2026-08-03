@@ -182,7 +182,6 @@ export default function AdminDashboard() {
   const [fetchingExistingClients, setFetchingExistingClients] = useState(false);
   const [selectedExistingClient, setSelectedExistingClient] = useState<any>(null);
   const [uploadingExistingClientFile, setUploadingExistingClientFile] = useState(false);
-
   // Portfolio Valuation state variables
   const [portfolioValuationsList, setPortfolioValuationsList] = useState<any[]>([]);
   const [portfolioValuationsPagination, setPortfolioValuationsPagination] = useState({
@@ -218,6 +217,18 @@ export default function AdminDashboard() {
   const [pan, setPan] = useState('');
   const [savingClientProfile, setSavingClientProfile] = useState(false);
   const [updatingUserRole, setUpdatingUserRole] = useState<string | null>(null);
+
+  // Lock body scroll when drawers are open to prevent background scrolling (scroll chaining)
+  useEffect(() => {
+    if (selectedExistingClient || selectedUser) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [selectedExistingClient, selectedUser]);
 
   // Lead status updating state
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
@@ -2964,10 +2975,10 @@ export default function AdminDashboard() {
           />
 
           {/* Drawer container */}
-          <div className="relative z-10 w-full max-w-4xl bg-white border-l border-neutral-200 h-full shadow-2xl overflow-y-auto flex flex-col p-6 md:p-8 animate-in slide-in-from-right duration-350 ease-out text-neutral-900">
+          <div className="relative z-10 w-full max-w-4xl bg-white border-l border-neutral-200 h-screen max-h-screen shadow-2xl overflow-hidden flex flex-col p-6 md:p-8 animate-in slide-in-from-right duration-350 ease-out text-neutral-900">
 
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-neutral-200 pb-4 mb-6">
+            <div className="flex items-center justify-between border-b border-neutral-200 pb-4 mb-6 shrink-0">
               <div>
                 <span className="text-[10px] text-neutral-500 font-mono uppercase tracking-wider">Existing Client Audit Ledger</span>
                 <h2 className="text-xl font-semibold font-clash text-neutral-900 mt-0.5">
@@ -2984,7 +2995,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Scrollable details view */}
-            <div className="space-y-8 flex-1 pb-10">
+            <div data-lenis-prevent className="space-y-8 flex-1 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-neutral-200 overscroll-contain touch-pan-y pb-10">
 
               {/* Section 4.6: Folio Holdings / Scheme Details */}
               <div id="admin-folio-details-section" className="border border-neutral-200 bg-neutral-50 rounded-2xl p-5 space-y-4">
