@@ -440,11 +440,11 @@ router.get('/client-data', authMiddleware, async (req: AuthenticatedRequest, res
     const user = req.user!;
     let clientMatch = null;
 
-    // 1. Match by email first (most reliable since email is verified)
-    if (user.email) {
+    // 1. Match by PAN first (most reliable since PAN is unique per client account)
+    if (user.pan) {
       clientMatch = await prisma.existingClient.findFirst({
         where: {
-          email: { equals: user.email.trim(), mode: 'insensitive' }
+          pan: { equals: user.pan.trim(), mode: 'insensitive' }
         },
         include: {
           folios: {
@@ -454,11 +454,11 @@ router.get('/client-data', authMiddleware, async (req: AuthenticatedRequest, res
       });
     }
 
-    // 2. Fallback: match by PAN
-    if (!clientMatch && user.pan) {
+    // 2. Fallback: match by email
+    if (!clientMatch && user.email) {
       clientMatch = await prisma.existingClient.findFirst({
         where: {
-          pan: { equals: user.pan.trim(), mode: 'insensitive' }
+          email: { equals: user.email.trim(), mode: 'insensitive' }
         },
         include: {
           folios: {

@@ -27,14 +27,16 @@ export default function Onboarding() {
   const [showPassword, setShowPassword] = useState(false);
   const [isAdminLogin, setIsAdminLogin] = useState(false);
   const [isUserLogin, setIsUserLogin] = useState(false);
-
   // Client passwordless login state
-  const [clientStep, setClientStep] = useState<"EMAIL" | "OTP_VERIFY">("EMAIL");
+  const [clientStep, setClientStep] = useState<"EMAIL" | "OTP_VERIFY" | "ACCOUNT_SELECT" | "PAN_VERIFY">("EMAIL");
   const [clientEmail, setClientEmail] = useState("");
   const [clientOtp, setClientOtp] = useState("");
   const [clientSuccessMsg, setClientSuccessMsg] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
-
+  const [clientAccounts, setClientAccounts] = useState<any[]>([]);
+  const [clientTempToken, setClientTempToken] = useState("");
+  const [selectedAccount, setSelectedAccount] = useState<any>(null);
+  const [enteredPan, setEnteredPan] = useState("");
   const backendUrl = process.env.NEXT_PUBLIC_API_URL;
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
@@ -168,6 +170,15 @@ export default function Onboarding() {
       const data = await res.json();
 
       if (data.success) {
+        if (data.data.requiresSelection) {
+          setClientAccounts(data.data.accounts || []);
+          setClientTempToken(data.data.tempToken || "");
+          setClientEmail(data.data.email || "");
+          setClientStep("ACCOUNT_SELECT");
+          setFlow("EXISTING_CLIENT");
+          setLoading(false);
+          return;
+        }
         // Save token and user details to cookies/localStorage
         setAuthSession(data.data.token, data.data.user, true);
 
@@ -341,10 +352,50 @@ export default function Onboarding() {
       const data = await res.json();
 
       if (res.ok && data.success) {
-        setAuthSession(data.data.token, data.data.user, true);
-        window.location.href = "/dashboard/client";
+        setClientAccounts(data.data.accounts || []);
+        setClientTempToken(data.data.tempToken || "");
+        setClientStep("ACCOUNT_SELECT");
       } else {
         setError(data.error || "Verification failed. Please try again.");
+      }
+    } catch (err) {
+      setError("Error connecting to server. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Client Passwordless Login – Verify PAN
+  const handleClientPanVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmedPan = enteredPan.trim().toUpperCase();
+
+    if (!trimmedPan || trimmedPan.length !== 10) {
+      setError("Please enter a valid 10-character PAN number.");
+      return;
+    }
+
+    setError(null);
+    setClientSuccessMsg("");
+    setLoading(true);
+
+    try {
+      const res = await fetch(`${backendUrl}/api/auth/client/pan/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tempToken: clientTempToken,
+          accountId: selectedAccount.id,
+          pan: trimmedPan,
+        }),
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        setAuthSession(data.data.token, data.data.user, rememberMe);
+        window.location.href = "/dashboard/client";
+      } else {
+        setError(data.error || "PAN verification failed. Please check the number and try again.");
       }
     } catch (err) {
       setError("Error connecting to server. Please try again.");
@@ -660,12 +711,15 @@ export default function Onboarding() {
             <h2 className="text-2xl font-semibold text-foreground mb-2 font-clash">
               {clientStep === 'EMAIL' && "Client Log In"}
               {clientStep === 'OTP_VERIFY' && "Verify Your Email"}
+              {clientStep === 'ACCOUNT_SELECT' && "Select Profile"}
+              {clientStep === 'PAN_VERIFY' && "Verify Identity"}
             </h2>
             <p className="text-muted-foreground text-xs font-sans mb-6">
               {clientStep === 'EMAIL' && "Enter your registered email address to receive a secure one-time verification code."}
               {clientStep === 'OTP_VERIFY' && `Enter the 6-digit code sent to ${clientEmail}`}
+              {clientStep === 'ACCOUNT_SELECT' && `Multiple portfolios found under ${clientEmail}. Select yours to proceed:`}
+              {clientStep === 'PAN_VERIFY' && `Enter the PAN card number associated with ${selectedAccount?.name || 'your profile'}`}
             </p>
-
             {/* Error Message */}
             {error && (
               <div className="mb-5 p-3.5 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs flex gap-2 items-start text-left font-sans animate-in fade-in slide-in-from-top-2">
@@ -722,7 +776,6 @@ export default function Onboarding() {
                 </div>
               </>
             )}
-
             {clientStep === 'OTP_VERIFY' && (
               <form onSubmit={handleClientVerifyOtp} className="space-y-4">
                 <div>
@@ -743,7 +796,7 @@ export default function Onboarding() {
                   disabled={loading}
                   className="w-full mt-4 py-3.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs flex items-center justify-center gap-2 transition duration-200 cursor-pointer disabled:opacity-50"
                 >
-                  {loading ? "Verifying..." : "Verify & Sign In"}
+                  {loading ? "Verifying..." : "Verify Code"}
                 </button>
 
                 <div className="text-center mt-4">
@@ -757,11 +810,94 @@ export default function Onboarding() {
                 </div>
               </form>
             )}
+
+            {clientStep === 'ACCOUNT_SELECT' && (
+              <div className="space-y-4">
+                <div className="space-y-2.5 max-h-[220px] overflow-y-auto pr-1">
+                  {clientAccounts.map((acc) => (
+                    <button
+                      key={acc.id}
+                      onClick={() => {
+                        setSelectedAccount(acc);
+                        setClientStep('PAN_VERIFY');
+                        setError(null);
+                      }}
+                      className="w-full text-left p-4 rounded-2xl border border-white/20 bg-white/40 hover:bg-white/60 hover:border-primary/20 hover:shadow-sm transition-all duration-200 cursor-pointer flex items-center gap-3.5 group text-left"
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-white/60 border border-white/40 flex items-center justify-center text-primary group-hover:border-primary/20 transition-all shrink-0">
+                        <User className="w-5 h-5 stroke-[1.5]" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="font-semibold text-sm text-neutral-900 group-hover:text-primary transition-colors leading-tight truncate">
+                          {acc.name}
+                        </div>
+                        <div className="text-[10px] text-neutral-500 font-mono tracking-wider mt-0.5">
+                          PAN: {acc.panMasked}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="text-center mt-4 border-t border-white/10 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => { setClientStep('EMAIL'); setError(null); setClientSuccessMsg(""); setClientOtp(""); setClientAccounts([]); }}
+                    className="text-xs text-neutral-600 hover:text-primary font-semibold font-sans cursor-pointer"
+                  >
+                    &larr; Use a different email
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {clientStep === 'PAN_VERIFY' && (
+              <form onSubmit={handleClientPanVerify} className="space-y-4">
+                <div>
+                  <label className="block text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-1.5">PAN Card Number</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <input
+                      type="text"
+                      maxLength={10}
+                      required
+                      placeholder="e.g. ABCDE1234F"
+                      value={enteredPan}
+                      onChange={(e) => setEnteredPan(e.target.value.toUpperCase())}
+                      className="w-full pl-10 pr-4 py-3 text-sm bg-white/40 border border-white/20 rounded-xl text-foreground placeholder-slate-500 focus:outline-none focus:border-primary focus:bg-white/60 font-mono tracking-wider transition-all"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full mt-4 py-3.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs flex items-center justify-center gap-2 transition duration-200 cursor-pointer disabled:opacity-50"
+                >
+                  {loading ? "Verifying..." : "Verify & Sign In"}
+                </button>
+
+                <div className="flex justify-between items-center mt-4 border-t border-white/10 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => { setClientStep('ACCOUNT_SELECT'); setError(null); setEnteredPan(""); }}
+                    className="text-xs text-neutral-600 hover:text-primary font-semibold font-sans cursor-pointer"
+                  >
+                    &larr; Back to Profiles
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setClientStep('EMAIL'); setError(null); setClientSuccessMsg(""); setClientOtp(""); setClientAccounts([]); setEnteredPan(""); }}
+                    className="text-xs text-neutral-600 hover:text-primary font-semibold font-sans cursor-pointer"
+                  >
+                    Use different email
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         )}
-
       </div>
     </main>
   );
 }
-

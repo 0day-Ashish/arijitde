@@ -316,7 +316,7 @@ router.post('/book-session-public', async (req: Request, res: Response, next) =>
     const emailNormalized = email.trim().toLowerCase();
 
     // Find or create User with role GUEST
-    let user = await prisma.user.findUnique({
+    let user = await prisma.user.findFirst({
       where: { email: emailNormalized },
     });
 

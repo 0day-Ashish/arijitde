@@ -1487,8 +1487,17 @@ export default function AdminDashboard() {
                     placeholder="Search users by name, email or phone..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 text-sm border border-neutral-200 rounded-xl bg-white focus:outline-none focus:ring-1 focus:ring-neutral-900 transition duration-200 text-neutral-900 placeholder-neutral-400"
+                    className="w-full pl-11 pr-10 py-3 text-sm border border-neutral-200 rounded-xl bg-white focus:outline-none focus:ring-1 focus:ring-neutral-900 transition duration-200 text-neutral-900 placeholder-neutral-400"
                   />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition cursor-pointer"
+                      title="Clear search"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
 
                 {/* Filter Selector */}
@@ -2173,8 +2182,17 @@ export default function AdminDashboard() {
                       placeholder="Search existing clients by name, PAN, email, mobile, city or app/iwell code..."
                       value={existingClientsSearchQuery}
                       onChange={(e) => setExistingClientsSearchQuery(e.target.value)}
-                      className="w-full pl-11 pr-4 py-3 text-sm border border-neutral-200 rounded-xl bg-white focus:outline-none focus:ring-1 focus:ring-neutral-900 transition duration-200 text-neutral-900 placeholder-neutral-400"
+                      className="w-full pl-11 pr-10 py-3 text-sm border border-neutral-200 rounded-xl bg-white focus:outline-none focus:ring-1 focus:ring-neutral-900 transition duration-200 text-neutral-900 placeholder-neutral-400"
                     />
+                    {existingClientsSearchQuery && (
+                      <button
+                        onClick={() => setExistingClientsSearchQuery('')}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition cursor-pointer"
+                        title="Clear search"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -2220,6 +2238,7 @@ export default function AdminDashboard() {
                                 <div className="flex flex-wrap gap-2 items-center mt-0.5">
                                   {client.pan && <span className="text-[10px] text-neutral-500 font-mono uppercase bg-neutral-100 px-1.5 py-0.5 rounded border border-neutral-200">PAN: {client.pan}</span>}
                                   {client.mobile && <span className="text-[10px] text-neutral-500 font-mono bg-neutral-100 px-1.5 py-0.5 rounded border border-neutral-200">Phone: {client.mobile}</span>}
+                                  {client.email && <span className="text-[10px] text-neutral-500 font-mono bg-neutral-100 px-1.5 py-0.5 rounded border border-neutral-200">Email: {client.email}</span>}
                                   {client.username && <span className="text-neutral-400 font-mono text-[9px]">@{client.username}</span>}
                                 </div>
                               </td>
@@ -2422,8 +2441,17 @@ export default function AdminDashboard() {
                       placeholder="Search schemes by asset name..."
                       value={aumSearchQuery}
                       onChange={(e) => setAumSearchQuery(e.target.value)}
-                      className="w-full pl-11 pr-4 py-3 text-sm border border-neutral-200 rounded-xl bg-white focus:outline-none focus:ring-1 focus:ring-neutral-900 transition duration-200 text-neutral-900 placeholder-neutral-400"
+                      className="w-full pl-11 pr-10 py-3 text-sm border border-neutral-200 rounded-xl bg-white focus:outline-none focus:ring-1 focus:ring-neutral-900 transition duration-200 text-neutral-900 placeholder-neutral-400"
                     />
+                    {aumSearchQuery && (
+                      <button
+                        onClick={() => setAumSearchQuery('')}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition cursor-pointer"
+                        title="Clear search"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 </div>
 

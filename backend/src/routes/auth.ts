@@ -2,6 +2,7 @@ import { Router } from 'express';
 import type { Response, Request } from 'express';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import rateLimit from 'express-rate-limit';
 import { generateOTP, sendOTP, saveOTP, verifyOTP } from '../services/otp';
 import { prisma } from '../lib/prisma';
@@ -49,7 +50,7 @@ router.post('/otp/send', authLimiter, async (req, res, next) => {
     const formattedEmail = email.toLowerCase();
 
     if (isRegistration) {
-      const existingUser = await prisma.user.findUnique({
+      const existingUser = await prisma.user.findFirst({
         where: { email: formattedEmail },
       });
       if (existingUser) {
@@ -122,32 +123,41 @@ router.post('/otp/verify', authLimiter, async (req, res, next) => {
 
     const refCode = await generateUniqueReferralCode();
 
-    // Upsert user in database
-    let user = await prisma.user.upsert({
+    // Find first and update or create since email is not unique anymore
+    let user = await prisma.user.findFirst({
       where: { email: formattedEmail },
-      update: {
-        name: name || undefined,
-        password: hashedPassword || undefined,
-      },
-      create: {
-        email: formattedEmail,
-        name: name || null,
-        password: hashedPassword || null,
-        role: 'GUEST',
-        referralCode: refCode,
-        referrerId: referrerId || null,
-      },
     });
+    if (user) {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          name: name || undefined,
+          password: hashedPassword || undefined,
+        },
+      });
+    } else {
+      user = await prisma.user.create({
+        data: {
+          email: formattedEmail,
+          name: name || null,
+          password: hashedPassword || null,
+          role: 'GUEST',
+          referralCode: refCode,
+          referrerId: referrerId || null,
+        },
+      });
+    }
 
-    // Auto-promote to CLIENT if email matches an ExistingClient record
-    if (user.role !== 'ADMIN') {
-      const clientRecord = await prisma.existingClient.findFirst({
+    // Auto-promote to CLIENT if email matches exactly one ExistingClient record
+    if (user.role !== 'ADMIN' && user.role !== 'CLIENT') {
+      const clientRecords = await prisma.existingClient.findMany({
         where: {
           email: { equals: formattedEmail, mode: 'insensitive' },
         },
       });
 
-      if (clientRecord && user.role !== 'CLIENT') {
+      if (clientRecords.length === 1) {
+        const clientRecord = clientRecords[0]!;
         user = await prisma.user.update({
           where: { id: user.id },
           data: {
@@ -225,16 +235,95 @@ router.post('/google', authLimiter, async (req, res, next) => {
       where: { googleId },
     });
 
+    // If user exists but is a CLIENT and does not have a verified PAN, require PAN verification
+    if (user && user.role === 'CLIENT' && !user.pan) {
+      const clientRecords = await prisma.existingClient.findMany({
+        where: {
+          email: { equals: formattedEmail, mode: 'insensitive' },
+        },
+      });
+
+      if (clientRecords.length > 0) {
+        const accounts = clientRecords.map((c) => {
+          const pan = c.pan || '';
+          const panMasked = pan.length >= 4
+            ? '*'.repeat(pan.length - 4) + pan.substring(pan.length - 4)
+            : 'N/A';
+          return {
+            id: c.id,
+            name: c.name || 'N/A',
+            panMasked,
+          };
+        });
+
+        const tempToken = jwt.sign(
+          { email: formattedEmail, googleId, purpose: 'client_pan_verification' },
+          process.env.JWT_SECRET!,
+          { expiresIn: '15m' }
+        );
+
+        res.json({
+          success: true,
+          data: {
+            requiresSelection: true,
+            accounts,
+            tempToken,
+            email: formattedEmail,
+          },
+        });
+        return;
+      }
+    }
+
     if (!user) {
-      // Check if user already exists with this email
-      user = await prisma.user.findUnique({
+      // Check if there are any ExistingClient records for this email
+      const clientRecords = await prisma.existingClient.findMany({
+        where: {
+          email: { equals: formattedEmail, mode: 'insensitive' },
+        },
+      });
+
+      if (clientRecords.length > 0) {
+        // Require account selection and identity verification (PAN)
+        const accounts = clientRecords.map((c) => {
+          const pan = c.pan || '';
+          const panMasked = pan.length >= 4
+            ? '*'.repeat(pan.length - 4) + pan.substring(pan.length - 4)
+            : 'N/A';
+          return {
+            id: c.id,
+            name: c.name || 'N/A',
+            panMasked,
+          };
+        });
+
+        const tempToken = jwt.sign(
+          { email: formattedEmail, googleId, purpose: 'client_pan_verification' },
+          process.env.JWT_SECRET!,
+          { expiresIn: '15m' }
+        );
+
+        res.json({
+          success: true,
+          data: {
+            requiresSelection: true,
+            accounts,
+            tempToken,
+            email: formattedEmail,
+          },
+        });
+        return;
+      }
+
+      // Check if user already exists with this email (non-client)
+      user = await prisma.user.findFirst({
         where: { email: formattedEmail },
       });
 
       if (user) {
         // Link googleId to existing email account
         user = await prisma.user.update({
-          where: { email: formattedEmail },
+          where: { id: user.id },
           data: {
             googleId,
             name: user.name || name || null,
@@ -268,15 +357,16 @@ router.post('/google', authLimiter, async (req, res, next) => {
       }
     }
 
-    // Auto-promote to CLIENT if email matches an ExistingClient record
-    if (user.role !== 'ADMIN') {
-      const clientRecord = await prisma.existingClient.findFirst({
+    // Auto-promote to CLIENT if email matches an ExistingClient record (only if single match)
+    if (user.role !== 'ADMIN' && user.role !== 'CLIENT') {
+      const clientRecords = await prisma.existingClient.findMany({
         where: {
           email: { equals: formattedEmail, mode: 'insensitive' },
         },
       });
 
-      if (clientRecord && user.role !== 'CLIENT') {
+      if (clientRecords.length === 1) {
+        const clientRecord = clientRecords[0]!;
         user = await prisma.user.update({
           where: { id: user.id },
           data: {
@@ -500,7 +590,7 @@ router.post('/password/reset/send-otp', authLimiter, async (req, res, next) => {
     const formattedEmail = email.toLowerCase();
 
     // Verify user exists
-    const user = await prisma.user.findUnique({
+    const user = await prisma.user.findFirst({
       where: { email: formattedEmail },
     });
 
@@ -554,8 +644,16 @@ router.post('/password/reset/confirm', authLimiter, async (req, res, next) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    const userToUpdate = await prisma.user.findFirst({
+      where: { email: formattedEmail }
+    });
+    if (!userToUpdate) {
+      res.status(404).json({ success: false, error: 'User not found' });
+      return;
+    }
+
     await prisma.user.update({
-      where: { email: formattedEmail },
+      where: { id: userToUpdate.id },
       data: { password: hashedPassword },
     });
 
@@ -595,17 +693,7 @@ router.post('/activation/send-otp', authLimiter, async (req, res, next) => {
       return;
     }
 
-    // 2. Check if user already exists with this email but a different PAN
-    const userWithEmail = await prisma.user.findUnique({
-      where: { email: formattedEmail }
-    });
-    if (userWithEmail && userWithEmail.pan && userWithEmail.pan !== formattedPan) {
-      res.status(400).json({
-        success: false,
-        error: 'This email address is already linked to another client account.'
-      });
-      return;
-    }
+    // 2. Check if user already exists with this email but a different PAN - removed/relaxed to allow shared emails
 
     // 3. Verify PAN + Email combination in ExistingClient or Folio tables
     const existingClientMatch = await prisma.existingClient.findFirst({
@@ -725,30 +813,33 @@ router.post('/activation/verify-otp', authLimiter, async (req, res, next) => {
     // 4. Upsert User in database with role CLIENT in a transaction
     const user = await prisma.$transaction(async (tx: any) => {
       const hashedPassword = await bcrypt.hash(password, 10);
-      const existingUser = await tx.user.findUnique({
-        where: { email: formattedEmail }
+      // Find a guest user with this email who hasn't set their PAN yet
+      const guestUser = await tx.user.findFirst({
+        where: { email: formattedEmail, pan: null }
       });
 
       let updatedUser;
-      if (existingUser) {
-        const targetRole = existingUser.role === 'ADMIN' ? 'ADMIN' : 'CLIENT';
+      if (guestUser) {
+        const targetRole = guestUser.role === 'ADMIN' ? 'ADMIN' : 'CLIENT';
         updatedUser = await tx.user.update({
-          where: { email: formattedEmail },
+          where: { id: guestUser.id },
           data: {
             pan: formattedPan,
-            name: existingUser.name || clientName || undefined,
+            name: guestUser.name || clientName || undefined,
             password: hashedPassword,
             role: targetRole
           }
         });
       } else {
+        const refCode = await generateUniqueReferralCode();
         updatedUser = await tx.user.create({
           data: {
             email: formattedEmail,
             pan: formattedPan,
             name: clientName,
             password: hashedPassword,
-            role: 'CLIENT'
+            role: 'CLIENT',
+            referralCode: refCode
           }
         });
       }
@@ -859,14 +950,14 @@ router.post('/client/otp/verify', authLimiter, async (req, res, next) => {
       return;
     }
 
-    // Re-verify client exists in ExistingClient table
-    const clientRecord = await prisma.existingClient.findFirst({
+    // Re-verify client exists in ExistingClient table (fetch all accounts matching the email)
+    const clientRecords = await prisma.existingClient.findMany({
       where: {
         email: { equals: formattedEmail, mode: 'insensitive' },
       },
     });
 
-    if (!clientRecord) {
+    if (clientRecords.length === 0) {
       res.status(400).json({
         success: false,
         error: 'This email is not registered as a client.',
@@ -874,36 +965,151 @@ router.post('/client/otp/verify', authLimiter, async (req, res, next) => {
       return;
     }
 
+    // Generate masked PANs for accounts selection
+    const accounts = clientRecords.map((c) => {
+      const pan = c.pan || '';
+      const panMasked = pan.length >= 4
+        ? '*'.repeat(pan.length - 4) + pan.substring(pan.length - 4)
+        : 'N/A';
+      return {
+        id: c.id,
+        name: c.name || 'N/A',
+        panMasked,
+      };
+    });
+
+    // Sign a temporary token for the email that expires in 15 minutes
+    const tempToken = jwt.sign(
+      { email: formattedEmail, purpose: 'client_pan_verification' },
+      process.env.JWT_SECRET!,
+      { expiresIn: '15m' }
+    );
+
+    res.json({
+      success: true,
+      data: {
+        tempToken,
+        accounts,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/auth/client/pan/verify
+const clientPanVerifySchema = z.object({
+  tempToken: z.string().min(1, 'Verification token is required'),
+  accountId: z.string().uuid('Invalid account ID'),
+  pan: z.string().min(1, 'PAN is required').transform((v) => v.trim().toUpperCase()),
+});
+
+router.post('/client/pan/verify', authLimiter, async (req, res, next) => {
+  try {
+    const { tempToken, accountId, pan } = clientPanVerifySchema.parse(req.body);
+
+    let decoded: any;
+    try {
+      decoded = jwt.verify(tempToken, process.env.JWT_SECRET!);
+    } catch (err) {
+      res.status(400).json({
+        success: false,
+        error: 'Session expired or invalid. Please request a new verification code.',
+      });
+      return;
+    }
+
+    if (decoded.purpose !== 'client_pan_verification' || !decoded.email) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid verification token.',
+      });
+      return;
+    }
+
+    const emailNormalized = decoded.email.toLowerCase();
+
+    const clientRecord = await prisma.existingClient.findUnique({
+      where: { id: accountId },
+    });
+
+    if (!clientRecord) {
+      res.status(404).json({
+        success: false,
+        error: 'Client account not found.',
+      });
+      return;
+    }
+
+    if ((clientRecord.email || '').toLowerCase() !== emailNormalized) {
+      res.status(400).json({
+        success: false,
+        error: 'This account does not belong to the verified email address.',
+      });
+      return;
+    }
+
+    const recordPan = (clientRecord.pan || '').trim().toUpperCase();
+    if (recordPan !== pan) {
+      res.status(400).json({
+        success: false,
+        error: 'Incorrect PAN number. Please try again.',
+      });
+      return;
+    }
+
+    // PAN matches! Log in or create User
     const refCode = await generateUniqueReferralCode();
+    const googleId = decoded.googleId || null;
 
-    const existingUser = await prisma.user.findUnique({
-      where: { email: formattedEmail }
-    });
-    const targetRole = existingUser?.role === 'ADMIN' ? 'ADMIN' : 'CLIENT';
+    if (googleId) {
+      // Clear googleId from any other User record first to prevent unique constraint violation
+      const existingGoogleUser = await prisma.user.findUnique({
+        where: { googleId },
+      });
+      if (existingGoogleUser) {
+        await prisma.user.update({
+          where: { id: existingGoogleUser.id },
+          data: { googleId: null },
+        });
+      }
+    }
 
-    // Find or create the user, and promote to CLIENT role
-    const user = await prisma.user.upsert({
-      where: { email: formattedEmail },
-      update: {
-        name: clientRecord.name || undefined,
-        role: targetRole,
-      },
-      create: {
-        email: formattedEmail,
-        name: clientRecord.name || null,
-        role: targetRole,
-        referralCode: refCode,
-      },
+    let user = await prisma.user.findUnique({
+      where: { pan },
     });
 
-    // Ensure a Client record exists for dashboard access
+    if (user) {
+      const targetRole = user.role === 'ADMIN' ? 'ADMIN' : 'CLIENT';
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          role: targetRole,
+          email: user.email || emailNormalized,
+          name: user.name || clientRecord.name || undefined,
+          googleId: googleId || user.googleId || undefined,
+        },
+      });
+    } else {
+      user = await prisma.user.create({
+        data: {
+          email: emailNormalized,
+          pan,
+          name: clientRecord.name || null,
+          role: 'CLIENT',
+          referralCode: refCode,
+          googleId,
+        },
+      });
+    }
+
     await prisma.client.upsert({
       where: { userId: user.id },
       update: {},
       create: {
         userId: user.id,
         activePlan: 'PREMIUM',
-        advisorNotes: 'Logged in via email OTP',
+        advisorNotes: 'Logged in via email OTP and PAN verification',
         activatedAt: new Date(),
       },
     });

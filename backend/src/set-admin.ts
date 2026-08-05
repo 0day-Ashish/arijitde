@@ -19,16 +19,25 @@ async function main() {
     process.exit(1);
   }
   
-  const user = await prisma.user.upsert({
+  let user = await prisma.user.findFirst({
     where: { email },
-    update: {
-      role: Role.ADMIN,
-    },
-    create: {
-      email,
-      role: Role.ADMIN,
-    },
   });
+
+  if (user) {
+    user = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        role: Role.ADMIN,
+      },
+    });
+  } else {
+    user = await prisma.user.create({
+      data: {
+        email,
+        role: Role.ADMIN,
+      },
+    });
+  }
 
   console.log('Successfully set/created admin user:', user.id, user.email);
   process.exit(0);
