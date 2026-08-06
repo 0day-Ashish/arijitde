@@ -41,6 +41,7 @@ if (!process.env.GMAIL_USER) {
 }
 
 const app = express();
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 5000;
 
 // ─── Security Middlewares ───────────────────────────────────────────────────

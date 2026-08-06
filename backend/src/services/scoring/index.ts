@@ -44,6 +44,48 @@ export async function calculateScore(
   rows: PortfolioRow[],
   assessment: AssessmentContext
 ): Promise<ScoreResult> {
+  if (rows.length === 0) {
+    const goalResult = scoreGoalAlignment(rows, assessment);
+    const qScore = goalResult.score;
+    const scaledTotal = Math.min(97, Math.max(2, qScore * 5));
+
+    let tag: ScoreTag;
+    if (!assessment.goal || assessment.goal === Goal.EXPLORING || assessment.goal === Goal.NOT_SURE_YET) {
+      tag = ScoreTag.NEEDS_STRUCTURING;
+    } else if (scaledTotal >= 75) {
+      tag = ScoreTag.ALIGNED;
+    } else if (scaledTotal >= 60) {
+      tag = ScoreTag.MODERATE;
+    } else {
+      tag = ScoreTag.NEEDS_REVIEW;
+    }
+
+    const selectedInsights = [...goalResult.insights];
+    const generalInsights = [
+      "Portfolio: Review and rebalance your portfolio annually to maintain your target risk profile",
+      "Portfolio: Maintain an emergency fund separate from your market-linked investments",
+      "Portfolio: Review your investment goals periodically to account for any lifecycle changes"
+    ];
+    let padIdx = 0;
+    while (selectedInsights.length < 3) {
+      selectedInsights.push(generalInsights[padIdx++] || "Portfolio: Stay invested for the long-term to beat inflation");
+    }
+
+    return {
+      total: scaledTotal,
+      goalAlignment: qScore,
+      assetAlloc: qScore,
+      diversification: qScore,
+      discipline: qScore,
+      efficiency: qScore,
+      tag,
+      insights: {
+        textInsights: selectedInsights.slice(0, 5),
+        comparison: null
+      }
+    };
+  }
+
   // Run all dimensions (efficiency is async due to AMFI API calls)
   const [goalResult, assetResult, divResult, discResult, effResult] = await Promise.all([
     Promise.resolve(scoreGoalAlignment(rows, assessment)),

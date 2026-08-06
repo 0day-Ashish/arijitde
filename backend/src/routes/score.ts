@@ -43,13 +43,6 @@ router.post('/:portfolioId', authMiddleware, async (req: AuthenticatedRequest, r
       return;
     }
 
-    if (portfolio.rows.length === 0) {
-      res.status(400).json({
-        success: false,
-        error: 'Cannot score a portfolio with 0 rows. Please populate your portfolio first.',
-      });
-      return;
-    }
 
     // Run scoring engine (async due to AMFI API calls in efficiency)
     const scoreResult = await calculateScore(portfolio.rows, portfolio.assessment);

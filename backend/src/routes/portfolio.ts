@@ -59,7 +59,7 @@ const portfolioRowSchema = z.object({
 
 const manualUploadSchema = z.object({
   assessmentId: z.string().uuid('Invalid assessment ID format'),
-  rows: z.array(portfolioRowSchema).min(1, 'At least 1 row required').max(15, 'Maximum of 15 rows allowed'),
+  rows: z.array(portfolioRowSchema).max(15, 'Maximum of 15 rows allowed'),
 });
 
 // Date parser helper for excel
@@ -318,15 +318,13 @@ router.post('/upload', authMiddleware, upload.single('file'), async (req: Authen
       // Validate Total Invested
       const invested = parseExcelNumber(rawInvested);
       if (invested === null || invested <= 0) {
-        res.status(400).json({ success: false, error: `Row ${i + 2}: Total Invested must be a positive number` });
-        return;
+        continue;
       }
 
       // Validate Current Value
       const currentValue = parseExcelNumber(rawCurrentValue);
       if (currentValue === null || currentValue <= 0) {
-        res.status(400).json({ success: false, error: `Row ${i + 2}: Current Value must be a positive number` });
-        return;
+        continue;
       }
 
       parsedRows.push({
@@ -337,11 +335,6 @@ router.post('/upload', authMiddleware, upload.single('file'), async (req: Authen
         invested,
         currentValue,
       });
-    }
-
-    if (parsedRows.length === 0) {
-      res.status(400).json({ success: false, error: 'Excel sheet must contain at least 1 valid data row' });
-      return;
     }
 
     // Save using Prisma transaction
@@ -408,15 +401,17 @@ router.post('/manual', authMiddleware, async (req: AuthenticatedRequest, res: Re
         },
       });
 
-      const rowsData = rows.map((r) => ({
-        portfolioId: portfolio.id,
-        fundName: r.fundName,
-        type: r.type,
-        startDate: r.startDate,
-        sipAmount: r.sipAmount,
-        invested: r.invested,
-        currentValue: r.currentValue,
-      }));
+      const rowsData = rows
+        .filter((r) => r.invested > 0 && r.currentValue > 0)
+        .map((r) => ({
+          portfolioId: portfolio.id,
+          fundName: r.fundName,
+          type: r.type,
+          startDate: r.startDate,
+          sipAmount: r.sipAmount,
+          invested: r.invested,
+          currentValue: r.currentValue,
+        }));
 
       await tx.portfolioRow.createMany({
         data: rowsData,

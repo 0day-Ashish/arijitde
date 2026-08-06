@@ -750,14 +750,16 @@ export default function ClientDashboard() {
     setStatusMsg("Analyzing certified portfolio...");
 
     try {
-      const rows = existingClientData.folios.map((f: any) => ({
-        fundName: f.schemeName || "Unknown Fund",
-        type: "LUMPSUM", // Defaulting to LUMPSUM for holdings
-        startDate: new Date().toISOString(),
-        sipAmount: 0,
-        invested: f.purchaseValue || 0,
-        currentValue: f.aum || 0
-      }));
+      const rows = existingClientData.folios
+        .filter((f: any) => f.purchaseValue !== null && f.purchaseValue !== undefined && f.purchaseValue > 0 && f.aum !== null && f.aum !== undefined && f.aum > 0)
+        .map((f: any) => ({
+          fundName: f.schemeName || "Unknown Fund",
+          type: "LUMPSUM", // Defaulting to LUMPSUM for holdings
+          startDate: new Date().toISOString(),
+          sipAmount: 0,
+          invested: f.purchaseValue,
+          currentValue: f.aum
+        }));
 
       const res = await fetch(`${backendUrl}/api/portfolio/manual`, {
         method: "POST",
